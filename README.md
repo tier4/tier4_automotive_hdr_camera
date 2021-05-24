@@ -3,5 +3,5 @@ GMSL2カメラドライバの開発用リポジトリ
 - ISX021ドライバ
 - 駆動モード設定ファイル
 - SerDesドライバ
-- Devide tree ファイル
+- Devie tree ファイル
 など
