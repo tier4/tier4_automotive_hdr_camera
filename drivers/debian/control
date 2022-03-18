@@ -1,0 +1,13 @@
+Source: tier4-isx021-gmsl
+Section: kernel
+Priority: optional
+Maintainer: YuSheng <chester.tseng@adlinktech.com>
+Build-Depends: debhelper (>=9), dkms
+Standards-Version: 3.9.6
+Homepage: <https://www.adlintkech.com>
+
+Package: tier4-isx021-gmsl
+Architecture: arm64
+Provides: tier4-isx021-gmsl
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Tier4 ISX021 GMSL2 Camera Kernel Module.

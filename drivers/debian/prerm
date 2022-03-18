@@ -1,0 +1,22 @@
+#!/bin/sh -e
+
+#!/bin/sh
+NAME=tier4-isx021-gmsl
+VERSION=0.9.0
+set -e
+case "$1" in
+    remove|upgrade|deconfigure)
+      if [  "`dkms status -m $NAME`" ]; then
+         dkms remove -m $NAME -v $VERSION --all
+         rm -rf /boot/tier4-isx021-gmsl-device-tree-overlay.dtbo
+      fi
+    ;;
+
+    failed-upgrade)
+    ;;
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+exit 0
