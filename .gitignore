@@ -46,3 +46,4 @@
 modules.order
 Module.symvers
 Mkfile.old
+build
