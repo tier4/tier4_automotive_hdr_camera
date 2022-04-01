@@ -1,8 +1,8 @@
 /*
  * tier4_max9295.c - tier4_max9295 GMSL Serializer driver
  *
+ * Copyright (c) 2022, TIERIV Inc.  All rights reserved.
  * Copyright (c) 2020, Leopard Imaging Inc.  All rights reserved.
- *
  * Copyright (c) 2018-2020, NVIDIA CORPORATION.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -207,7 +207,7 @@ int tier4_max9295_setup_streaming(struct device *dev)
 	struct map_ctx map_pipe_dtype[] = {
 		{GMSL_CSI_DT_YUV_8, MAX9295_PIPE_Z_DT_ADDR, 0x1E,		// For YUV8
 			MAX9295_ST_ID_2},
-		{GMSL_CSI_DT_UED_U1, MAX9295_PIPE_X_DT_ADDR, 0x1e,
+		{GMSL_CSI_DT_UED_U1, MAX9295_PIPE_X_DT_ADDR, 0x30,
 			MAX9295_ST_ID_0},
 		{GMSL_CSI_DT_EMBED, MAX9295_PIPE_Y_DT_ADDR, 0x12,
 			MAX9295_ST_ID_1},

@@ -1,6 +1,7 @@
 /*
  * tier4_max9296.c - tier4_max9296 GMSL Deserializer driver
  *
+ * Copyright (c) 2022, TIERIV Inc.  All rights reserved.
  * Copyright (c) 2018-2020, NVIDIA CORPORATION.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it

@@ -29,7 +29,7 @@ endif
 
 ccflags-y += -DBUILD_STAMP="\"`date +'%Y-%m-%d %H:%M:%S'`\""
 
-obj-m := tier4-max9295.o tier4-max9296.o tier4-isx021.o
+obj-m := tier4-max9295.o tier4-max9296.o tier4-isx021.o tier4-isx021-ctrl.o tier4-isx021-rw-reg.o
 
 .PHONY: all
 all: modules dtbo

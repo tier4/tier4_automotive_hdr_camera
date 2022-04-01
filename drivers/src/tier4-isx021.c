@@ -1,9 +1,7 @@
 /*
  * isx021.c - isx021 sensor driver
  *
- * TODO: Need to change license to Propietary
- *
- *
+ * Copyright (c) 2022, TIERIV INC.  All rights reserved.
  * Copyright (c) 2018-2021, NVIDIA CORPORATION.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -34,153 +32,17 @@
 #include "tier4-max9295.h"
 #include "tier4-max9296.h"
 #include "tier4-gmsl-link.h"
-
 #include <media/tegracam_core.h>
+#include "tier4-isx021-ctrl.h"
+#include "tier4-isx021.h"
 
-// Register Address
+#define NO_ERROR									(0)
 
-#define	ISX021_SG_MODE_INTERNAL_SYNC				0
-
-#define	ISX021_SG_MODE_INTERNAL_SYNC				0
-
-#define ISX021_MIN_GAIN         					0
-#define ISX021_MAX_GAIN         					48
-
-#define ISX021_MIN_EXPOSURE_TIME   					0
-#define ISX021_MAX_EXPOSURE_TIME   					33000	// 33 milisecond 
-
-#define ISX021_GAIN_DEFAULT_VALUE					6
-
-#define ISX021_DEFAULT_FRAME_LENGTH    				(1125)
-#define ISX021_FRAME_LENGTH_ADDR_MSB            	0x200A
-#define ISX021_FRAME_LENGTH_ADDR_MID    			0x2009
-#define ISX021_FRAME_LENGTH_ADDR_LSB    			0x2008
-#define ISX021_COARSE_TIME_SHS1_ADDR_MSB			0x000E
-#define ISX021_COARSE_TIME_SHS1_ADDR_MID			0x000D
-#define ISX021_COARSE_TIME_SHS1_ADDR_LSB        	0x000C
-#define ISX021_COARSE_TIME_SHS2_ADDR_MSB			0x0012
-#define ISX021_COARSE_TIME_SHS2_ADDR_MID			0x0011
-#define ISX021_COARSE_TIME_SHS2_ADDR_LSB			0x0010
-#define ISX021_GROUP_HOLD_ADDR    					0x0008
-//#define ISX021_ANALOG_GAIN_SP1H_ADDR            	0x0018
-//#define ISX021_ANALOG_GAIN_SP1M_ADDR    			0x0019
-//#define ISX021_ANALOG_GAIN_SP1L_ADDR            	0x001A
-#define ISX021_ANALOG_GAIN_SP1B_ADDR    			0x001B
-
-#define ISX021_DEVSTATUS_ADDR						0x6005
-
-//   AE  mode
-
-#define ISX021_AE_SHUTTER0_VALUE_BYTE0_ADDR			0x616C
-#define ISX021_AE_SHUTTER0_VALUE_BYTE1_ADDR			0x616D
-#define ISX021_AE_SHUTTER0_VALUE_BYTE2_ADDR			0x616E
-#define ISX021_AE_SHUTTER0_VALUE_BYTE3_ADDR			0x616F
-
-#define ISX021_AE_SHUTTER1_VALUE_BYTE0_ADDR			0x647C
-#define ISX021_AE_SHUTTER1_VALUE_BYTE1_ADDR			0x647D
-#define ISX021_AE_SHUTTER1_VALUE_BYTE2_ADDR			0x647E
-#define ISX021_AE_SHUTTER1_VALUE_BYTE3_ADDR			0x647F
-
-//  ME  mode
-
-#define ISX021_ME_SHUTTER0_DEFAULT_VALUE_BYTE0_ADDR	0xABEC
-#define ISX021_ME_SHUTTER0_DEFAULT_VALUE_BYTE1_ADDR	0xABED
-#define ISX021_ME_SHUTTER0_DEFAULT_VALUE_BYTE2_ADDR	0xABEE
-#define ISX021_ME_SHUTTER0_DEFAULT_VALUE_BYTE3_ADDR	0xABEF
-
-#define ISX021_ME_SHUTTER1_DEFAULT_VALUE_BYTE0_ADDR	0xABF4
-#define ISX021_ME_SHUTTER1_DEFAULT_VALUE_BYTE1_ADDR	0xABF5
-#define ISX021_ME_SHUTTER1_DEFAULT_VALUE_BYTE2_ADDR	0xABF6
-#define ISX021_ME_SHUTTER1_DEFAULT_VALUE_BYTE3_ADDR	0xABF7
-
-//  Analog Gain
-
-#define ISX021_AE_ANALOG_GAIN0_LOW_BYTE_ADDR		0x6170
-#define ISX021_AE_ANALOG_GAIN0_HIGH_BYTE_ADDR		0x6171
-
-#define ISX021_ME_ANALOG_GAIN0_LOW_BYTE_ADDR		0xABFA
-#define ISX021_ME_ANALOG_GAIN0_HIGH_BYTE_ADDR		0xABFB
-
-#define ISX021_AE_ANALOG_GAIN1_LOW_BYTE_ADDR		0x6480
-#define ISX021_AE_ANALOG_GAIN1_HIGH_BYTE_ADDR		0x6481
-
-#define ISX021_ME_ANALOG_GAIN1_LOW_BYTE_ADDR		0xABFC
-#define ISX021_ME_ANALOG_GAIN1_HIGH_BYTE_ADDR		0xABFD
-
-#define ISX021_AE_ANALOG_GAIN2_LOW_BYTE_ADDR		0x6484
-#define ISX021_AE_ANALOG_GAIN2_HIGH_BYTE_ADDR		0x6485
-
-#define ISX021_ME_ANALOG_GAIN2_LOW_BYTE_ADDR		0xABFE
-#define ISX021_ME_ANALOG_GAIN2_HIGH_BYTE_ADDR		0xABFF
-
-#define ISX021_AE_ANALOG_GAIN3_LOW_BYTE_ADDR		0x6488
-#define ISX021_AE_ANALOG_GAIN3_HIGH_BYTE_ADDR		0x6489
-
-#define ISX021_ME_ANALOG_GAIN3_LOW_BYTE_ADDR		0xAC00
-#define ISX021_ME_ANALOG_GAIN3_HIGH_BYTE_ADDR		0xAC01
-
-// Exposure
-
-#define ISX021_EXPOSURE_SHUTTER1_UNIT_ADDR			0xAC4D
-#define ISX021_EXPOSURE_SHUTTER2_UNIT_ADDR			0xAC4E
-
-#define ISX021_EXPOSURE_SHUTTER1_TIME_BYTE0_ADDR	0xAC44
-#define ISX021_EXPOSURE_SHUTTER1_TIME_BYTE1_ADDR	0xAC45
-#define ISX021_EXPOSURE_SHUTTER1_TIME_BYTE2_ADDR	0xAC46
-#define ISX021_EXPOSURE_SHUTTER1_TIME_BYTE3_ADDR	0xAC47
-
-#define ISX021_EXPOSURE_SHUTTER2_TIME_BYTE0_ADDR	0xAC48
-#define ISX021_EXPOSURE_SHUTTER2_TIME_BYTE1_ADDR	0xAC49
-#define ISX021_EXPOSURE_SHUTTER2_TIME_BYTE2_ADDR	0xAC4A
-#define ISX021_EXPOSURE_SHUTTER2_TIME_BYTE3_ADDR	0xAC4B
+#define TIME_120_MILISEC							(120000)
+#define TIME_121_MILISEC							(121000)
 
 
-#define ISX021_MODE_SET_F_ADDR						0x8A01
-
-#define ISX021_SG_MODE_CTL_ADDR						0x8AF0
-#define ISX021_FSYNC_FUNCSEL_ADDR					0x8AFE
-#define ISX021_FSYNC_DRVABTY_ADDR					0x8AFF
-
-//  AE mode
-
-#define ISX021_AE_MODE_FULL_ME_ADDR					0xABC0
-
-#define ISX021_SHUTTER0_UNIT_ADDR					0xABF0
-#define ISX021_SHUTTER1_UNIT_ADDR					0xABF8
-
-#define ISX021_SHUTTER1_UNIT_ADDR					0xABF8
-
-//  Digital Gain
-
-#define ISX021_DIGITAL_GAIN_LOW_BYTE_ADDR			0xAC0A
-#define ISX021_DIGITAL_GAIN_HIGH_BYTE_ADDR			0xAC0B
-
-// Distortion Corretion
-
-#define	ISX021_DISTORTION_CORRECTION_0_ADDR			0xFFFF
-#define	ISX021_DISTORTION_CORRECTION_1_ADDR			0xCC04
-#define	ISX021_DISTORTION_CORRECTION_2_ADDR			0x8AB8
-
-//#define ISX021_MODE_SET_F_LOCK_ADDR				0xBEF0
-
-#define ISX021_SG_MODE_APL_ADDR						0xBF14
-
-//#define ISX021_IR_DR_SG_FSYNCIN_SEL_ADDR			0x0153
-
-#define ISX021_AUTO_EXPOSURE_MODE					0x00
-#define ISX021_AE_TIME_UNIT_MICRO_SECOND			0x03
-
-#define BIT_SHIFT_8									8
-#define BIT_SHIFT_16								16
-#define MASK_1_BIT									0x1
-#define MASK_4_BIT									0xF
-#define MASK_8_BIT									0xFF
-
-#define NO_ERROR									0
-
-#define TIME_120_MILISEC							120000
-#define TIME_121_MILISEC							121000
-
+#define ISX021_DEFAULT_FRAME_LENGTH    	(1125)
 
 enum {
 	ISX021_MODE_1920X1280_CROP_30FPS,
@@ -239,118 +101,40 @@ static const struct regmap_config tier4_sensor_regmap_config = {
 static int trigger_mode ;
 module_param(trigger_mode, int, 0644);
 
-static inline int tier4_isx021_read_reg(struct camera_common_data *s_data, u16 addr, u8 *val)
-{
-	int err 	= 0;
-	u32 reg_val = 0;
+static struct mutex serdes_lock__;
 
-	err = regmap_read(s_data->regmap, addr, &reg_val);
-
-	if (err) {
-		dev_err(s_data->dev, "[%s] : I2C read failed, address = 0x%x\n", __func__, addr);
-	} else {
-		*val = reg_val & 0xFF;
-	}
-	return err;
-}
-
-static int tier4_isx021_write_reg(struct camera_common_data *s_data, u16 addr, u8 val)
-{
-
-	int 			err 	= 0;
-	struct 	device	*pdev 	= s_data->dev;
-	char str_bus_num[4],str_sl_addr[4];
-	int				len;
-
-	memset(str_bus_num,0,4);
-	memset(str_sl_addr,0,4);
-
-	len = strlen(pdev->kobj.name);
-
-	if (pdev) {
-		strncpy(str_bus_num, &pdev->kobj.name[0], 2);
-		strncpy(str_sl_addr, &(pdev->kobj.name[len-2]), 2);
-	}
-	err = regmap_write(s_data->regmap, addr, val);
-
-	if (err) {
-		dev_err(s_data->dev,  "[%s] : I2C write failed.    Reg Address = 0x%x  Data = 0x%x\n", __func__, addr, val);
-	}
-
-	return err;
-}
+int tier4_isx021_write_reg(struct camera_common_data *s_data, u16 addr, u8 val);
+int tier4_isx021_read_reg(struct camera_common_data *s_data, u16 addr, u8 *val);
+/* --------------------------------------------------------------------------- */
 
 static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 {
-	int err 	= 0;
-
-	struct camera_common_data 	*s_data = priv->s_data;
-	struct device 				*dev	= s_data->dev;;
-
+	int err = 0;
+	struct device *dev = priv->s_data->dev;
+	
 	err = tier4_max9296_setup_gpi(priv->dser_dev);
-
 	if ( err ) {
 		dev_err(dev, "[%s] :tier4_max9296_setup_gpi() failed\n", __func__);
 		return err;
 	}
 
 	err = tier4_max9295_setup_gpo(priv->ser_dev);
-
 	if ( err ) {
 		dev_err(dev, "[%s] : tier4_max9295_setup_gpo() failed\n", __func__);
 		return err;
 	}
 
-	// transit to Startup state
-
-	err = tier4_isx021_write_reg(s_data, ISX021_MODE_SET_F_ADDR, 0x00);
-
+	err = tier4_isx021_ctrl_set_fsync_trigger_mode(priv->s_data);
 	if ( err ) {
-		dev_err(dev, "[%s] : tier4_isx021_write_reg() failed\n", __func__);
+		dev_err(dev, "[%s] : err = 0x%0X : tier4_isx021_ctrl_setup() failed\n", __func__, err);
 		return err;
+	} else {
+		dev_info(dev, "[%s] : tier4_isx021_ctrl_setup() succeeded\n", __func__);
 	}
-
-	usleep_range(TIME_120_MILISEC, TIME_121_MILISEC);
-
-	// set SG_MODE_CTL to 0 for transition to FSYNC mode
-
-	err = tier4_isx021_write_reg(s_data, ISX021_SG_MODE_CTL_ADDR, 0x02);		// set FSYNC mode
-
-	if ( err ) {
-			dev_err(dev, "[%s] : tier4_isx021_write_reg() failed\n", __func__);
-		return err;
-	}
-
-	usleep_range(TIME_120_MILISEC, TIME_121_MILISEC);
-
-	// set SG_MODE_APL to 0 for transition to FSYNC mode
-
-	err = tier4_isx021_write_reg(s_data, ISX021_SG_MODE_APL_ADDR, 0x02);
-
-	if ( err ) {
-		dev_err(dev, "[%s] : tier4_isx021_write_reg() failed\n", __func__);
-		return err;
-	}
-
-	usleep_range(TIME_120_MILISEC, TIME_121_MILISEC);
-
-	// Exit Startup state
-
-	err = tier4_isx021_write_reg(s_data, ISX021_MODE_SET_F_ADDR, 0x80);
-
-	if ( err ) {
-			dev_err(dev, "[%s] : tier4_isx021_write_reg() failed\n", __func__);
-		return err;
-	}
-
-	usleep_range(TIME_120_MILISEC, TIME_121_MILISEC);
 
 	return err;
 }
-
-// #endif // _SUPPORT_ISX021_FSYNC_TRIGGER_MODE_
-
-static struct mutex serdes_lock__;
+/* --------------------------------------------------------------------------- */
 
 static int tier4_isx021_gmsl_serdes_setup(struct tier4_isx021 *priv)
 {
@@ -401,6 +185,8 @@ error:
 	return err;
 }
 
+/* --------------------------------------------------------------------------- */
+
 static void tier4_isx021_gmsl_serdes_reset(struct tier4_isx021 *priv)
 {
 	mutex_lock(&serdes_lock__);
@@ -414,6 +200,8 @@ static void tier4_isx021_gmsl_serdes_reset(struct tier4_isx021 *priv)
 
 	mutex_unlock(&serdes_lock__);
 }
+
+/* --------------------------------------------------------------------------- */
 
 static int tier4_isx021_power_on(struct camera_common_data *s_data)
 {
@@ -443,6 +231,8 @@ static int tier4_isx021_power_on(struct camera_common_data *s_data)
 	return err;
 }
 
+/* --------------------------------------------------------------------------- */
+
 static int tier4_isx021_power_off(struct camera_common_data *s_data)
 {
 	int 							err 	= 0;
@@ -470,6 +260,8 @@ power_off_done:
 	return err;
 }
 
+/* --------------------------------------------------------------------------- */
+
 static int tier4_isx021_power_get(struct tegracam_device *tc_dev)
 {
 	struct 	camera_common_power_rail 	*pw 	= tc_dev->s_data->power;
@@ -480,6 +272,8 @@ static int tier4_isx021_power_get(struct tegracam_device *tc_dev)
 	return err;
 }
 
+/* --------------------------------------------------------------------------- */
+
 static int tier4_isx021_power_put(struct tegracam_device *tc_dev)
 {
 	if (unlikely(!tc_dev->s_data->power)) {
@@ -489,6 +283,8 @@ static int tier4_isx021_power_put(struct tegracam_device *tc_dev)
 	return NO_ERROR;
 }
 
+/* --------------------------------------------------------------------------- */
+
 static int tier4_isx021_set_group_hold(struct tegracam_device *tc_dev, bool val)
 {
 	volatile int err = 0;
@@ -496,197 +292,20 @@ static int tier4_isx021_set_group_hold(struct tegracam_device *tc_dev, bool val)
 	return err;
 }
 
-static int tier4_copy_reg_value(struct camera_common_data *s_data, u16 ae_addr, u16 me_addr)
-{
-	int err 	= 0;
-	u8	val8 = 0;
-
-	err = tier4_isx021_read_reg(s_data, ae_addr, &val8);
-
-	if (err) {
-		dev_err(s_data->dev, "[%s] : tier4_isx021_read_reg failed, address = 0x%x\n", __func__, ae_addr);
-	}
-
-	err = tier4_isx021_write_reg(s_data, me_addr, val8);
-
-	if (err) {
-		dev_err(s_data->dev, "[%s] : tier4_isx021_write_reg failed, address = 0x%x, val = 0x%x\n", __func__, me_addr, val8);
-	}
-
-	return err;
-}
+/* --------------------------------------------------------------------------- */
 
 static int tier4_isx021_set_gain(struct tegracam_device *tc_dev, s64 val)
 {
 
-	int 						err = 0;
+	int err = 0;
+	struct camera_common_data *s_data = tc_dev->s_data;
+//	struct device *dev = tc_dev->dev;
 
-	s64							gain;
-	u8							digital_gain_low_byte;
-	u8							digital_gain_high_byte;
-
-	struct camera_common_data 	*s_data 	= tc_dev->s_data;
-	struct device 				*dev 		= tc_dev->dev;
-
-	if ( val > ISX021_MAX_GAIN ) {
-		val = ISX021_MAX_GAIN;
-	} else if ( val < ISX021_MIN_GAIN ) {
-		val = ISX021_MIN_GAIN;
-	}
-
-	dev_info(dev,"[%s] :Gain is set to %lld\n", __func__, val);
-
-	gain = 10*val;
-
-	digital_gain_low_byte = gain & 0xFF;
-
-	digital_gain_high_byte = ( gain >> 8  ) & 0xFF;
-
-	err = tier4_isx021_write_reg(s_data, ISX021_SHUTTER0_UNIT_ADDR, 0x01);
+	err = tier4_isx021_ctrl_set_gain(s_data, val);
 
 	if (err) {
-		goto fail;
+		dev_err(tc_dev->dev, "[%s] : GAIN control error\n", __func__);
 	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_SHUTTER1_UNIT_ADDR, 0x01);
-
-	if (err) {
-		goto fail;
-	}
-
-	// Shutter 0 value
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_SHUTTER0_VALUE_BYTE0_ADDR, ISX021_ME_SHUTTER0_DEFAULT_VALUE_BYTE0_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_SHUTTER0_VALUE_BYTE1_ADDR, ISX021_ME_SHUTTER0_DEFAULT_VALUE_BYTE1_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_SHUTTER0_VALUE_BYTE2_ADDR, ISX021_ME_SHUTTER0_DEFAULT_VALUE_BYTE2_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_SHUTTER0_VALUE_BYTE3_ADDR, ISX021_ME_SHUTTER0_DEFAULT_VALUE_BYTE3_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	// Shutter 1 value
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_SHUTTER1_VALUE_BYTE0_ADDR, ISX021_ME_SHUTTER1_DEFAULT_VALUE_BYTE0_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_SHUTTER1_VALUE_BYTE1_ADDR, ISX021_ME_SHUTTER1_DEFAULT_VALUE_BYTE1_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_SHUTTER1_VALUE_BYTE2_ADDR, ISX021_ME_SHUTTER1_DEFAULT_VALUE_BYTE2_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_SHUTTER1_VALUE_BYTE3_ADDR, ISX021_ME_SHUTTER1_DEFAULT_VALUE_BYTE3_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	// Set Analog Gain for shutter 0
-
-	err = tier4_isx021_write_reg(s_data, ISX021_AE_ANALOG_GAIN0_LOW_BYTE_ADDR, digital_gain_low_byte);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_AE_ANALOG_GAIN0_HIGH_BYTE_ADDR, digital_gain_high_byte);
-
-	if (err) {
-		goto fail;
-	}
-
-	// copy  AE Analog gain value to ME analog gain registers for shutter 1 to 3
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_ANALOG_GAIN1_LOW_BYTE_ADDR, ISX021_ME_ANALOG_GAIN1_LOW_BYTE_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_ANALOG_GAIN1_HIGH_BYTE_ADDR, ISX021_ME_ANALOG_GAIN1_HIGH_BYTE_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_ANALOG_GAIN2_LOW_BYTE_ADDR, ISX021_ME_ANALOG_GAIN2_LOW_BYTE_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_ANALOG_GAIN2_HIGH_BYTE_ADDR, ISX021_ME_ANALOG_GAIN2_HIGH_BYTE_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_ANALOG_GAIN3_LOW_BYTE_ADDR, ISX021_ME_ANALOG_GAIN3_LOW_BYTE_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_copy_reg_value(s_data, ISX021_AE_ANALOG_GAIN3_HIGH_BYTE_ADDR, ISX021_ME_ANALOG_GAIN3_HIGH_BYTE_ADDR);
-
-	if (err) {
-		goto fail;
-	}
-
-	msleep(100);		// For ES3
-
-	// Change AE mode 
-
-	err = tier4_isx021_write_reg(s_data, ISX021_AE_MODE_FULL_ME_ADDR, 0x03);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_DIGITAL_GAIN_LOW_BYTE_ADDR, digital_gain_low_byte);
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_DIGITAL_GAIN_HIGH_BYTE_ADDR, digital_gain_high_byte);
-
-	if (err) {
-		goto fail;
-	}
-
-
-	return NO_ERROR;
-
-fail:
-	dev_err(dev, "[%s] : GAIN control error\n", __func__);
 
 	return err;
 }
@@ -709,42 +328,15 @@ static int tier4_isx021_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
 static int tier4_isx021_set_auto_exposure(struct tegracam_device *tc_dev)
 {
 
-	int 									err 		= 0;
-	struct tier4_isx021 					*priv 		= (struct tier4_isx021 *)tegracam_get_privdata(tc_dev);
-	struct camera_common_data 				*s_data 	= tc_dev->s_data;
+	int err	= 0;
+	struct camera_common_data *s_data = tc_dev->s_data;
+	struct tier4_isx021 *priv = (struct tier4_isx021 *)tegracam_get_privdata(tc_dev);
 
-	// Change to Auto exposure mode
-
-        msleep(100);		// For ES3
-
-	err = tier4_isx021_write_reg(s_data, ISX021_AE_MODE_FULL_ME_ADDR, ISX021_AUTO_EXPOSURE_MODE);
+	err = tier4_isx021_ctrl_set_auto_exposure(s_data);
 
 	if (err) {
-		goto fail;
+		dev_err(&priv->i2c_client->dev,	"[%s] : Setting Auto exposure mode failed.\n", __func__);
 	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_UNIT_ADDR, ISX021_AE_TIME_UNIT_MICRO_SECOND );
-
-	if (err) {
-		goto fail;
-	}
-
-	// Set max exposure time
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE0_ADDR, ISX021_MAX_EXPOSURE_TIME & 0xFF );
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE1_ADDR, ( ISX021_MAX_EXPOSURE_TIME  >> 8 ) & 0xFF );
-
-	if (err) {
-		goto fail;
-	}
-
-fail:
-	dev_dbg(&priv->i2c_client->dev,	"[%s] : Set Auto exposure mode error.\n", __func__);
 
 	return err;
 }
@@ -754,116 +346,28 @@ fail:
 static int tier4_isx021_set_exposure(struct tegracam_device *tc_dev, s64 val)
 {
 
-	int 									err 		= 0;
-
-	u8										exp_time_byte0;
-	u8										exp_time_byte1;
-	u8										exp_time_byte2;
-	u8										exp_time_byte3;
-	struct tier4_isx021 					*priv 		= (struct tier4_isx021 *)tegracam_get_privdata(tc_dev);
-	struct camera_common_data 				*s_data 	= tc_dev->s_data;
-
-	//  unit for val is micro-second
-
-	if ( val > ISX021_MAX_EXPOSURE_TIME ) {
-		val = ISX021_MAX_EXPOSURE_TIME;
-	} else if ( val < ISX021_MIN_EXPOSURE_TIME ) {
-		val = ISX021_MIN_EXPOSURE_TIME;
-	}
-
-	exp_time_byte0 = val & 0xFF;
-
-	exp_time_byte1 = ( val >> 8 ) & 0xFF;
-
-	exp_time_byte2 = ( val >> 16 ) & 0xFF;
-
-	exp_time_byte3 = ( val >> 24 ) & 0xFF;
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER1_UNIT_ADDR, 0x03);
+	int err = 0;
+	struct camera_common_data *s_data = tc_dev->s_data;
+	struct tier4_isx021 *priv = (struct tier4_isx021 *)tegracam_get_privdata(tc_dev);
+	
+	err = tier4_isx021_ctrl_set_exposure(s_data, val);
 
 	if (err) {
-		goto fail;
+		dev_err(&priv->i2c_client->dev,	"[%s] : Setting Exposure Time failed.\n", __func__);
 	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_UNIT_ADDR, 0x03 );
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER1_TIME_BYTE0_ADDR, exp_time_byte0 );
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER1_TIME_BYTE1_ADDR, exp_time_byte1 );
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER1_TIME_BYTE2_ADDR, exp_time_byte2 );
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER1_TIME_BYTE3_ADDR, exp_time_byte3 );
-
-	if (err) {
-		goto fail;
-	}
-
-	// Shutter2
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE0_ADDR, exp_time_byte0 );
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE1_ADDR, exp_time_byte1 );
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE2_ADDR, exp_time_byte2 );
-
-	if (err) {
-		goto fail;
-	}
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE3_ADDR, exp_time_byte3 );
-
-	if (err) {
-		goto fail;
-	}
-
-	return NO_ERROR;
-
-fail:
-	dev_dbg(&priv->i2c_client->dev,	"[%s] : Set Exposure time error\n", __func__);
 
 	return err;
 }
+
 // --------------------------------------------------------------------------------------
 //  Enable Distortion Coreection
 // --------------------------------------------------------------------------------------
-static int tier4_isx021_set_distortion_correction(struct tegracam_device *tc_dev, bool val)
+static int tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_dev, bool val)
 {
 	int err = 0;
+	struct camera_common_data *s_data = tc_dev->s_data;
 
-	if ( val == true ) {
-		err = tier4_isx021_write_reg(tc_dev->s_data, ISX021_DISTORTION_CORRECTION_0_ADDR, 0x02);
-		err = tier4_isx021_write_reg(tc_dev->s_data, ISX021_DISTORTION_CORRECTION_1_ADDR, 0x01);
-		err = tier4_isx021_write_reg(tc_dev->s_data, ISX021_DISTORTION_CORRECTION_2_ADDR, 0x01);
-		err = tier4_isx021_write_reg(tc_dev->s_data, ISX021_DISTORTION_CORRECTION_0_ADDR, 0xF5);
-	} else {
-		err = -EINVAL;
-		dev_dbg(tc_dev->dev,"[%s] : Distortion Correction is not disabled.", __func__);
-	}
+	err = tier4_isx021_ctrl_enable_distortion_correction(s_data, val);
 
 	return err;
 }
@@ -879,7 +383,7 @@ static struct tegracam_ctrl_ops tier4_isx021_ctrl_ops = {
 	.set_exposure_short = tier4_isx021_set_exposure,
 	.set_frame_rate 	= tier4_isx021_set_frame_rate,
 	.set_group_hold 	= tier4_isx021_set_group_hold,
-//	.set_distortion_correction 	= tier4_isx021_set_distortion_correction,
+//	.set_distortion_correction 	= tier4_isx021_enable_distortion_correction,
 };
 
 // --------------------------------------------------------------------------------------
@@ -914,6 +418,8 @@ static struct camera_common_pdata *tier4_isx021_parse_dt(struct tegracam_device 
 	return board_priv_pdata;
 }
 
+
+/* --------------------------------------------------------------------------- */
 /*   tier4_isx021_set_mode() can not be needed. But it remains for compatiblity */
 
 static int tier4_isx021_set_mode(struct tegracam_device *tc_dev)
@@ -923,6 +429,8 @@ static int tier4_isx021_set_mode(struct tegracam_device *tc_dev)
 
 	return err;
 }
+
+/* --------------------------------------------------------------------------- */
 
 static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 {
@@ -964,7 +472,7 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 
 	if ( priv->distortion_correction == true ) {
 
-		err = tier4_isx021_set_distortion_correction(tc_dev, true);
+		err = tier4_isx021_enable_distortion_correction(tc_dev, true);
 
 		if (err) {
 			dev_err(dev, "[%s] : Enabling Distortion Correction  failed\n", __func__);
@@ -1011,6 +519,8 @@ exit:
 	return err;
 }
 
+/* --------------------------------------------------------------------------- */
+
 static int tier4_isx021_stop_streaming(struct tegracam_device *tc_dev)
 {
 	struct device 	*dev  	= tc_dev->dev;
@@ -1027,6 +537,8 @@ static int tier4_isx021_stop_streaming(struct tegracam_device *tc_dev)
 	return NO_ERROR;
 }
 
+/* --------------------------------------------------------------------------- */
+
 static struct camera_common_sensor_ops tier4_isx021_common_ops = {
 	.numfrmfmts 	 = ARRAY_SIZE(tier4_isx021_frmfmt),
 	.frmfmt_table 	 = tier4_isx021_frmfmt,
@@ -1042,6 +554,8 @@ static struct camera_common_sensor_ops tier4_isx021_common_ops = {
 	.stop_streaming  = tier4_isx021_stop_streaming,
 };
 
+/* --------------------------------------------------------------------------- */
+
 static int tier4_isx021_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
@@ -1051,9 +565,13 @@ static int tier4_isx021_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 	return NO_ERROR;
 }
 
+/* --------------------------------------------------------------------------- */
+
 static const struct v4l2_subdev_internal_ops tier4_isx021_subdev_internal_ops = {
 	.open = tier4_isx021_open,
 };
+
+/* --------------------------------------------------------------------------- */
 
 static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 {
@@ -1309,6 +827,8 @@ error:
 	return err;
 }
 
+/* --------------------------------------------------------------------------- */
+
 static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	struct device 			*dev 	= &client->dev;
@@ -1417,8 +937,16 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 
 	dev_info(&client->dev, "Detected ISX021 sensor\n");
 
+#if 0
+	err = tier4_isx021_ctrl_set_response_mode(priv->s_data);
+	if(err) {
+		dev_err(dev, "[%s]: Failed set i2c response mode\n");
+	}
+#endif
 	return NO_ERROR;
 }
+
+/* --------------------------------------------------------------------------- */
 
 static int tier4_isx021_remove(struct i2c_client *client)
 {
@@ -1453,6 +981,8 @@ static struct i2c_driver tier4_isx021_i2c_driver = {
 	.id_table 	= tier4_isx021_id,
 };
 
+/* --------------------------------------------------------------------------- */
+
 static int __init tier4_isx021_init(void)
 {
 	mutex_init(&serdes_lock__);
@@ -1461,6 +991,8 @@ static int __init tier4_isx021_init(void)
 
 	return i2c_add_driver(&tier4_isx021_i2c_driver);
 }
+
+/* --------------------------------------------------------------------------- */
 
 static void __exit tier4_isx021_exit(void)
 {

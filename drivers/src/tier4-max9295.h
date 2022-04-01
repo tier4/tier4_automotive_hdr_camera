@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2022, TIERIV INC.  All rights reserved.
  * Copyright (c) 2018, NVIDIA Corporation.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -13,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 /**
  * @file
@@ -37,7 +37,6 @@
  */
 
 int tier4_max9295_setup_gpo(struct device *dev);
-
 
 /**
  * @brief  Powers on a serializer device and performs the I2C overrides
@@ -120,4 +119,4 @@ int tier4_max9295_pre_setup_streaming(struct device *dev);
  */
 int tier4_max9295_setup_streaming(struct device *dev);
 
-#endif	// __TIER4_MAX9295_H__
+#endif  // __TIER4_MAX9295_H__
