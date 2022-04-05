@@ -265,7 +265,7 @@ int tier4_isx021_ctrl_set_response_mode(void *p_s_data)
 {
 	int err = 0;
   
-	micro_sec_sleep(1e6 * 1);
+	micro_sec_sleep(100000);
 	err = tier4_isx021_write_reg_wrapper(p_s_data, ISX021_MODE_SET_F_ADDR, 0x00);
 	if (err) {
 		goto error_exit;
@@ -523,6 +523,10 @@ int tier4_isx021_ctrl_set_exposure(void *p_s_data, s64 val)
 	} else if ( val < ISX021_MIN_EXPOSURE_TIME ) {
 		val = ISX021_MIN_EXPOSURE_TIME;
 	}
+	exp_time_byte0 = val & 0xFF;
+	exp_time_byte1 = ( val >> 8 ) & 0xFF;
+	exp_time_byte2 = ( val >> 16 ) & 0xFF;
+	exp_time_byte3 = ( val >> 24 ) & 0xFF;
 
 	err = tier4_isx021_write_reg_wrapper(p_s_data, ISX021_EXPOSURE_SHUTTER1_UNIT_ADDR, 0x03);
 
@@ -561,14 +565,6 @@ int tier4_isx021_ctrl_set_exposure(void *p_s_data, s64 val)
 	}
 
 	// Shutter2
-
-	exp_time_byte0 = val & 0xFF;
-
-	exp_time_byte1 = ( val >> 8 ) & 0xFF;
-
-	exp_time_byte2 = ( val >> 16 ) & 0xFF;
-
-	exp_time_byte3 = ( val >> 24 ) & 0xFF;
 
 	err = tier4_isx021_write_reg_wrapper(p_s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE0_ADDR, exp_time_byte0 );
 
