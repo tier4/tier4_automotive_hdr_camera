@@ -1,0 +1,8 @@
+使用方法：
+
+1. binary moduleのtier4-isx021-ctrl.koを他のソースコードと同じsrc directoryの下においてください。
+2. Makefile.except_ctrl_ko も同じsrc directoryにMakefileとしてcopyしてください。
+
+以降は、これまでと同じ手順です。
+
+

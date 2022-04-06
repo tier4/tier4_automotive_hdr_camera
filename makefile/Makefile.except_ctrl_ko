@@ -1,0 +1,58 @@
+HOST_ARCH       ?= $(shell uname -m | sed -e s/arm.*/arm/ -e s/aarch64.*/arm64/)
+ARCH            ?= $(shell uname -m | sed -e s/arm.*/arm/ -e s/aarch64.*/arm64/)
+PWD 		    ?= ${shell pwd}
+BUILD_DIR       ?= $(shell pwd)
+_BUILD_DIR      ?= $(shell readlink -f $(BUILD_DIR))
+MOD_INST_DIR_0	?=  $(shell cat dkms.conf | grep ^'DEST_MODULE_LOCATION\[0\]'= | cut -d '"' -f 2 | cut -d '/' -f 2 )
+
+INST_PACKAGE_NAME    ?=  $(shell cat dkms.conf | grep 'PACKAGE_NAME' | cut -d '=' -f 2 | cut -d '"' -f 2 )
+INST_PACKAGE_VERSION ?=  $(shell cat dkms.conf | grep 'PACKAGE_VERSION' | cut -d '=' -f 2 | cut -d '"' -f 2 )
+
+TIER4_ISX021_CTRL := tier4-isx021-ctrl
+
+ifdef KERNELRELEASE
+	KERNELRELEASE := $(KERNELRELEASE)
+else
+	KERNELRELEASE ?= $(shell uname -r)
+endif
+
+KERNELRELEASE_NUMBER  := $(shell echo $(KERNELRELEASE) | cut -d '-' -f 1 )
+SRC_BINARY_MODULE     :=  /usr/src/$(INST_PACKAGE_NAME)-$(INST_PACKAGE_VERSION)/$(TIER4_ISX021_CTRL)-$(KERNELRELEASE_NUMBER).ko
+DEST_MODULE_DIR       := /lib/modules/$(KERNELRELEASE)/$(MOD_INST_DIR_0)/dkms
+DEST_BINARY_MODULE    := $(DEST_MODULE_DIR)/$(TIER4_ISX021_CTRL).ko
+
+ifdef KERNEL_SRC
+  KERNEL_SRC_DIR  := $(KERNEL_SRC)
+else
+  KERNEL_SRC_DIR  ?= /lib/modules/$(shell uname -r)/build
+endif
+
+ifeq ($(ARCH), arm)
+ ifneq ($(HOST_ARCH), arm)
+   CROSS_COMPILE  ?= arm-linux-gnueabihf-
+ endif
+endif
+ifeq ($(ARCH), arm64)
+ ifneq ($(HOST_ARCH), arm64)
+   CROSS_COMPILE  ?= aarch64-linux-gnu-
+ endif
+endif
+
+ccflags-y += -DBUILD_STAMP="\"`date +'%Y-%m-%d %H:%M:%S'`\""
+
+obj-m := tier4-max9295.o tier4-max9296.o tier4-isx021.o tier4-isx021-rw-reg.o
+
+.PHONY: all
+all: binary_module modules dtbo
+
+modules:
+	$(MAKE) -C $(KERNEL_SRC_DIR) ARCH=$(ARCH) M=$(BUILD_DIR) src=$(PWD) modules
+binary_module:
+	install -d $(DEST_MODULE_DIR)
+	cp -f $(SRC_BINARY_MODULE) $(DEST_BINARY_MODULE)
+dtbo:
+	dtc -O dtb -o tier4-isx021-gmsl-device-tree-overlay.dtbo -@ tier4-isx021-gmsl-device-tree-overlay.dts
+	cp -rf tier4-isx021-gmsl-device-tree-overlay.dtbo /boot
+clean:
+	$(MAKE) -C $(KERNEL_SRC_DIR) ARCH=$(ARCH) M=$(BUILD_DIR) src=$(PWD) clean
+	# rm /boot/tier4-isx021-gmsl-device-tree-overlay.dtbo
