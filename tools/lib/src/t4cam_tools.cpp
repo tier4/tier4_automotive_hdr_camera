@@ -1,9 +1,9 @@
 // Copyright 2022 Tier IV, Inc.
-// Proprietary 
+// Proprietary
 
-#include "t4cam_tools.hpp"
 #include "c1_reg.hpp"
 #include "i2c.hpp"
+#include "t4cam_tools.hpp"
 
 static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &data_u, uint8_t &data_l, uint16_t mask)
 {
@@ -13,6 +13,65 @@ static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &d
   data_l = temp & 0xFF;
   data_u = temp >> 8;
   return;
+}
+
+int8_t C1::checkES3()
+{
+  uint8_t data = 0;
+  bool ret = false;
+
+  i2c::read16(dev_name, i2c_dev_addr, I2C_RESPONSE_MODE, &data);
+  if (data & I2C_RESPONSE_MODE_ACK)
+  {
+    fprintf(stderr, "[WARN] I2C Response Mode is NACK. Even though you may get an I2C write error, you may still be "
+                    "able to write.\n");
+    return -1;
+  }
+
+  return 0;
+}
+
+float C1::getTempature(int type)
+{
+  // TODO: add check the sensor state.
+
+  float ret;
+  if (type == 0)
+  {
+    ret = getTempatureS0();
+  }
+  else
+  {
+    ret = getTempatureS1();
+  }
+
+  return ret;
+}
+
+float C1::getTempatureS0(void)
+{
+  uint8_t l, u;
+  float data;
+
+  i2c::read16(dev_name, i2c_dev_addr, RO_CD_DU_TEMP_SEN0_OUT_L, &l);
+  i2c::read16(dev_name, i2c_dev_addr, RO_CD_DU_TEMP_SEN0_OUT_U, &u);
+  data = l + (u << 8);
+  data = data / 16 - 50;
+
+  return data;
+}
+
+float C1::getTempatureS1(void)
+{
+  uint8_t l, u;
+  float data;
+
+  i2c::read16(dev_name, i2c_dev_addr, RO_CD_DU_TEMP_SEN1_OUT_L, &l);
+  i2c::read16(dev_name, i2c_dev_addr, RO_CD_DU_TEMP_SEN1_OUT_U, &u);
+  data = l + (u << 8);
+  data = data / 16 - 50;
+
+  return data;
 }
 
 int8_t C1::setDigitalGain(int db)
@@ -58,7 +117,7 @@ int8_t C1::setHue(int deg)
   }
 
   int16_t data;
-  data =(deg / HUE_UNIT);
+  data = (deg / HUE_UNIT);
 
   i2c::write16(dev_name, i2c_dev_addr, UIHUE, data);
   return 0;
@@ -182,8 +241,7 @@ int8_t C1::setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float
 }
 int8_t C1::setExposureOffset(float offset)
 {
-
-//TODO
+// TODO
 #if 0
   if (offset < EVREF_OFFSET_MIN || EVREF_OFFSET_MAX < offset)
   {
