@@ -21,7 +21,7 @@ int8_t C1::checkES3()
   bool ret = false;
 
   i2c::read16(dev_name, i2c_dev_addr, I2C_RESPONSE_MODE, &data);
-  if (data & I2C_RESPONSE_MODE_ACK)
+  if ((data & I2C_RESPONSE_MODE_ACK) == 0)
   {
     fprintf(stderr, "[WARN] I2C Response Mode is NACK. Even though you may get an I2C write error, you may still be "
                     "able to write.\n");

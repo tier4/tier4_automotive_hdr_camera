@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
 
   p.add<float>("brightness", 'b', "set Brightness val", false);
   p.add<float>("contrast", 'c', "set Contrast val", false);
+  p.add("tempature", 't', "get Tempature val");
 #if 0
   p.add<float>("evrefoffset", 'e', "set EvrefOffset val", false);
   p.add<float>("digitalgain", 'D', "set DigitalGain val", false);
@@ -62,6 +63,11 @@ int main(int argc, char* argv[])
     float val = p.get<float>("brightness");
     std::cout << "set Brightness val:" << val << std::endl;
     c1_a.setBrightness(val);
+  }
+  if (p.exist("tempature"))
+  {
+    float val = c1_a.getTempature(0);
+    std::cout << "get tempature:" << val << std::endl;
   }
 #if 0
   if (p.exist("evrefoffset"))

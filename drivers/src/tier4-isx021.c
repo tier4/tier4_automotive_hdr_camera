@@ -937,13 +937,12 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 
 	dev_info(&client->dev, "Detected ISX021 sensor\n");
 
-#if 0
 	err = tier4_isx021_ctrl_set_response_mode(priv->s_data);
 	if(err) {
-		dev_err(dev, "[%s]: Failed set i2c response mode\n");
+		dev_err(dev, "[%s]: Failed set i2c response mode\n", __func__);
 	}
-#endif
-	return NO_ERROR;
+	
+  return NO_ERROR;
 }
 
 /* --------------------------------------------------------------------------- */
