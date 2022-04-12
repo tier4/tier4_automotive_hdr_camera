@@ -1,0 +1,7 @@
+debian
+src/*.c
+src/*.h
+src/Makefile
+src/*.dts
+
+!src/tier4-isx021-ctrl.ko
