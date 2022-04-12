@@ -1,0 +1,13 @@
+#!/bin/bash
+REPO_TOP=../../
+DEBIAN_DIR=${REPO_TOP}/drivers/debian
+SRC_DIR=${REPO_TOP}/drivers/src
+DKMS_FILE=${REPO_TOP}/drivers/dkms.conf
+MAKEFILE=./Makefile.except_ctrl_ko
+
+cp -r ${DEBIAN_DIR} ./
+cp -r ${SRC_DIR} ./
+rm -r src/tier4-isx021-ctrl.c
+cp -rf ${MAKEFILE} ./src/Makefile
+
+dpkg-buildpackage -b -rfakeroot -us -uc
