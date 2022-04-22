@@ -19,7 +19,6 @@ private:
 public:
   C1(std::string _dev_name = DEFAULT_CAM_PORT, uint8_t _dev_addr = DEFAULT_DEV_ADDR) : dev_name(_dev_name), i2c_dev_addr(_dev_addr)
   {
-    checkES3();
   }
 
   int8_t setDigitalGain(int db);

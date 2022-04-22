@@ -25,7 +25,8 @@ int main(int argc, char* argv[])
 
   p.add<int>("hue", 'h', "set Hue val", false);
   p.add<float>("saturation", 's', "set Saturation val", false);
-  p.add<std::string>("device", 'd', "set device name", false, "/dev/i2c-30");
+  p.add<std::string>("i2c-device", 'i', "set i2c device file name", false, "/dev/i2c-30");
+  p.add<std::string>("dev-addr", 'd', "set device addr", false, "0x1a");
 
   p.add<float>("brightness", 'b', "set Brightness val", false);
   p.add<float>("contrast", 'c', "set Contrast val", false);
@@ -36,9 +37,10 @@ int main(int argc, char* argv[])
 #endif
   p.parse_check(argc, argv);
 
-  std::string dev_name = p.get<std::string>("device");
+  std::string dev_name = p.get<std::string>("i2c-device");
+  uint8_t dev_addr = strtol(p.get<std::string>("dev-addr").c_str(),NULL, 0);
 
-  C1 c1_a = C1(dev_name);
+  C1 c1_a = C1(dev_name, (uint8_t)dev_addr);
 
   if (p.exist("hue"))
   {

@@ -111,7 +111,7 @@ int8_t C1::setHue(int deg)
 {
   if (deg < HUE_MIN || HUE_MAX < deg)
   {
-    fprintf(stderr, "[WARN][%s]: please set in the range of %d ≤ deg ≤ %d. Hue is not set.\n", __func__, HUE_MIN,
+    fprintf(stderr, "[WARN][%s:%x]: please set in the range of %d ≤ deg ≤ %d. Hue is not set.\n", __func__, i2c_dev_addr,HUE_MIN,
             HUE_MAX);
     return -1;
   }
