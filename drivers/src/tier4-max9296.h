@@ -164,4 +164,4 @@ void tier4_max9296_power_off(struct device *dev);
 
 /** @} */
 
-#endif /* __TIER4_MAX9296_H__ */
+#endif  /* __TIER4_MAX9296_H__ */

@@ -37,6 +37,8 @@ struct tier4_max9296_source_ctx {
 
 /* register specifics */
 
+#define MAX9296_LINK_ADDR 					0x0013
+
 #define MAX9296_REG5_ADDR 					0x0005
 #define MAX9296_CTRL0_ADDR 					0x0010
 
@@ -109,6 +111,7 @@ struct tier4_max9296_source_ctx {
 
 #define MAX9296_INVAL_ST_ID 				0xFF
 
+
 /* Use reset value as per spec, confirm with vendor */
 
 #define MAX9296_RESET_ST_ID					 0x00
@@ -145,7 +148,7 @@ struct tier4_max9296 {
 	struct regulator 	*vdd_cam_1v2;
 };
 
-#if _USE_CHECK_LINK_LOCKED_
+//#if _USE_CHECK_LINK_LOCKED_
 
 static int tier4_max9296_read_reg(struct device *dev, u16 addr, u8 *val)
 {
@@ -158,22 +161,24 @@ static int tier4_max9296_read_reg(struct device *dev, u16 addr, u8 *val)
 	memset(str_bus_num,0,4);
 	memset(str_sl_addr,0,4);
 
-	len = strlen(dev->kobj.name);
-
-	if (dev) {
-		strncpy(str_bus_num, &dev->kobj.name[0], 2);
-		strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
-	}
-
 	err = regmap_read(priv->regmap, addr, &reg_val);
 	*val = reg_val & 0xFF;
 
+	dev_dbg(dev,  "[%s ] : Max9296 I2C Read : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, *val );
+
 	if (( err == 0 ) && ( dev != NULL ) ) {
-		printk("tier4_max9296_read_reg %s  0x%s 0x%x\n", str_bus_num, str_sl_addr, addr );
+
+		len = strlen(dev->kobj.name);
+
+		if (dev) {
+			strncpy(str_bus_num, &dev->kobj.name[0], 2);
+			strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
+		}
+		dev_dbg(dev, "tier4_max9296_read_reg %s  0x%s 0x%x\n", str_bus_num, str_sl_addr, addr );
 	}
 	return err;
 }
-#endif
+//#endif
 
 static int tier4_max9296_write_reg(struct device *dev, u16 addr, u8 val)
 {
@@ -193,12 +198,13 @@ static int tier4_max9296_write_reg(struct device *dev, u16 addr, u8 val)
 		strncpy(str_bus_num, &dev->kobj.name[0], 2);
 		strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
 	}
-	
+
+	dev_dbg(dev,  "[%s] : Max9296 I2C Write : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, val );
 
 	err = regmap_write(priv->regmap, addr, val);
 
 	if (err) {
-		dev_err(dev,  "[%s] : I2C write failed.    Reg Address = 0x%x  Data= 0x%x\n", __func__, addr, val );
+		dev_err(dev,  "[%s] : Max9296 I2C write failed.    Reg Address = 0x%04X  Data= 0x%02X\n", __func__, addr, val );
 		return err;
 	}
 
@@ -398,12 +404,14 @@ ret:
 }
 EXPORT_SYMBOL(tier4_max9296_setup_link);
 
-#define MAX9296_LINK_ADDR 0x13
 
-#if _USE_CHECK_LINK_LOCKED_
+//#if _USE_CHECK_LINK_LOCKED_
 static int tier4_max9296_link_locked(struct device *dev)
 {
 	u8 val;
+
+	dev_info(dev, "[%s] : Enter tier4_max9296_link_locked().\n", __func__);
+
 	usleep_range(100, 110);
 	tier4_max9296_read_reg(dev, MAX9296_LINK_ADDR, &val);
 	if (0 == (val & 0x08)) {
@@ -411,7 +419,7 @@ static int tier4_max9296_link_locked(struct device *dev)
 	}
 	return 0;
 }
-#endif
+//#endif
 
 int tier4_max9296_setup_gpi(struct device *dev)
 {
@@ -582,6 +590,9 @@ int tier4_max9296_sdev_register(struct device *dev, struct gmsl_link_ctx *g_ctx)
 		 * to be configured with different num-csi-lanes, then this
 		 * check should be performed per port.
 		 */
+//		dev_info(dev,"[%s] : g_ctx->num_csi_lanes = 0x%0x priv->sources[%d].g_ctx->num_csi_lanes = 0x%0x \n"
+//				, __func__, g_ctx->num_csi_lanes, i, priv->sources[i].g_ctx->num_csi_lanes);
+
 		if (g_ctx->num_csi_lanes !=
 				priv->sources[i].g_ctx->num_csi_lanes) {
 			dev_err(dev,"[%s] : CSI num lanes mismatch\n", __func__);
@@ -1069,7 +1080,6 @@ static struct i2c_driver tier4_max9296_i2c_driver = {
 static int __init tier4_max9296_init(void)
 {
 	printk("MAX9296 Driver for ROScube : %s\n", BUILD_STAMP);
-
 	return i2c_add_driver(&tier4_max9296_i2c_driver);
 }
 
@@ -1082,5 +1092,7 @@ module_init(tier4_max9296_init);
 module_exit(tier4_max9296_exit);
 
 MODULE_DESCRIPTION("Dual GMSL Deserializer driver tier4_max9296");
-MODULE_AUTHOR("Sudhir Vyas <svyas@nvidia.com");
+MODULE_AUTHOR("Originaly NVIDIA Corporation");
+MODULE_AUTHOR("K.Iwasaki");
+MODULE_AUTHOR("Y.Fujii");
 MODULE_LICENSE("GPL v2");

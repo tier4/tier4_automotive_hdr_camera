@@ -1,5 +1,5 @@
-tier4-isx021-gmsl (0.9.0) unstable; urgency=low
+tier4-isx021-gmsl (1.0.0) unstable; urgency=low
 
-  * v0.9.0 Release
+  * v1.0.0 release.
 
-  -- Y.Fujii <ykfj4096@gmail.com> Wed Mar  9 20:51:46 JST 2022
+ -- autoware <autoware@autoware-desktop>  Fri, 15 Apr 2022 14:30:20 +0900

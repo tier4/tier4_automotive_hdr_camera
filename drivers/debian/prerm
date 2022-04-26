@@ -2,12 +2,20 @@
 
 #!/bin/sh
 NAME=tier4-isx021-gmsl
-VERSION=0.9.0
+VERSION=1.0.0
+KERNEL_REL=$(uname -r)
 set -e
 case "$1" in
     remove|upgrade|deconfigure)
       if [  "`dkms status -m $NAME`" ]; then
          dkms remove -m $NAME -v $VERSION --all
+         rm -rf /usr/src/$NAME-$VERSION
+         rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-isx021.ko
+         rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-max9295.ko
+         rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-max9296.ko
+         rm -f /lib/firmware/tier4-isx021.bin
+         rm -f /etc/modules-load.d/$NAME.conf
+         rm -f /etc/modprobe.d/tier4-isx021.conf
          rm -rf /boot/tier4-isx021-gmsl-device-tree-overlay.dtbo
       fi
     ;;

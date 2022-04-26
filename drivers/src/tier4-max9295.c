@@ -148,8 +148,28 @@ static int tier4_max9295_read_reg(struct device *dev, u16 addr, u8 *val)
 	int err = 0;
 	u32 reg_val = 0;
 	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+	char str_bus_num[4], str_sl_addr[4];
+	int	len = 0;
+
+	memset(str_bus_num,0,4);
+	memset(str_sl_addr,0,4);
+
 	err = regmap_read(priv->regmap, addr, &reg_val);
+
 	*val = reg_val & 0xFF;
+
+	dev_dbg(dev,  "[%s ] : Max9295 I2C Read  : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, *val );
+
+	if (( err == 0 ) && ( dev != NULL ) ) {
+
+		len = strlen(dev->kobj.name);
+
+		if (dev) {
+			strncpy(str_bus_num, &dev->kobj.name[0], 2);
+			strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
+		}
+		dev_dbg(dev, "tier4_max9295_read_reg %s  0x%s 0x%x.\n", str_bus_num, str_sl_addr, addr );
+	}
 	return err;
 }
 
@@ -171,10 +191,12 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 		strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
 	}
 
+	dev_dbg(dev,  "[%s] : Max9295 I2C Write : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, val );
+
 	err = regmap_write(priv->regmap, addr, val);
 
 	if (err) {
-		dev_err(dev, "[%s] : I2C write failed.    Reg Address = 0x%x  Data= 0x%x\n",
+		dev_err(dev, "[%s] : Max9295 I2C write failed.    Reg Address = 0x%04X  Data= 0x%02X.\n",
 			__func__, addr, val);
 	}
 
@@ -207,6 +229,7 @@ int tier4_max9295_setup_streaming(struct device *dev)
 	struct map_ctx map_pipe_dtype[] = {
 		{GMSL_CSI_DT_YUV_8, MAX9295_PIPE_Z_DT_ADDR, 0x1E,		// For YUV8
 			MAX9295_ST_ID_2},
+//		{GMSL_CSI_DT_UED_U1, MAX9295_PIPE_X_DT_ADDR, 0x1e,		// may be wrong
 		{GMSL_CSI_DT_UED_U1, MAX9295_PIPE_X_DT_ADDR, 0x30,
 			MAX9295_ST_ID_0},
 		{GMSL_CSI_DT_EMBED, MAX9295_PIPE_Y_DT_ADDR, 0x12,
@@ -661,5 +684,7 @@ module_init(tier4_max9295_init);
 module_exit(tier4_max9295_exit);
 
 MODULE_DESCRIPTION("GMSL Serializer driver tier4_max9295");
-MODULE_AUTHOR("Sudhir Vyas <svyas@nvidia.com>");
+MODULE_AUTHOR("Originaly NVIDIA Corporation");
+MODULE_AUTHOR("K.Iwasaki");
+MODULE_AUTHOR("Y.Fujii");
 MODULE_LICENSE("GPL v2");
