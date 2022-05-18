@@ -1159,21 +1159,20 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 		dev_info(dev, "[%s] : Prameter[enable_distortion_correction] = 1 .\n", __func__ );
 	}
 
-	if ( priv->distortion_correction == true ) {
+  err = tier4_isx021_enable_distortion_correction(tc_dev, priv->distortion_correction);
+  if (err) {
+    dev_err(dev, "[%s] : Failed to enable Distortion Correction.\n", __func__);
+    goto exit;
+  } else {
+    if ( priv->distortion_correction == true ) {
+      dev_info(dev, "[%s] : Enabled Distortion Correction.\n", __func__ );
+    } else {
+      dev_info(dev, "[%s] : Disabled Distortion Correction.\n", __func__ );
+    }
+  }
 
-		err = tier4_isx021_enable_distortion_correction(tc_dev, true);
-		if (err) {
-			dev_err(dev, "[%s] : Failed to enable Distortion Correction.\n", __func__);
-			goto exit;
-		} else {
-			dev_info(dev, "[%s] : Enabled Distortion Correction.\n", __func__ );
-		}
+  msleep(20);
 
-		msleep(20);
-
-	} else {
-		dev_info(dev, "[%s] : Disabled Distortion Correction.\n", __func__ );
-	}
 
 	if ( trigger_mode == 1 ) {
 		priv->fsync_mode = true;
