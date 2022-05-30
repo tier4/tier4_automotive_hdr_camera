@@ -366,6 +366,7 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 
 	struct camera_common_data 	*s_data = priv->s_data;
 	struct device 				*dev	= s_data->dev;
+	
 
 	err = tier4_max9296_setup_gpi(priv->dser_dev);
 
@@ -1042,11 +1043,13 @@ static int tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_
 
 	usleep_range(35000,36000);
 
+#if 0
 	err = tier4_isx021_write_reg_with_verify(tc_dev->s_data, TIER4_ISX021_REG_68_ADDR, 0xF5);
 	if ( err ) {
 		dev_err(tc_dev->dev,"[%s] : Failed to lock access to Serial EEPROM.", __func__);
 		return err;
 	}
+#endif
 
 	return err;
 }
@@ -1149,10 +1152,30 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 	} else {
 		dev_info(dev, "[%s] : Disabled Auto Exposure.\n", __func__ );
 	}
-
 	if (err) {
 		dev_err(dev, "[%s] : Failed to make Digital Gain set to the default value.\n", __func__);
 	}
+	
+  if ( trigger_mode == 1 ) {
+		priv->fsync_mode = true;
+		dev_info(dev, "[%s] : Enabled Slave(fsync triggered) mode.\n", __func__ );
+	}
+
+//	dev_info(dev, "[%s] : fsync-mode in DTB = %d\n", __func__,  priv->fsync_mode );
+
+	if ( priv->fsync_mode == true ) {
+		err = tier4_isx021_set_fsync_trigger_mode(priv);
+		if (err) {
+			dev_err(dev, "[%s] : Failed to put Camera sensor into Slave(fsync triggered) mode.\n", __func__);
+			goto exit;
+		} else {
+			dev_info(dev, "[%s] : Put Camera sensor into Slave(fsync triggered) Mode.\n", __func__);
+		}
+	} else {
+		dev_info(dev, "[%s] :Put Camera sensor into Master(free running) Mode.\n", __func__);
+	}
+  msleep(20);
+
 
 	if ( enable_distortion_correction == 1 ) {
 		priv->distortion_correction = true;
@@ -1173,26 +1196,6 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 
   msleep(20);
 
-
-	if ( trigger_mode == 1 ) {
-		priv->fsync_mode = true;
-		dev_info(dev, "[%s] : Enabled Slave(fsync triggered) mode.\n", __func__ );
-	}
-
-//	dev_info(dev, "[%s] : fsync-mode in DTB = %d\n", __func__,  priv->fsync_mode );
-
-	if ( priv->fsync_mode == true ) {
-		err = tier4_isx021_set_fsync_trigger_mode(priv);
-		if (err) {
-			dev_err(dev, "[%s] : Failed to put Camera sensor into Slave(fsync triggered) mode.\n", __func__);
-			goto exit;
-		} else {
-			dev_info(dev, "[%s] : Put Camera sensor into Slave(fsync triggered) Mode.\n", __func__);
-		}
-		msleep(20);
-	} else {
-		dev_info(dev, "[%s] :Put Camera sensor into Master(free running) Mode.\n", __func__);
-	}
 
 	err = tier4_max9296_start_streaming(priv->dser_dev, dev);
 	if (err) {
