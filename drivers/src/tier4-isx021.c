@@ -998,60 +998,58 @@ fail:
 // --------------------------------------------------------------------------------------
 static int tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_dev, bool is_enabled)
 {
-	int err = 0;
+  int err = 0;
+  u8 r_val = 0;
 
-	err = tier4_isx021_write_reg_with_verify(tc_dev->s_data, TIER4_ISX021_REG_68_ADDR, 0x02);
-
+    err = tier4_isx021_read_reg(tc_dev->s_data,TIER4_ISX021_REG_68_ADDR, &r_val);
+    if(r_val != 0x02 || r_val != 0x04){
+      err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_68_ADDR, 0x02);
+    }
+ 
+    err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_57_ADDR, 0x00);
+      
   	usleep_range(35000,36000);
+    
+    if(is_enabled){
 
-	if ( is_enabled == true ) {
+      err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_69_ADDR, 0x01);
+      if ( err ) {
+        dev_err(tc_dev->dev,"[%s] : Failed to enable Distortion Correction.", __func__);
+        return err;
+      }
 
-			err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_69_ADDR, 0x01);
-			if ( err ) {
-				dev_err(tc_dev->dev,"[%s] : Failed to enable Distortion Correction.", __func__);
-				return err;
-			}
+      usleep_range(35000,36000);
 
-    		usleep_range(35000,36000);
+      err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_70_ADDR, 0x01);
+      if ( err ) {
+        dev_err(tc_dev->dev,"[%s] : Failed to enable Distortion Correction.", __func__);
+        return err;
+      }
 
-			err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_70_ADDR, 0x01);
-			if ( err ) {
-				dev_err(tc_dev->dev,"[%s] : Failed to enable Distortion Correction.", __func__);
-				return err;
-			}
+    } else{
 
-	} else {
+      dev_info(tc_dev->dev,"[%s] : Disabled Distortion Correction.", __func__);
 
-		dev_info(tc_dev->dev,"[%s] : Disabled Distortion Correction.", __func__);
+      err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_69_ADDR, 0x00);
+      if ( err ) {
+        dev_err(tc_dev->dev,"[%s] : Failed to disable Distortion Correction.", __func__);
+        return err;
+      }
 
-		err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_69_ADDR, 0x00);
-		if ( err ) {
-			dev_err(tc_dev->dev,"[%s] : Failed to disable Distortion Correction.", __func__);
-			return err;
-		}
+      usleep_range(35000,36000);
 
-		usleep_range(35000,36000);
+      err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_70_ADDR, 0x00);
+      if ( err ) {
+        dev_err(tc_dev->dev,"[%s] : Failed to disable Distortion Correction.", __func__);
+        return err;
+      }
 
-		err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_70_ADDR, 0x00);
-		if ( err ) {
-			dev_err(tc_dev->dev,"[%s] : Failed to disable Distortion Correction.", __func__);
-			return err;
-		}
+    }
 
-		return err;
-	}
+    usleep_range(35000,36000);
+    err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_57_ADDR, 0x80);
 
-	usleep_range(35000,36000);
-
-#if 0
-	err = tier4_isx021_write_reg_with_verify(tc_dev->s_data, TIER4_ISX021_REG_68_ADDR, 0xF5);
-	if ( err ) {
-		dev_err(tc_dev->dev,"[%s] : Failed to lock access to Serial EEPROM.", __func__);
-		return err;
-	}
-#endif
-
-	return err;
+    return err;
 }
 // --------------------------------------------------------------------------------------
 //  If you add new ioctl VIDIOC_S_EXT_CTRLS function, 
@@ -1177,24 +1175,6 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
   msleep(20);
 
 
-	if ( enable_distortion_correction == 1 ) {
-		priv->distortion_correction = true;
-		dev_info(dev, "[%s] : Prameter[enable_distortion_correction] = 1 .\n", __func__ );
-	}
-
-  err = tier4_isx021_enable_distortion_correction(tc_dev, priv->distortion_correction);
-  if (err) {
-    dev_err(dev, "[%s] : Failed to enable Distortion Correction.\n", __func__);
-    goto exit;
-  } else {
-    if ( priv->distortion_correction == true ) {
-      dev_info(dev, "[%s] : Enabled Distortion Correction.\n", __func__ );
-    } else {
-      dev_info(dev, "[%s] : Disabled Distortion Correction.\n", __func__ );
-    }
-  }
-
-  msleep(20);
 
 
 	err = tier4_max9296_start_streaming(priv->dser_dev, dev);
@@ -1202,6 +1182,16 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 		dev_err(dev, "[%s] : tier4_max9296_start_stream() failed\n", __func__);
 		return err;
 	}
+
+  if ( enable_distortion_correction == 1 ) {
+    priv->distortion_correction = true;
+    dev_info(dev, "[%s] : Prameter[enable_distortion_correction] = 1 .\n", __func__ );
+  }
+  err = tier4_isx021_enable_distortion_correction(tc_dev, priv->distortion_correction);
+  if (err) {
+    dev_err(dev, "[%s] : Failed to enable Distortion Correction.\n", __func__);
+    goto exit;
+  }
 
 	dev_info(dev, "[%s] : Started Camera streaming.\n", __func__);
 
