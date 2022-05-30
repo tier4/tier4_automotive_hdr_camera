@@ -1,3 +1,9 @@
+tier4-isx021-gmsl (1.0.2) unstable; urgency=medium
+
+  * fix to confilct fsync and distortion collection
+
+ -- DESKTOP-CCEP7KK <yukke@DESKTOP-CCEP7KK.localdomain>  Mon, 30 May 2022 17:34:47 +0900
+
 tier4-isx021-gmsl (1.0.1) unstable; urgency=low
 
   * 
