@@ -1,0 +1,17 @@
+tier4-isx021-gmsl (1.0.2) unstable; urgency=medium
+
+  * fix to confilct fsync and distortion collection
+
+ -- DESKTOP-CCEP7KK <yukke@DESKTOP-CCEP7KK.localdomain>  Mon, 30 May 2022 17:34:47 +0900
+
+tier4-isx021-gmsl (1.0.1) unstable; urgency=low
+
+  * 
+
+ -- yukke <yukke@yukke-ThinkPad-X1-Extreme>  Tue, 17 May 2022 18:20:08 +0900
+
+tier4-isx021-gmsl (1.0.0) unstable; urgency=low
+
+  * v1.0.0 release.
+
+ -- autoware <autoware@autoware-desktop>  Fri, 15 Apr 2022 14:30:20 +0900

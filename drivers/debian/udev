@@ -1,0 +1,8 @@
+SUBSYSTEM=="video4linux", ATTR{name}=="vi-output, tier4_isx021 30-001b", SYMLINK+= "gmsl/tier4-isx021-cam1"
+SUBSYSTEM=="video4linux", ATTR{name}=="vi-output, tier4_isx021 30-001c", SYMLINK+= "gmsl/tier4-isx021-cam2"
+SUBSYSTEM=="video4linux", ATTR{name}=="vi-output, tier4_isx021 31-001b", SYMLINK+= "gmsl/tier4-isx021-cam3"
+SUBSYSTEM=="video4linux", ATTR{name}=="vi-output, tier4_isx021 31-001c", SYMLINK+= "gmsl/tier4-isx021-cam4"
+SUBSYSTEM=="video4linux", ATTR{name}=="vi-output, tier4_isx021 32-001b", SYMLINK+= "gmsl/tier4-isx021-cam5"
+SUBSYSTEM=="video4linux", ATTR{name}=="vi-output, tier4_isx021 32-001c", SYMLINK+= "gmsl/tier4-isx021-cam6"
+SUBSYSTEM=="video4linux", ATTR{name}=="vi-output, tier4_isx021 33-001b", SYMLINK+= "gmsl/tier4-isx021-cam7"
+SUBSYSTEM=="video4linux", ATTR{name}=="vi-output, tier4_isx021 33-001c", SYMLINK+= "gmsl/tier4-isx021-cam8"
