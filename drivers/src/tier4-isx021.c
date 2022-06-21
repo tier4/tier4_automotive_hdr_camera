@@ -46,6 +46,7 @@
 #define ISX021_MAX_GAIN         					48
 
 #define ISX021_MIN_EXPOSURE_TIME   					0
+#define ISX021_MID_EXPOSURE_TIME   					11010	// 11 milisecond
 #define ISX021_MAX_EXPOSURE_TIME   					33000	// 33 milisecond 
 
 #define ISX021_GAIN_DEFAULT_VALUE					6
@@ -123,8 +124,14 @@
 
 // Exposure
 
+#define ISX021_EXPOSURE_SHUTTER_MIN_UNIT_ADDR  0xAC4C
 #define ISX021_EXPOSURE_SHUTTER1_UNIT_ADDR  0xAC4D
 #define ISX021_EXPOSURE_SHUTTER2_UNIT_ADDR  0xAC4E
+
+#define ISX021_EXPOSURE_SHUTTER_MIN_TIME_BYTE0_ADDR  0xAC40
+#define ISX021_EXPOSURE_SHUTTER_MIN_TIME_BYTE1_ADDR  0xAC41
+#define ISX021_EXPOSURE_SHUTTER_MIN_TIME_BYTE2_ADDR  0xAC42
+#define ISX021_EXPOSURE_SHUTTER_MIN_TIME_BYTE3_ADDR  0xAC43
 
 #define ISX021_EXPOSURE_SHUTTER1_TIME_BYTE0_ADDR  0xAC44
 #define ISX021_EXPOSURE_SHUTTER1_TIME_BYTE1_ADDR  0xAC45
@@ -250,13 +257,19 @@ static const struct regmap_config tier4_sensor_regmap_config = {
 };
 
 
-static int trigger_mode ;
-static int enable_auto_exposure;
-static int enable_distortion_correction;
+static int trigger_mode = 0xCAFE;
+static int enable_auto_exposure = 0xCAFE;
+static int enable_distortion_correction = 0xCAFE;
+static int shutter_time_min = ISX021_MIN_EXPOSURE_TIME;
+static int shutter_time_mid = ISX021_MID_EXPOSURE_TIME;
+static int shutter_time_max = ISX021_MAX_EXPOSURE_TIME;
 
-module_param(trigger_mode, int, 0644);
-module_param(enable_auto_exposure, int, 0644);
-module_param(enable_distortion_correction, int, 0644);
+module_param(trigger_mode, int, S_IRUGO);
+module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
+module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
+module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
+module_param(shutter_time_mid, int, S_IRUGO | S_IWUSR);
+module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
 
 static inline int tier4_isx021_read_reg(struct camera_common_data *s_data, u16 addr, u8 *val)
 {
@@ -265,7 +278,8 @@ static inline int tier4_isx021_read_reg(struct camera_common_data *s_data, u16 a
 	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
 
 
-	err = regmap_read(s_data->regmap, priv->firmware_buffer[addr], &reg_val);
+	//err = regmap_read(s_data->regmap, priv->firmware_buffer[addr], &reg_val);
+	err = regmap_read(s_data->regmap, addr, &reg_val);
 
 	*val = reg_val & 0xFF;
 
@@ -282,10 +296,12 @@ static int tier4_isx021_write_reg(struct camera_common_data *s_data, u16 addr, u
 	int 				err 	= 0;
 	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
 
-	err = regmap_write(s_data->regmap, priv->firmware_buffer[addr], val);
+	//err = regmap_write(s_data->regmap, priv->firmware_buffer[addr], val);
+	err = regmap_write(s_data->regmap, addr, val);
 
 	if (err) {
-		dev_err(s_data->dev,  "[%s] : I2C write failed. Reg Address = 0x%04X  Data = 0x%02X\n", __func__, priv->firmware_buffer[addr], val);
+		//dev_err(s_data->dev,  "[%s] : I2C write failed. Reg Address = 0x%04X  Data = 0x%02X\n", __func__, priv->firmware_buffer[addr], val);
+		dev_err(s_data->dev,  "[%s] : I2C write failed. Reg Address = 0x%04X  Data = 0x%02X\n", __func__, addr, val);
 	}
 
 	return err;
@@ -299,19 +315,23 @@ static int tier4_isx021_write_reg_with_verify(struct camera_common_data *s_data,
 	int 				err 	= 0;
 	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
 
-	err = regmap_write(s_data->regmap, priv->firmware_buffer[addr], val8);
+	//err = regmap_write(s_data->regmap, priv->firmware_buffer[addr], val8);
+	err = regmap_write(s_data->regmap, addr, val8);
 
 	usleep_range(10000,11000);
 
-	err = regmap_read(s_data->regmap, priv->firmware_buffer[addr], &r_val32);
+	//err = regmap_read(s_data->regmap, priv->firmware_buffer[addr], &r_val32);
+	err = regmap_read(s_data->regmap, addr, &r_val32);
 
 	r_val8 = r_val32 & 0xFF;
 
 	if (err) {
-		dev_err(s_data->dev,  "[%s] : Failed at I2C Read Reg. Reg Address[0x%04X]  Read Data[0x%02X]\n", __func__, priv->firmware_buffer[addr], r_val8);
+		//dev_err(s_data->dev,  "[%s] : Failed at I2C Read Reg. Reg Address[0x%04X]  Read Data[0x%02X]\n", __func__, priv->firmware_buffer[addr], r_val8);
+		dev_err(s_data->dev,  "[%s] : Failed at I2C Read Reg. Reg Address[0x%04X]  Read Data[0x%02X]\n", __func__, addr, r_val8);
 	} else {
 		if ( val8 != r_val8 ) {
-			dev_err(s_data->dev,  "[%s] : Failed at I2C Reg Read and Verify. Reg Address[0x%04X], Expected Data[0x%02X], Actual Read Data[0x%02X]\n", __func__, priv->firmware_buffer[addr], val8, r_val8);
+			//dev_err(s_data->dev,  "[%s] : Failed at I2C Reg Read and Verify. Reg Address[0x%04X], Expected Data[0x%02X], Actual Read Data[0x%02X]\n", __func__, priv->firmware_buffer[addr], val8, r_val8);
+			dev_err(s_data->dev,  "[%s] : Failed at I2C Reg Read and Verify. Reg Address[0x%04X], Expected Data[0x%02X], Actual Read Data[0x%02X]\n", __func__, addr, val8, r_val8);
 			err = -EINVAL;
 		}
 	}
@@ -868,22 +888,53 @@ static int tier4_isx021_set_auto_exposure(struct tegracam_device *tc_dev)
 		goto fail;
 	}
 
+	// Set min exposure time unit
+	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER_MIN_UNIT_ADDR, ISX021_AE_TIME_UNIT_MICRO_SECOND );
+
+	if (err) {
+		goto fail;
+	}
+
+	// Set mid exposure time unit
+	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER1_UNIT_ADDR, ISX021_AE_TIME_UNIT_MICRO_SECOND );
+
+	if (err) {
+		goto fail;
+	}
+
+	// Set max exposure time unit
 	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_UNIT_ADDR, ISX021_AE_TIME_UNIT_MICRO_SECOND );
 
 	if (err) {
 		goto fail;
 	}
 
-	// Set max exposure time
-
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE0_ADDR, ISX021_MAX_EXPOSURE_TIME & 0xFF );
-
+	// Set min exposure time
+	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER_MIN_TIME_BYTE0_ADDR, shutter_time_min & 0xFF);
+	if (err) {
+		goto fail;
+	}
+	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER_MIN_TIME_BYTE1_ADDR, (shutter_time_min >> 8) & 0xFF);
 	if (err) {
 		goto fail;
 	}
 
-	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE1_ADDR, ( ISX021_MAX_EXPOSURE_TIME  >> 8 ) & 0xFF );
+	// Set mid exposure time
+	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER1_TIME_BYTE0_ADDR, shutter_time_mid & 0xFF);
+	if (err) {
+		goto fail;
+	}
+	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER1_TIME_BYTE1_ADDR, (shutter_time_mid >> 8) & 0xFF);
+	if (err) {
+		goto fail;
+	}
 
+	// Set max exposure time
+	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE0_ADDR, shutter_time_max & 0xFF);
+	if (err) {
+		goto fail;
+	}
+	err = tier4_isx021_write_reg(s_data, ISX021_EXPOSURE_SHUTTER2_TIME_BYTE1_ADDR, (shutter_time_max >> 8) & 0xFF);
 	if (err) {
 		goto fail;
 	}
@@ -1174,9 +1225,6 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 	}
   msleep(20);
 
-
-
-
 	err = tier4_max9296_start_streaming(priv->dser_dev, dev);
 	if (err) {
 		dev_err(dev, "[%s] : tier4_max9296_start_stream() failed\n", __func__);
@@ -1298,34 +1346,40 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 		priv->fsync_mode = false;
 	}
 
-	err = of_property_read_string(node, "distortion-correction", &str_value);
 
-	if (err < 0) {
-		dev_err(dev, "[%s] : No distortion-correction found\n", __func__);
-		goto error;
-	}
+  if(enable_distortion_correction == 0xCAFE){
+    // if not set kernel param, read device tree param
+    err = of_property_read_string(node, "distortion-correction", &str_value);
+    if (err < 0) {
+      dev_err(dev, "[%s] : No distortion-correction found. set enable_distortion-correction = true\n", __func__);
+    }else{
+      if (!strcmp(str_value, "true")) {
+        enable_distortion_correction = 1;
+      } else {
+        enable_distortion_correction = 0;
+      }
+    }
+  }
+  priv->distortion_correction = enable_distortion_correction != 0? true:false;
 
-	if (!strcmp(str_value, "true")) {
-		priv->distortion_correction = true;
-	} else {
-		priv->distortion_correction = false;
-	}
 
-	err = of_property_read_string(node, "auto-exposure", &str_value);
+  if(enable_auto_exposure == 0xCAFE){
+    // if not set kernel param, read device tree param
+    err = of_property_read_string(node, "auto-exposure", &str_value);
+    if (err < 0) {
+      dev_err(dev, "[%s] : No auto-exposure mode found. set enable_auto_exposure = true\n", __func__);
+    }else{
+      if (!strcmp(str_value, "true")) {
+        enable_auto_exposure = 1;
+      } else {
+        enable_auto_exposure = 0;
+      }
+    }
+  }
+  priv->auto_exposure = enable_auto_exposure != 0? true: false;
 
-	if (err < 0) {
-		dev_err(dev, "[%s] : Inavlid Exposure mode.\n", __func__);
-		goto error;
-	}
-
-	if (!strcmp(str_value, "true")) {
-		priv->auto_exposure = true;
-	} else {
-		priv->auto_exposure = false;
-	}
 
 	ser_node = of_parse_phandle(node, "nvidia,gmsl-ser-device", 0);
-
 	if (ser_node == NULL) {
 		dev_err(dev, "[%s] : Missing %s handle\n", __func__, "nvidia,gmsl-ser-device");
 		goto error;
