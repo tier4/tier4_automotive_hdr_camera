@@ -36,6 +36,8 @@
 
 #include <media/tegracam_core.h>
 
+#define USE_FIRMWARE
+
 // Register Address
 
 #define	ISX021_SG_MODE_INTERNAL_SYNC				0
@@ -276,15 +278,20 @@ static inline int tier4_isx021_read_reg(struct camera_common_data *s_data, u16 a
 	int err 	= 0;
 	u32 reg_val = 0;
 	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
+  u16 reg_addr = 0;
 
+#ifdef USE_FIRMWARE
+  reg_addr = priv->firmware_buffer[addr];
+#else
+  reg_addr = addr;
+#endif
 
-	//err = regmap_read(s_data->regmap, priv->firmware_buffer[addr], &reg_val);
-	err = regmap_read(s_data->regmap, addr, &reg_val);
+  err = regmap_read(s_data->regmap, reg_addr, &reg_val);
 
 	*val = reg_val & 0xFF;
 
 	if (err) {
-		dev_err(s_data->dev, "[%s ] : ISX021 I2C Read failed. Address = 0x%04X\n", __func__, addr);
+		dev_err(s_data->dev, "[%s ] : ISX021 I2C Read failed. Address = 0x%04X\n", __func__, reg_addr);
 	} 
 
 	return err;
@@ -295,13 +302,18 @@ static int tier4_isx021_write_reg(struct camera_common_data *s_data, u16 addr, u
 
 	int 				err 	= 0;
 	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
+  u16 reg_addr = 0;
 
-	//err = regmap_write(s_data->regmap, priv->firmware_buffer[addr], val);
-	err = regmap_write(s_data->regmap, addr, val);
+#ifdef USE_FIRMWARE
+  reg_addr = priv->firmware_buffer[addr];
+#else
+  reg_addr = addr;
+#endif
+
+  err = regmap_write(s_data->regmap, reg_addr, val);
 
 	if (err) {
-		//dev_err(s_data->dev,  "[%s] : I2C write failed. Reg Address = 0x%04X  Data = 0x%02X\n", __func__, priv->firmware_buffer[addr], val);
-		dev_err(s_data->dev,  "[%s] : I2C write failed. Reg Address = 0x%04X  Data = 0x%02X\n", __func__, addr, val);
+		dev_err(s_data->dev,  "[%s] : I2C write failed. Reg Address = 0x%04X  Data = 0x%02X\n", __func__, reg_addr, val);
 	}
 
 	return err;
@@ -314,24 +326,27 @@ static int tier4_isx021_write_reg_with_verify(struct camera_common_data *s_data,
 	u8					r_val8;
 	int 				err 	= 0;
 	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
+  u16 reg_addr = 0;
 
-	//err = regmap_write(s_data->regmap, priv->firmware_buffer[addr], val8);
-	err = regmap_write(s_data->regmap, addr, val8);
+#ifdef USE_FIRMWARE
+  reg_addr = priv->firmware_buffer[addr];
+#else
+  reg_addr = addr;
+#endif
+
+	err = regmap_write(s_data->regmap, reg_addr, val8);
 
 	usleep_range(10000,11000);
 
-	//err = regmap_read(s_data->regmap, priv->firmware_buffer[addr], &r_val32);
-	err = regmap_read(s_data->regmap, addr, &r_val32);
+	err = regmap_read(s_data->regmap, reg_addr, &r_val32);
 
 	r_val8 = r_val32 & 0xFF;
 
 	if (err) {
-		//dev_err(s_data->dev,  "[%s] : Failed at I2C Read Reg. Reg Address[0x%04X]  Read Data[0x%02X]\n", __func__, priv->firmware_buffer[addr], r_val8);
-		dev_err(s_data->dev,  "[%s] : Failed at I2C Read Reg. Reg Address[0x%04X]  Read Data[0x%02X]\n", __func__, addr, r_val8);
+		dev_err(s_data->dev,  "[%s] : Failed at I2C Read Reg. Reg Address[0x%04X]  Read Data[0x%02X]\n", __func__, reg_addr, r_val8);
 	} else {
 		if ( val8 != r_val8 ) {
-			//dev_err(s_data->dev,  "[%s] : Failed at I2C Reg Read and Verify. Reg Address[0x%04X], Expected Data[0x%02X], Actual Read Data[0x%02X]\n", __func__, priv->firmware_buffer[addr], val8, r_val8);
-			dev_err(s_data->dev,  "[%s] : Failed at I2C Reg Read and Verify. Reg Address[0x%04X], Expected Data[0x%02X], Actual Read Data[0x%02X]\n", __func__, addr, val8, r_val8);
+			dev_err(s_data->dev,  "[%s] : Failed at I2C Reg Read and Verify. Reg Address[0x%04X], Expected Data[0x%02X], Actual Read Data[0x%02X]\n", __func__, reg_addr, val8, r_val8);
 			err = -EINVAL;
 		}
 	}
