@@ -1,3 +1,9 @@
+tier4-isx021-gmsl (1.0.3) focal; urgency=medium
+
+  * Add feature to fix exposure time
+
+ -- manato.hirabayashi <manatohirabayashi@npc2109058>  Wed, 29 Jun 2022 18:19:14 +0900
+
 tier4-isx021-gmsl (1.0.2) unstable; urgency=medium
 
   * fix to confilct fsync and distortion collection
