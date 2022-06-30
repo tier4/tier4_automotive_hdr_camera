@@ -22,7 +22,7 @@ $> dpkg-buildpackage -b -rfakeroot -us -uc
 ```
 $> cd ..
 $> sudo apt update
-$> sudo apt install ./tier4-isx021-gmsl_0.9.0_arm64.deb
+$> sudo apt install ./tier4-isx021-gmsl_1.0.3_arm64.deb
 ```
 
 ## Confirm  /boot/tier4-isx021-gmsl-device-tree-overlay.dtbo exists
