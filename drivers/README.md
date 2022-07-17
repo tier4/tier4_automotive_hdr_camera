@@ -11,6 +11,16 @@ $> sudo apt update
 $> sudo apt install make build-essential debhelper debmake devscripts dkms
 ```
 
+Execute a script to hide register value and overwrite sources by the results
+
+```
+$> cd ./tools
+$> python3 gen_firmware.py ../src/tier4-isx021.c
+$> cp ./tier4-isx021.c_out_<timestamp> ../src/tier4-isx021.c
+$> cp ./tier4-isx021.bin_<timestamp> ../src/tier4-isx021.bin
+$> cd ..
+```
+
 ## Build debian-dkms package
 
 ```
