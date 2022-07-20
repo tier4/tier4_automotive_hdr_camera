@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#include <linux/version.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
 #include <linux/gpio.h>
@@ -29,6 +31,10 @@
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/of_gpio.h>
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
+#include <linux/kernel_read_file.h>
+#endif
 
 #include "tier4-max9295.h"
 #include "tier4-max9296.h"
@@ -486,9 +492,6 @@ static int tier4_isx021_set_response_mode(struct tier4_isx021 *priv)
 	usleep_range(100000, 110000); 	// For ES3
 	
 	err = tier4_isx021_read_reg(s_data,ISX021_I2C_RESPONSE_MODE_ADDR, &r_val);
-	if (err) {
-		goto error_exit;
-	}
 
 	if ( r_val == 0x04 ) {
 		priv->es_number = 2;
@@ -496,18 +499,10 @@ static int tier4_isx021_set_response_mode(struct tier4_isx021 *priv)
 		priv->es_number = 3;
  	}
 
-//	err = tier4_isx021_write_reg(s_data, ISX021_I2C_RESPONSE_MODE_ADDR, 0x04);
 	err = tier4_isx021_write_reg(s_data, ISX021_I2C_RESPONSE_MODE_ADDR, 0x06);
-
-	if (err) {
-		goto error_exit;
-	}
 
 	usleep_range(100000, 110000);	// For ES3
 	err = tier4_isx021_write_reg(s_data, ISX021_MODE_SET_F_ADDR, 0x80);
-	if (err) {
-		goto error_exit;
-	}
 
 error_exit:
 
@@ -1573,8 +1568,6 @@ error:
 
 static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
-    loff_t 	size;
-    size_t 	msize = INT_MAX;
 	int 	err = 0;
 	char 	*path = FIRMWARE_BIN_FILE;
 	void	*firmware_buffer;
@@ -1584,25 +1577,30 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 	struct 	tegracam_device *tc_dev;
 	struct 	tier4_isx021 	*priv;
 
-	enum 	kernel_read_file_id krf_id = READING_FIRMWARE;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,10,65)
+  loff_t 	size;
+#endif
 
 	dev_info(dev, "[%s] : Probing V4L2 Sensor.\n", __func__);
 
 	if (!IS_ENABLED(CONFIG_OF) || !node) {
-		return -EINVAL;
+		err = -EINVAL;
+		goto errret;
 	}
 
 	priv = devm_kzalloc(dev, sizeof(struct tier4_isx021), GFP_KERNEL);
 
 	if (!priv) {
 		dev_err(dev, "[%s] : Unable to allocate Memory!\n", __func__);
-		return -ENOMEM;
+		err = -ENOMEM;
+		goto errret;
 	}
 
 	tc_dev = devm_kzalloc(dev, sizeof(struct tegracam_device), GFP_KERNEL);
 
 	if (!tc_dev) {
-		return -ENOMEM;
+		err = -ENOMEM;
+		goto errret;
 	}
 
 	priv->i2c_client = tc_dev->client = client;
@@ -1620,15 +1618,23 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 
 	if (!firmware_buffer) {
 		dev_err(dev, "[%s] : Failed to allocate firmware buffer\n", __func__);
-		return -ENOMEM;
+		err = -ENOMEM;
+		goto errret;
 	}
 
-	err = kernel_read_file_from_path(path, &firmware_buffer, &size, msize, krf_id);		// size : number of bytes actually read
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
+	err = kernel_read_file_from_path(path, 0, &firmware_buffer, INT_MAX, NULL, READING_POLICY); //err is errono and number of bytes actually read
+	if (!err) {
+		dev_err(dev, "Failed loading %s with error %d\n", path, err);
+		goto errret;
+  }
+#else
+	err = kernel_read_file_from_path(path, &firmware_buffer, &size, INT_MAX, READLING_FIRMWARE);		// size : number of bytes actually read
 	if (err) {
 		dev_err(dev, "Failed loading %s with error %d\n", path, err);
-		return err;
+		goto errret;
 	}
+#endif
 
 	priv->firmware_buffer = (u16 *)firmware_buffer;
 
@@ -1636,7 +1642,7 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 
 	if (err) {
 		dev_err(dev, "[%s] : Failed Tegra Camera Driver Registration.\n", __func__);
-		return err;
+		goto errret;
 	}
 
 	priv->tc_dev = tc_dev;
@@ -1649,7 +1655,7 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 
 	if (err) {
 		dev_err(dev, "[%s] : Board Setup failed\n", __func__);
-		return err;
+		goto errret;
 	}
 
 	/* Pair sensor to serializer dev */
@@ -1658,7 +1664,7 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 
 	if (err) {
 		dev_err(&client->dev, "[%s] : GMSL Ser Pairing failed\n", __func__);
-		return err;
+		goto errret;
 	}
 
 	/* Register sensor to deserializer dev */
@@ -1667,7 +1673,7 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 
 	if (err) {
 		dev_err(&client->dev, "[%s] : GMSL Deserializer Register failed\n", __func__);
-		return err;
+		goto errret;
 	}
 
 	/*
@@ -1689,24 +1695,28 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 
 	if (err) {
 		dev_err(&client->dev,"[%s] : Failed GMSL Serdes setup.\n", __func__ );
-		return err;
+		goto errret;
 	}
 
 	err = tegracam_v4l2subdev_register(tc_dev, true);
 	if (err) {
 		dev_err(dev, "[%s] : Failed Tegra Camera Subdev Registration.\n", __func__ );
-		return err;
+		goto errret;
 	}
 
 	err = tier4_isx021_set_response_mode(priv);
 	if (err) {
-		dev_err(dev, "[%s] : Failed to set response mode.\n", __func__ );
-		return err;
+		dev_warn(dev, "[%s] : Failed to set response mode.\n", __func__ );
 	}
 
 	dev_info(&client->dev, "Detected ISX021 sensor\n");
 
+errret:
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
 	return NO_ERROR;
+#else
+	return err;
+#endif
 }
 
 static int tier4_isx021_remove(struct i2c_client *client)
@@ -1762,7 +1772,6 @@ module_init(tier4_isx021_init);
 module_exit(tier4_isx021_exit);
 
 MODULE_DESCRIPTION("TIERIV Automotive HDR Camera driver");
-MODULE_AUTHOR("Originaly NVIDIA Corporation");
 MODULE_AUTHOR("K.Iwasaki");
 MODULE_AUTHOR("Y.Fujii");
 MODULE_LICENSE("GPL v2");

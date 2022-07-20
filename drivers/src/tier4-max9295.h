@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 /**
  * @file
  * <b>MAX9295 API: For Maxim Integrated MAX9295 serializer.</b>
@@ -27,7 +26,7 @@
 #ifndef __TIER4_MAX9295_H__
 #define __TIER4_MAX9295_H__
 
-#include <media/gmsl-link.h>
+#include "tier4-gmsl-link.h"
 /**
  * \defgroup tier4_max9295 MAX9295 serializer driver
  *
@@ -38,7 +37,6 @@
  */
 
 int tier4_max9295_setup_gpo(struct device *dev);
-
 
 /**
  * @brief  Powers on a serializer device and performs the I2C overrides
@@ -121,4 +119,4 @@ int tier4_max9295_pre_setup_streaming(struct device *dev);
  */
 int tier4_max9295_setup_streaming(struct device *dev);
 
-#endif	// __TIER4_MAX9295_H__
+#endif  // __TIER4_MAX9295_H__
