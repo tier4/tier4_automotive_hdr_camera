@@ -16,42 +16,10 @@
   fragment@1{
     target-path = "/tegra-capture-vi";
     __overlay__ {
-      num-channels = <0x08>;
+      num-channels = <0x06>;
     };
   };
-
-  fragment@1_a{
-//    target-path = "/tegra-capture-vi/ports";
-    target = <&capture_vi_base>;
-    __overlay__ {
-      ports {
-        port@6 {
-          reg = <6>;
-          status = "okay";
-          vi_in6: endpoint {
-            status = "okay";
-            vc-id = <0>;
-            port-index = <5>;
-            bus-width = <2>;
-            remote-endpoint = <&isx021_csi_out6>;
-          };
-        };
-      
-        port@7 {
-          reg = <7>;
-          status = "okay";
-          vi_in7: endpoint {
-            status = "okay";
-            vc-id = <1>;
-            port-index = <5>;
-            bus-width = <2>;
-            remote-endpoint = <&isx021_csi_out7>;
-          };
-        };
-      };  
-    };  
-  };  
-
+  
   //diff view    
   fragment@2{
     target-path = "/tegra-capture-vi/ports/port@0";
@@ -91,8 +59,7 @@ fragment@6{
     target-path = "/tegra-capture-vi/ports/port@2";
     __overlay__ {
       status = "okay";
-    
-  };
+    };
   };
   
   fragment@7{
@@ -396,68 +363,7 @@ fragment@6{
   fragment@29{
     target-path = "/host1x@13e00000/nvcsi@15a00000";
     __overlay__ {
-      num-channels = <8>;
-      max_lane_speed = <4000000>;
-    };
-  };
-
-  fragment@29_a{
-    target-path = "/host1x@13e00000/nvcsi@15a00000";
-    __overlay__ {
-
-      channel@6 {
-        reg = <6>;
-        status = "okay";
-        ports {
-          #address-cells = <1>;
-          #size-cells = <0>;
-          port@0 {
-            status = "okay";
-            reg = <0>;
-            isx021_csi_in6: endpoint@12 {
-              status = "okay";
-              port-index = <5>;
-              bus-width = <2>;
-              remote-endpoint = <&isx021_out6>;
-            };
-          };
-          port@1 {
-            status = "okay";
-            reg = <1>;
-            isx021_csi_out6: endpoint@13 {
-              status = "okay";
-              remote-endpoint = <&vi_in6>;
-            };
-          };
-        };
-      };
-
-      channel@7 {
-        reg = <7>;
-        status = "okay";
-        ports {
-          #address-cells = <1>;
-          #size-cells = <0>;
-          port@0 {
-            status = "okay";
-            reg = <0>;
-            isx021_csi_in7: endpoint@14 {
-              status = "okay";
-              port-index = <5>;
-              bus-width = <2>;
-              remote-endpoint = <&isx021_out7>;
-            };
-          };
-          port@1 {
-            status = "okay";
-            reg = <1>;
-            isx021_csi_out7: endpoint@15 {
-              status = "okay";
-              remote-endpoint = <&vi_in7>;
-            };
-          };
-        };
-      };
+      num-channels = <6>;
     };
   };
 
@@ -592,37 +498,6 @@ fragment@6{
     };
   };
 
-  fragment@42a{
-    target-path = "/tegra-camera-platform/modules";
-    __overlay__ {
-      module6 {
-        badge = "isx021_centerleft";
-        position = "centerleft";
-        orientation = "1";
-        status = "okay";
-        drivernode0 {
-          status = "okay";
-          pcl_id = "v4l2_sensor";
-          devname = "isx021 33-001b";
-          proc-device-tree = "/proc/device-tree/i2c@3180000/tca9546@70/i2c@3/isx021_g@1b";
-        };
-      };
-
-      module7 {
-        badge = "isx021_bottomleft";
-        position = "bottomleft";
-        orientation = "1";
-        status = "okay";
-        drivernode0 {
-          status = "okay";
-          pcl_id = "v4l2_sensor";
-          devname = "isx021 33-001c";
-          proc-device-tree = "/proc/device-tree/i2c@3180000/tca9546@70/i2c@3/isx021_h@1c";
-        };
-      };
-    };
-  };
-
   // cam
   fragment@43{
     //cami2c/i2c@0
@@ -731,9 +606,9 @@ fragment@6{
           serdes_pix_clk_hz =   "180000000";
 
           gain_factor = "10";
-          min_gain_val = "0";                       /* dB */
-          max_gain_val = "300";                         /* dB */
-          step_gain_val = "3";                      /* 0.3 */
+          min_gain_val = "0"; 						/* dB */
+          max_gain_val = "300"; 						/* dB */
+          step_gain_val = "3"; 						/* 0.3 */
           default_gain = "0";
           min_hdr_ratio = "1";
           max_hdr_ratio = "1";
@@ -743,10 +618,10 @@ fragment@6{
           step_framerate = "1";
           default_framerate = "30000000";
           exposure_factor = "1000000";
-          min_exp_time = "24";                      /* us 1 line */
+          min_exp_time = "24"; 						/* us 1 line */
           max_exp_time = "33333";
           step_exp_time = "1";
-          default_exp_time = "33333";                   /* us */
+          default_exp_time = "33333";					/* us */
           embedded_metadata_height = "0";
         };
         ports {
@@ -764,13 +639,13 @@ fragment@6{
         };
 
         gmsl-link {
-          src-csi-port = "b";       /* Port at which sensor is connected to its serializer device. */
-          dst-csi-port = "a";       /* Destination CSI port on the Jetson side, connected at deserializer. */
-          serdes-csi-link = "a";    /* GMSL link sensor/serializer connected */
-          csi-mode = "1x4";     /*  to sensor CSI mode. */
-          st-vc = <0>;          /* Sensor source default VC ID: 0 unless overridden by sensor. */
-          vc-id = <0>;          /* Destination VC ID, assigned to sensor stream by deserializer. */
-          num-lanes = <2>;      /* Number of CSI lanes used. */
+          src-csi-port = "b";		/* Port at which sensor is connected to its serializer device. */
+          dst-csi-port = "a";		/* Destination CSI port on the Jetson side, connected at deserializer. */
+          serdes-csi-link = "a";	/* GMSL link sensor/serializer connected */
+          csi-mode = "1x4";		/*  to sensor CSI mode. */
+          st-vc = <0>;			/* Sensor source default VC ID: 0 unless overridden by sensor. */
+          vc-id = <0>;			/* Destination VC ID, assigned to sensor stream by deserializer. */
+          num-lanes = <2>;		/* Number of CSI lanes used. */
           streams = "ued-u1", "yuv8"; /* Types of streams sensor is streaming. */
         };
       };
@@ -836,9 +711,9 @@ fragment@6{
           serdes_pix_clk_hz =   "180000000";
 
           gain_factor = "10";
-          min_gain_val = "0";                           /* dB */
-          max_gain_val = "300";                             /* dB */
-          step_gain_val = "3";                          /* 0.3 */
+          min_gain_val = "0"; 							/* dB */
+          max_gain_val = "300"; 							/* dB */
+          step_gain_val = "3"; 							/* 0.3 */
           default_gain = "0";
           min_hdr_ratio = "1";
           max_hdr_ratio = "1";
@@ -848,10 +723,10 @@ fragment@6{
           step_framerate = "1";
           default_framerate = "30000000";
           exposure_factor = "1000000";
-          min_exp_time = "24";                          /* us 1 line */
+          min_exp_time = "24"; 							/* us 1 line */
           max_exp_time = "33333";
           step_exp_time = "1";
-          default_exp_time = "33333";                       /* us */
+          default_exp_time = "33333";						/* us */
           embedded_metadata_height = "0";
         };
         ports {
@@ -883,12 +758,13 @@ fragment@6{
 
 
   fragment@48{
-    target-path = "/i2c@3180000/tca9546@70/i2c@1";
+    target-path = "/i2c@3180000/tca9546@70";
     __overlay__ {
-        reg = <1>;
-        i2c-mux,deselect-on-exit;
-        #address-cells = <0x01>;
-        #size-cells = <0x00>;
+      i2c@1 {
+	    reg = <1>;
+	    i2c-mux,deselect-on-exit;
+	    #address-cells = <0x01>;
+		#size-cells = <0x00>;
 
         max9296_dser_b: max9296@48 {
           compatible = "nvidia,tier4_max9296";
@@ -922,7 +798,7 @@ fragment@6{
           compatible = "nvidia,tier4_isx021";
           reg = <0x1c>;
           status = "okay";
-    
+	
           def-addr = <0x1a>;
           /* Define any required hw resources needed by driver */
           /* ie. clocks, io pins, power sources */
@@ -1118,27 +994,28 @@ fragment@6{
           };
 
           gmsl-link {
-            src-csi-port = "b";             /* Port at which sensor  is connected to its serializer device. */
-            dst-csi-port = "a";             /* Destination CSI port on the Jetson side, connected at deserializer. */
-            serdes-csi-link = "a";          /* GMSL link sensor/serializer connected */
-            csi-mode = "1x4";               /*  to sensor CSI mode. */
-            st-vc = <0>;                    /* Sensor source default VC ID: 0 unless overridden by sensor. */
-            vc-id = <0>;                    /* Destination VC ID, assigned to sensor stream by deserializer. */
-            num-lanes = <2>;                /* Number of CSI lanes used. */
-            streams = "ued-u1","yuv8";              /* Types of streams sensor is streaming. */
+            src-csi-port = "b";				/* Port at which sensor  is connected to its serializer device. */
+            dst-csi-port = "a";				/* Destination CSI port on the Jetson side, connected at deserializer. */
+            serdes-csi-link = "a";			/* GMSL link sensor/serializer connected */
+            csi-mode = "1x4";				/*  to sensor CSI mode. */
+            st-vc = <0>;					/* Sensor source default VC ID: 0 unless overridden by sensor. */
+            vc-id = <0>;					/* Destination VC ID, assigned to sensor stream by deserializer. */
+            num-lanes = <2>;				/* Number of CSI lanes used. */
+            streams = "ued-u1","yuv8"; 				/* Types of streams sensor is streaming. */
           };
         };
       };
+    };
   };
 
   fragment@49{
     target-path = "/i2c@3180000/tca9546@70";
     __overlay__ {
       i2c@2 {
-        reg = <2>;
-        i2c-mux,deselect-on-exit;
-        #address-cells = <0x01>;
-        #size-cells = <0x00>;
+	    reg = <2>;
+	    i2c-mux,deselect-on-exit;
+	    #address-cells = <0x01>;
+		#size-cells = <0x00>;
 
         max9296_dser_c: max9296@48 {
           compatible = "nvidia,tier4_max9296";
@@ -1369,265 +1246,18 @@ fragment@6{
           };
 
           gmsl-link {
-            src-csi-port = "b";             /* Port at which sensor  is connected to its serializer device. */
-            dst-csi-port = "a";             /* Destination CSI port on the Jetson side, connected at deserializer. */
-            serdes-csi-link = "a";          /* GMSL link sensor/serializer connected */
-            csi-mode = "1x4";               /*  to sensor CSI mode. */
-            st-vc = <0>;                    /* Sensor source default VC ID: 0 unless overridden by sensor. */
-            vc-id = <0>;                    /* Destination VC ID, assigned to sensor stream by deserializer. */
-            num-lanes = <2>;                /* Number of CSI lanes used. */
-            streams = "ued-u1","yuv8";              /* Types of streams sensor is streaming. */
-          };
-        };
-      };
-
-      i2c@3 {
-        reg = <3>;
-        i2c-mux,deselect-on-exit;
-        #address-cells = <0x01>;
-        #size-cells = <0x00>;
-
-        max9296_dser_d: max9296@48 {
-          compatible = "nvidia,tier4_max9296";
-          reg = <0x48>;
-          status = "okay";
-          csi-mode = "2x4";
-          max-src = <2>;
-          //reset-gpios = <&tegra_main_gpio CAM0_PWDN GPIO_ACTIVE_HIGH>;
-          reset-gpios = <&tegra_main_gpio 0xA0 0x0>;
-        };
-        max9295_prim@62 {
-          compatible = "nvidia,tier4_max9295";
-          status = "okay";
-          reg = <0x62>;
-          is-prim-ser;
-        };
-        max9295_ser_d_0: max9295_a@42 {
-          compatible = "nvidia,tier4_max9295";
-          status = "okay";
-          reg = <0x42>;
-          nvidia,gmsl-dser-device = <&max9296_dser_d>;
-        };
-        max9295_ser_d_1: max9295_b@60 {
-          compatible = "nvidia,tier4_max9295";
-          status = "okay";
-          reg = <0x60>;
-          nvidia,gmsl-dser-device = <&max9296_dser_d>;
-        };
-
-        isx021_h@1c {
-          compatible = "nvidia,tier4_isx021";
-          reg = <0x1c>;
-          status = "okay";
-
-          def-addr = <0x1a>;
-          /* Define any required hw resources needed by driver */
-          /* ie. clocks, io pins, power sources */
-          clocks = <&bpmp 36U>,
-          <&bpmp 36U>;
-          clock-names = "extperiph1", "pllp_grtba";
-          mclk = "extperiph1";
-          nvidia,gmsl-ser-device = <&max9295_ser_d_1>;
-          nvidia,gmsl-dser-device = <&max9296_dser_d>;
-
-          /* Physical dimensions of sensor */
-          physical_w = "15.0";
-          physical_h = "12.5";
-          reg_mux = <3>;
-          sensor_model ="isx021";
-
-          fsync-mode = "false";
-
-          distortion-correction = "false";
-
-          auto-exposure = "true";
-
-          /* Defines number of frames to be dropped by driver internally after applying */
-          /* sensor crop settings. Some sensors send corrupt frames after applying */
-          /* crop co-ordinates */
-          post_crop_frame_drop = "0";
-
-          /* Convert Gain to unit of dB (decibel) befor passing to kernel driver */
-          use_decibel_gain = "true";
-
-          /* enable CID_SENSOR_MODE_ID for sensor modes selection */
-          use_sensor_mode_id = "true";
-
-          mode0 {
-            /*mode ISX021_MODE_1920X1280_CROP_30FPS*/
-            mclk_khz = "24000";
-            num_lanes = "2";
-            tegra_sinterface = "serial_d";
-            vc_id = "1";
-            discontinuous_clk = "no";
-            dpcm_enable = "false";
-            cil_settletime = "0";
-            dynamic_pixel_bit_depth = "16";
-            csi_pixel_bit_depth = "16";
-            mode_type = "yuv";
-            pixel_phase = "uyvy";
-
-            active_w = "1920";
-            active_h = "1280";
-            readout_orientation = "0";
-            line_length = "2250";
-            inherent_gain = "1";
-            pix_clk_hz = "74250000";
-            serdes_pix_clk_hz =   "180000000";
-
-            gain_factor = "10";
-            min_gain_val = "0"; /* dB */
-            max_gain_val = "300"; /* dB */
-            step_gain_val = "3"; /* 0.3 */
-            default_gain = "0";
-            min_hdr_ratio = "1";
-            max_hdr_ratio = "1";
-            framerate_factor = "1000000";
-            min_framerate = "30000000";
-            max_framerate = "30000000";
-            step_framerate = "1";
-            default_framerate = "30000000";
-            exposure_factor = "1000000";
-            min_exp_time = "24"; /* us 1 line */
-            max_exp_time = "33333";
-            step_exp_time = "1";
-            default_exp_time = "33333";/* us */
-            embedded_metadata_height = "0";
-          };
-
-          ports {
-            #address-cells = <1>;
-            #size-cells = <0>;
-            port@0 {
-              reg = <0>;
-              isx021_out7: endpoint {
-                vc-id = <1>;
-                port-index = <5>;
-                bus-width = <2>;
-                remote-endpoint = <&isx021_csi_in7>;
-              };
-            };
-          };
-          gmsl-link {
-            src-csi-port = "b";
-            dst-csi-port = "a";
-            serdes-csi-link = "b";
-            csi-mode = "1x4";
-            st-vc = <0>;
-            vc-id = <1>;
-            num-lanes = <2>;
-            streams = "ued-u1","yuv8";
-          };
-        };
-
-        isx021_g@1b {
-          compatible = "nvidia,tier4_isx021";
-
-          def-addr = <0x1a>;
-          /* Define any required hw resources needed by driver */
-          /* ie. clocks, io pins, power sources */
-          clocks = <&bpmp 36U>,
-          <&bpmp 36U>;
-          clock-names = "extperiph1", "pllp_grtba";
-          mclk = "extperiph1";
-          nvidia,gmsl-ser-device = <&max9295_ser_d_0>;
-          nvidia,gmsl-dser-device = <&max9296_dser_d>;
-
-          reg = <0x1b>;
-          status = "okay";
-
-          /* Physical dimensions of sensor */
-          physical_w = "15.0";
-          physical_h = "12.5";
-          reg_mux = <3>;
-          sensor_model ="isx021";
-
-          fsync-mode = "false";
-
-          distortion-correction = "false";
-
-          auto-exposure = "true";
-
-          /* Defines number of frames to be dropped by driver internally after applying */
-          /* sensor crop settings. Some sensors send corrupt frames after applying */
-          /* crop co-ordinates */
-          post_crop_frame_drop = "0";
-
-          /* Convert Gain to unit of dB (decibel) befor passing to kernel driver */
-          use_decibel_gain = "true";
-
-          /* enable CID_SENSOR_MODE_ID for sensor modes selection */
-          use_sensor_mode_id = "true";
-
-          mode0 {
-            /*mode ISX021_MODE_1920X1280_CROP_30FPS*/
-            mclk_khz = "24000";
-            num_lanes = "2";
-            tegra_sinterface = "serial_c";
-            vc_id = "0";
-            discontinuous_clk = "no";
-            dpcm_enable = "false";
-            cil_settletime = "0";
-            dynamic_pixel_bit_depth = "16";
-            csi_pixel_bit_depth = "16";
-            mode_type = "yuv";
-            pixel_phase = "uyvy";
-
-            active_w = "1920";
-            active_h = "1280";
-            readout_orientation = "0";
-            line_length = "2250";
-            inherent_gain = "1";
-            pix_clk_hz = "74250000";
-            serdes_pix_clk_hz =   "180000000";
-
-            gain_factor = "10";
-            min_gain_val = "0"; /* dB */
-            max_gain_val = "300"; /* dB */
-            step_gain_val = "3"; /* 0.3 */
-            default_gain = "0";
-            min_hdr_ratio = "1";
-            max_hdr_ratio = "1";
-            framerate_factor = "1000000";
-            min_framerate = "30000000";
-            max_framerate = "30000000";
-            step_framerate = "1";
-            default_framerate = "30000000";
-            exposure_factor = "1000000";
-            min_exp_time = "24"; /* us 1 line */
-            max_exp_time = "33333";
-            step_exp_time = "1";
-            default_exp_time = "33333";/* us */
-            embedded_metadata_height = "0";
-          };
-
-          ports {
-            #address-cells = <1>;
-            #size-cells = <0>;
-            port@0 {
-              reg = <0>;
-              isx021_out6: endpoint {
-                vc-id = <0>;
-                port-index = <5>;
-                bus-width = <2>;
-                remote-endpoint = <&isx021_csi_in6>;
-              };
-            };
-          };
-
-          gmsl-link {
-            src-csi-port = "b";             /* Port at which sensor  is connected to its serializer device. */
-            dst-csi-port = "a";             /* Destination CSI port on the Jetson side, connected at deserializer. */
-            serdes-csi-link = "a";          /* GMSL link sensor/serializer connected */
-            csi-mode = "1x4";               /*  to sensor CSI mode. */
-            st-vc = <0>;                    /* Sensor source default VC ID: 0 unless overridden by sensor. */
-            vc-id = <0>;                    /* Destination VC ID, assigned to sensor stream by deserializer. */
-            num-lanes = <2>;                /* Number of CSI lanes used. */
-            streams = "ued-u1","yuv8";              /* Types of streams sensor is streaming. */
+            src-csi-port = "b";				/* Port at which sensor  is connected to its serializer device. */
+            dst-csi-port = "a";				/* Destination CSI port on the Jetson side, connected at deserializer. */
+            serdes-csi-link = "a";			/* GMSL link sensor/serializer connected */
+            csi-mode = "1x4";				/*  to sensor CSI mode. */
+            st-vc = <0>;					/* Sensor source default VC ID: 0 unless overridden by sensor. */
+            vc-id = <0>;					/* Destination VC ID, assigned to sensor stream by deserializer. */
+            num-lanes = <2>;				/* Number of CSI lanes used. */
+            streams = "ued-u1","yuv8"; 				/* Types of streams sensor is streaming. */
           };
         };
       };
     };
   };
-  
+
 };
