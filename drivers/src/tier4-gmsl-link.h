@@ -101,6 +101,9 @@ struct gmsl_link_ctx
                   configuration settings during setup. */
   struct gmsl_stream streams[GMSL_DEV_MAX_NUM_DATA_STREAMS];
   /*< An array of information about the data streams in the link. */
+	__u32 sensor_id;        /**< Sensor ID  21:isx021 or 490:imx490 */
+	__u32 sdev_isp_reg;     /**< Sensor or ISP proxy slave address. */
+	__u32 sdev_isp_def;     /**< Sensor or ISP default slave address. */
   struct device *s_dev; /**< Sensor device handle. */
 };
 

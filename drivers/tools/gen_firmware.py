@@ -35,17 +35,20 @@ str_current_time = now.strftime('%Y-%m-%d_%H_%M_%S')
 
 source_file              = args[1]
 
-firmware_bin_file        = "tier4-isx021.bin_" + str_current_time
-
-sed_revert_reg_addr_file = "revert-reg-addr.sed_" + str_current_time
 
 source_file_without_ext  = os.path.splitext(os.path.basename(source_file))[0]
+
+source_file_dir = os.path.dirname(source_file)
 
 temp_source_file         = source_file_without_ext + "_tmp.c"
 
 backup_org_source_file   = source_file_without_ext + ".c_org_backup_" + str_current_time
 
-converted_source_file    = source_file_without_ext + ".c_out_" + str_current_time
+converted_source_file    = source_file
+
+firmware_bin_file        = source_file_dir + "/tier4-isx021.bin"
+
+sed_revert_reg_addr_file = "revert-reg-addr.sed_" + str_current_time
 
 print("----------------------------------------------------------------------------------------")
 print("--- Input  [ Source file                      ] : ", source_file)
