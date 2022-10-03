@@ -33,7 +33,7 @@
             vc-id = <0>;
             port-index = <5>;
             bus-width = <2>;
-            remote-endpoint = <&csi_out6>;
+            remote-endpoint = <&isx021_csi_out6>;
           };
         };
       
@@ -45,7 +45,7 @@
             vc-id = <1>;
             port-index = <5>;
             bus-width = <2>;
-            remote-endpoint = <&csi_out7>;
+            remote-endpoint = <&isx021_csi_out7>;
           };
         };
       };  
