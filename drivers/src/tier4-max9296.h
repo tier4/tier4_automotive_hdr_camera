@@ -26,7 +26,7 @@
 #ifndef __TIER4_MAX9296_H__
 #define __TIER4_MAX9296_H__
 
-#include <media/gmsl-link.h>
+#include "tier4-gmsl-link.h"
 
 /**
  * \defgroup tier4_max9296 MAX9296 deserializer driver
@@ -164,4 +164,4 @@ void tier4_max9296_power_off(struct device *dev);
 
 /** @} */
 
-#endif  /* __TIER4_MAX9296_H__ */
+#endif /* __TIER4_MAX9296_H__ */
