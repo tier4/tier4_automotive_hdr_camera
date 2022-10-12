@@ -1,13 +1,13 @@
-Source: tier4-isx021-gmsl
+Source: tier4-camera-gmsl
 Section: kernel
 Priority: optional
-Maintainer: YuSheng <chester.tseng@adlinktech.com>
+Maintainer: Yusuke Fujii <ykfj4096@gmail.com>
 Build-Depends: debhelper (>=9), dkms
 Standards-Version: 3.9.6
-Homepage: <https://www.adlintkech.com>
+Homepage: <https://sensor.tier4.jp/automotive-hdr-camera-jp>
 
-Package: tier4-isx021-gmsl
+Package: tier4-camera-gmsl
 Architecture: arm64
-Provides: tier4-isx021-gmsl
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: tier4-camera-gmsl
+Depends: ${misc:Depends}
 Description: Tier4 ISX021 GMSL2 Camera Kernel Module.

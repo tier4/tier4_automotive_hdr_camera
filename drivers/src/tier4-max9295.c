@@ -33,6 +33,12 @@
 #define MAX9295_I2C4_ADDR 				0x0044
 #define MAX9295_I2C5_ADDR 				0x0045
 
+#define MAX9295_CFGV_VIDEO_Y_ADDR 		0x0057
+#define MAX9295_CFGV_VIDEO_Z_ADDR 		0x005B
+
+#define MAX9295_VIDEO_TX0_ADDR 			0x0110
+#define MAX9295_VIDEO_TX1_ADDR 			0x0111
+#define MAX9295_VIDEO_TX2_ADDR 			0x0112
 #define MAX9295_SRC_CTRL_ADDR 			0x02BF
 #define MAX9295_SRC_PWDN_ADDR 			0x02BE
 
@@ -47,18 +53,22 @@
 #define MAX9295_CSI_PORT_SEL_ADDR 		0x0308
 
 #define MAX9295_START_PIPE_ADDR 		0x0311
+#define MAX9295_SEND_Z_PIPE_ADDR 		0x0312
 #define MAX9295_PIPE_X_DT_ADDR 			0x0314
 #define MAX9295_PIPE_Y_DT_ADDR 			0x0316
 #define MAX9295_PIPE_Z_DT_ADDR 			0x0318
 #define MAX9295_PIPE_U_DT_ADDR 			0x031A
+#define MAX9295_OVERRIDE_Z_PIPE_ADDR 	0x031E
 
 #define MAX9295_MIPI_RX0_ADDR 			0x0330
 #define MAX9295_MIPI_RX1_ADDR 			0x0331
 #define MAX9295_MIPI_RX2_ADDR 			0x0332
 #define MAX9295_MIPI_RX3_ADDR 			0x0333
 
+#define MAX9295_REF_VTG0_ADDR 			0x03F0
 #define MAX9295_SRC_OUT_RCLK_ADDR 		0x03F1
 
+#define MAX9295_REG570_ADDR	 			0x0570
 
 #define MAX9295_STREAM_PIPE_UNUSED 		0x22
 #define MAX9295_CSI_MODE_1X4 			0x00
@@ -229,8 +239,7 @@ int tier4_max9295_setup_streaming(struct device *dev)
 	struct map_ctx map_pipe_dtype[] = {
 		{GMSL_CSI_DT_YUV_8, MAX9295_PIPE_Z_DT_ADDR, 0x1E,		// For YUV8
 			MAX9295_ST_ID_2},
-//		{GMSL_CSI_DT_UED_U1, MAX9295_PIPE_X_DT_ADDR, 0x1e,		// may be wrong
-		{GMSL_CSI_DT_UED_U1, MAX9295_PIPE_X_DT_ADDR, 0x30,
+		{GMSL_CSI_DT_UED_U1, MAX9295_PIPE_X_DT_ADDR, 0x30,		// User defined embedded data type
 			MAX9295_ST_ID_0},
 		{GMSL_CSI_DT_EMBED, MAX9295_PIPE_Y_DT_ADDR, 0x12,
 			MAX9295_ST_ID_1},
@@ -352,6 +361,7 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev)
 {
 	int err = 0;
 
+#if 0
 	msleep(50);
 	err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
 	msleep(50);
@@ -367,7 +377,7 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev)
 	}
 
 	msleep(50);
-
+#endif
 	return err;
 }
 EXPORT_SYMBOL(tier4_max9295_control_sensor_power_seq);
@@ -415,18 +425,14 @@ int tier4_max9295_setup_control(struct device *dev)
 	};
 
 	mutex_lock(&priv->lock);
-	if (!priv->g_client.g_ctx) {
-		dev_err(dev, "[%s] : No sensor dev client found\n", __func__);
-		err = -EINVAL;
-		goto error;
-	}
 
 	g_ctx = priv->g_client.g_ctx;
 
 	/* update address reassingment */
-
 	tier4_max9295_write_reg(&prim_priv__[g_ctx->reg_mux]->i2c_client->dev,
 			MAX9295_DEV_ADDR, (g_ctx->ser_reg << 1));
+
+  msleep(100);
 
 	if (g_ctx->serdes_csi_link == GMSL_SERDES_CSI_LINK_A)
 		err = tier4_max9295_write_reg(dev, MAX9295_CTRL0_ADDR, 0x21);
@@ -616,7 +622,17 @@ static int tier4_max9295_probe(struct i2c_client *client,
 			return -EINVAL;
 		}
 
+		if ( priv == NULL ) {
+			dev_err(&client->dev,"[%s] : priv is NULL\n", __func__);
+			return err;
+		}
+
 		prim_priv__[channel_count_isx021] = priv;
+
+
+		dev_info(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
+				, __func__, channel_count_isx021,prim_priv__[channel_count_isx021]);
+
 		channel_count_isx021++;
 
 	}

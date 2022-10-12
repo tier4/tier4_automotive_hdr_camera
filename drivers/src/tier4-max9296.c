@@ -86,6 +86,7 @@ struct tier4_max9296_source_ctx {
 #define MAX9296_ALLPHYS_NOSTDBY 			0xF0
 #define MAX9296_ST_ID_SEL_INVALID 			0xF
 
+//#define MAX9296_PHY1_CLK 					0x32
 #define MAX9296_PHY1_CLK 					0x2F
 //#define MAX9296_PHY1_CLK 					0x2C
 
@@ -354,12 +355,14 @@ EXPORT_SYMBOL(tier4_max9296_power_off);
 
 static int tier4_max9296_write_link(struct device *dev, u32 link)
 {
+	int err = 0;
+
 	if (link == GMSL_SERDES_CSI_LINK_A) {
-		tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x01);
-		tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x21);
+		err  = tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x01);
+		err |= tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x21);
 	} else if (link == GMSL_SERDES_CSI_LINK_B) {
-		tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x02);
-		tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x22);
+		err  = tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x02);
+		err |= tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x22);
 	} else {
 		dev_err(dev, "[%s] : Invalid GMSL link\n", __func__);
 		return -EINVAL;
@@ -377,8 +380,8 @@ int tier4_max9296_setup_link(struct device *dev, struct device *s_dev)
 	int err = 0;
 	int i;
 
-	err = tier4_max9296_get_sdev_idx(dev, s_dev, &i);
 
+	err = tier4_max9296_get_sdev_idx(dev, s_dev, &i);
 	if (err) {
 		dev_err(dev, "[%s] : tier4_max9296_get_sdev_idx failed.\n", __func__);
 		return err;
@@ -393,7 +396,6 @@ int tier4_max9296_setup_link(struct device *dev, struct device *s_dev)
 			dev_err(dev, "[%s] : tier4_max9296_write_link failed.\n", __func__);
 			goto ret;
 		}
-
 		priv->link_setup = true;
 	}
 
@@ -410,7 +412,7 @@ static int tier4_max9296_link_locked(struct device *dev)
 {
 	u8 val;
 
-	dev_info(dev, "[%s] : Enter tier4_max9296_link_locked().\n", __func__);
+	dev_info(dev, "[%s] : Check max9296 link locke.\n", __func__);
 
 	usleep_range(100, 110);
 	tier4_max9296_read_reg(dev, MAX9296_LINK_ADDR, &val);
@@ -480,7 +482,7 @@ int tier4_max9296_setup_control(struct device *dev, struct device *s_dev)
 	err = tier4_max9296_link_locked(dev);
 	if (err) {
         	// GMSL2 link not locked
-		dev_info(dev, "[%s]: tier4_max9296_link_locked() failed.\n", __func__);
+		dev_info(dev, "[%s]: max9296 link is not locked.\n", __func__);
     	err = tier4_max9296_write_link(dev, priv->src_link);
 		if (err) {
 			dev_err(dev, "[%s]: tier4_max9296_write_link() failed.\n", __func__);
@@ -595,7 +597,8 @@ int tier4_max9296_sdev_register(struct device *dev, struct gmsl_link_ctx *g_ctx)
 
 		if (g_ctx->num_csi_lanes !=
 				priv->sources[i].g_ctx->num_csi_lanes) {
-			dev_err(dev,"[%s] : CSI num lanes mismatch\n", __func__);
+			dev_err(dev,"[%s] : CSI num lanes mismatch. %d, %d\n", __func__,
+		g_ctx->num_csi_lanes, priv->sources[i].g_ctx->num_csi_lanes);
 			err = -EINVAL;
 			goto error;
 		}
@@ -917,8 +920,9 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 		priv->lane_setup = true;
 	}
 
+#if 0
 	tier4_max9296_write_reg(dev, MAX9296_REG5_ADDR, 0xC0);			// informed from Maxim
-
+#endif
 	priv->sources[i].st_enabled = true;
 
 ret:
@@ -975,6 +979,8 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv,
 		dev_err(&client->dev, "[%s] : No max-src info\n", __func__);
 		return err;
 	}
+  
+  	printk("%s-maxsrc:%d\n",__func__, value);
 	priv->max_src = value;
 
 	priv->reset_gpio = of_get_named_gpio(node, "reset-gpios", 0);
@@ -982,6 +988,8 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv,
 		dev_err(&client->dev, "[%s] : reset-gpios not found %d\n", __func__, err);
 		return err;
 	}
+
+  	printk("[%s] priv->reset_gpio = %d\n",__func__, priv->reset_gpio);
 
 	/* digital 1.2v */
 	if (of_get_property(node, "vdd_cam_1v2-supply", NULL)) {

@@ -1,10 +1,10 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-package         = tier4-isx021-gmsl
+package         = tier4-camera-gmsl
 deb_version	:= $(shell dpkg-parsechangelog | grep ^Version:| cut -d ' ' -f 2)
 dkms_version	:= $(shell cat dkms.conf | grep ^PACKAGE_VERSION= | cut -d '"' -f 2)
-dkms_src_dir	:= $(CURDIR)/debian/${package}/usr/src/tier4-isx021-gmsl-$(dkms_version)/
+dkms_src_dir	:= $(CURDIR)/debian/${package}/usr/src/tier4-camera-gmsl-$(dkms_version)/
 kernel_src_dir ?= /lib/modules/$(kernel_release)/build
 
 

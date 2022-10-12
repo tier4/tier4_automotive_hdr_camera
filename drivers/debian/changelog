@@ -1,3 +1,9 @@
+tier4-camera-gmsl (1.1.0) UNRELEASED; urgency=medium
+
+  * Support C2(IMX490) camera.
+
+ -- tier4 <camera@tier4.jp>  Thu, 04 Aug 2022 16:49:40 +0900
+
 tier4-isx021-gmsl (1.0.3) focal; urgency=medium
 
   * Add feature to fix exposure time
