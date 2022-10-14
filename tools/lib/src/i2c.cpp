@@ -6,16 +6,22 @@
 
 int8_t i2c::read16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, uint8_t* data) {
 
+  int8_t ret = 0;
   int32_t fd = open(dev_name.c_str(), O_RDWR);
   if (fd == -1) {
-    fprintf(stderr, "i2c_read: failed to open: %s\n", strerror(errno));
+    fprintf(stderr, "%s: failed to open %s: %s\n", __func__, dev_name.c_str(), strerror(errno));
     return -1;
   }
 
   uint8_t reg_addr_mask_u = (reg_addr >> 8) &0xff;
   uint8_t reg_addr_mask_l = reg_addr&0xff;
-  write8(dev_name, dev_addr, reg_addr_mask_u, reg_addr_mask_l);
-  read8(dev_name, dev_addr, 0, data);
+ 
+  if(write8(dev_name, dev_addr, reg_addr_mask_u, reg_addr_mask_l) < 0){
+	  return -1;
+  }
+  if(read8(dev_name, dev_addr, 0, data)<0){
+	  return -1;
+  }
   DEBUG_PRINT("[0x%02X-0x%04X]: = 0x%02X\n",dev_addr, reg_addr, *data);
 
   close(fd);
@@ -25,7 +31,7 @@ int8_t i2c::read16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, ui
 int8_t i2c::read8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uint8_t* data) {
   int32_t fd = open(dev_name.c_str(), O_RDWR);
   if (fd == -1) {
-    fprintf(stderr, "i2c_read: failed to open: %s\n", strerror(errno));
+    fprintf(stderr, "%s: failed to open %s: %s\n", __func__, dev_name.c_str(), strerror(errno));
     return -1;
   }
 
@@ -90,13 +96,13 @@ int8_t i2c::write(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, cons
 
   int32_t fd = open(dev_name.c_str(), O_RDWR);
   if (fd == -1) {
-    fprintf(stderr, "i2c_write: failed to open: %s\n", strerror(errno));
+    fprintf(stderr, "%s: failed to open %s: %s\n", __func__, dev_name.c_str(), strerror(errno));
     return -1;
   }
 
   uint8_t* buffer = (uint8_t*)malloc(length + 1);
   if (buffer == nullptr) {
-    fprintf(stderr, "i2c_write: failed to memory allocate\n");
+    fprintf(stderr, "%s: failed to allocate memory: %s\n", __func__, strerror(errno));
     close(fd);
     return -1;
   }
@@ -131,7 +137,7 @@ int8_t i2c::write16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, u
 {
   int32_t fd = open(dev_name.c_str(), O_RDWR);
   if (fd == -1) {
-    fprintf(stderr, "i2c_write: failed to open: %s\n", strerror(errno));
+    fprintf(stderr, "%s: failed to open %s: %s\n", __func__, dev_name.c_str(), strerror(errno));
     return -1;
   }
 

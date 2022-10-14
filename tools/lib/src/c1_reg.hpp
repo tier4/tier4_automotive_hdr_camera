@@ -3,6 +3,10 @@
 //
 #define __C1_REG_ADDR__
 
+#define AE_MODE 0xABC0
+#define AE_MODE_AE 0x0
+#define AE_MODE_ME 0x3
+
 #define DIGITAL_GAIN_L 0xAC0A
 #define DIGITAL_GAIN_U 0xAC0B
 #define DIGITAL_GAIN_MIN 0.0
@@ -54,6 +58,8 @@
 #define FULLMWBGAIN_UNIT 0.00390625
 #define FULLMWBGAIN_MAX 15.99609375
 #define FULLMWBGAIN_MIN 0.0
+
+#define EVREF_CTRL_SEL 0xABC9
 
 #define EVREF_OFFSET 0xABC8
 #define EVREF_OFFSET_MIN -12.61

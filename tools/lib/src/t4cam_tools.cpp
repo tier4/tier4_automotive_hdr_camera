@@ -30,6 +30,32 @@ int8_t C1::checkES3()
 
   return 0;
 }
+  float C1::getAEError(){
+	  float ret;
+	  uint8_t l,u;
+	  uint16_t d;
+
+	  i2c::read16(dev_name, i2c_dev_addr, ERRSCL_L, &l);
+	  i2c::read16(dev_name, i2c_dev_addr, ERRSCL_U, &u);
+	  
+	  d = l + (u << 8);
+
+	  ret = (int16_t)d * 6.02 / 1024.0;
+	  return ret;
+  }
+
+
+bool C1::isAvailableCamera(void)
+{
+	uint8_t data;
+	bool ret=true;
+	if(i2c::read16(dev_name, i2c_dev_addr, AE_MODE, &data) < 0){
+		ret = false;
+	}
+	
+	return ret;
+
+}
 
 float C1::getTempature(int type)
 {
@@ -74,10 +100,41 @@ float C1::getTempatureS1(void)
   return data;
 }
 
+uint8_t C1::getAEMode(){
+  uint8_t aemode;
+  i2c::read16(dev_name, i2c_dev_addr, AE_MODE, &aemode);
+  return aemode;
+}
+
+int8_t C1::setAEMode(int mode)
+{
+  
+  if(getAEMode() != mode)
+  {
+    //set aemode
+    i2c::write16(dev_name, i2c_dev_addr,AE_MODE, mode);
+  }
+}
+
+
+int8_t C1::setShutterSpeedforFME(int val)
+{
+#define FME_SHTVAL 0xABEC
+
+    i2c::write16(dev_name, i2c_dev_addr,AE_MODE, val);
+
+}
+
+
 int8_t C1::setDigitalGain(int db)
 {
   uint8_t u;
   uint8_t l;
+
+  if(getAEMode() != AE_MODE_ME){
+    fprintf(stderr, "[WARN]: AEMode is not ME. DigitalGain parameter has not effect in this mode.\n");
+  }
+
 
   if (db < DIGITAL_GAIN_MIN || DIGITAL_GAIN_MAX < db)
   {
@@ -169,6 +226,7 @@ int8_t C1::setContrast(float gain)
   return 0;
 }
 
+
 int8_t C1::setAutoWhiteBalance(bool on)
 {
   uint8_t set_val = AWBMODE_ATW;
@@ -239,16 +297,26 @@ int8_t C1::setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float
 
   return 0;
 }
+
+int8_t C1::setExposureOffsetFlag(bool flag)
+{
+  i2c::write16(dev_name, i2c_dev_addr, EVREF_CTRL_SEL, flag);
+
+}
+
 int8_t C1::setExposureOffset(float offset)
 {
 // TODO
-#if 0
+#if 1
   if (offset < EVREF_OFFSET_MIN || EVREF_OFFSET_MAX < offset)
   {
     fprintf(stderr, "[WARN][%s]: please set in the range of %lf ≤ offset ≤ %lf. Contrast is not set.\n", __func__,
             EVREF_OFFSET_MIN, EVREF_OFFSET_MAX);
     return -1;
   }
+
+
+  fprintf(stderr,"%s:%f\n", __func__,getAEError());
 
   int8_t data = offset / EVREF_OFFSET_UNIT;
 

@@ -14,63 +14,80 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include "cmdline.h"
 
+#define DEBUG
 #include <t4cam_tools.hpp>
 
-#include "cmdline.h"
 
 int main(int argc, char* argv[])
 {
   cmdline::parser p;
 
-  p.add<int>("hue", 'h', "set Hue val", false);
-  p.add<float>("saturation", 's', "set Saturation val", false);
-  p.add<std::string>("i2c-device", 'i', "set i2c device file name", false, "/dev/i2c-30");
-  p.add<std::string>("dev-addr", 'd', "set device addr", false, "0x1a");
-
-  p.add<float>("brightness", 'b', "set Brightness val", false);
-  p.add<float>("contrast", 'c', "set Contrast val", false);
+  //config
+  p.add<int>("port-num",'p',"set port number [0-7]", false, 0, cmdline::range(0,7));
+  p.add<std::string>("config-file",'f',"set config file name", false);
+  
+  // get
   p.add("tempature", 't', "get Tempature val");
+  
+  //set
+  p.add<float>("brightness", 'B', "set Brightness val", false);
+  p.add<float>("contrast", 'C', "set Contrast val", false);
+  p.add<int>("hue", 'H', "set Hue val", false);
+  p.add<float>("saturation", 'S', "set Saturation val", false);
 #if 0
   p.add<float>("evrefoffset", 'e', "set EvrefOffset val", false);
   p.add<float>("digitalgain", 'D', "set DigitalGain val", false);
 #endif
   p.parse_check(argc, argv);
 
-  std::string dev_name = p.get<std::string>("i2c-device");
-  uint8_t dev_addr = strtol(p.get<std::string>("dev-addr").c_str(),NULL, 0);
+  int port_num = p.get<int>("port-num");
 
-  C1 c1_a = C1(dev_name, (uint8_t)dev_addr);
+  C1 c1_a = C1(port_num);
 
-  if (p.exist("hue"))
+  int ret = 0;
+
+  if (p.exist("config-file"))
   {
-    int val = p.get<int>("hue");
-    std::cout << "set hue val:" << val << std::endl;
-    c1_a.setHue(val);
+    return 0;
+  }else{
+    if (p.exist("hue"))
+    {
+      int val = p.get<int>("hue");
+      std::cout << "set hue val:" << val << std::endl;
+      ret = c1_a.setHue(val);
+    }
+    if (p.exist("saturation"))
+    {
+      float val = p.get<float>("saturation");
+      std::cout << "set Saturation val:" << val << std::endl;
+      ret = c1_a.setSaturation(val);
+    }
+    if (p.exist("contrast"))
+    {
+      float val = p.get<float>("contrast");
+      std::cout << "set Contrast val:" << val << std::endl;
+      ret = c1_a.setContrast(val);
+    }
+    if (p.exist("brightness"))
+    {
+      float val = p.get<float>("brightness");
+      std::cout << "set Brightness val:" << val << std::endl;
+      ret = c1_a.setBrightness(val);
+    }
+    if (p.exist("tempature"))
+    {
+      float val = c1_a.getTempature(0);
+      std::cout << "get tempature:" << val << std::endl;
+    }
   }
-  if (p.exist("saturation"))
-  {
-    float val = p.get<float>("saturation");
-    std::cout << "set Saturation val:" << val << std::endl;
-    c1_a.setSaturation(val);
+
+  if (ret<0){
+    std::cerr << "Failed set parameter. please check parameter and hardware connection"<< std::endl;
   }
-  if (p.exist("contrast"))
-  {
-    float val = p.get<float>("contrast");
-    std::cout << "set Contrast val:" << val << std::endl;
-    c1_a.setContrast(val);
-  }
-  if (p.exist("brightness"))
-  {
-    float val = p.get<float>("brightness");
-    std::cout << "set Brightness val:" << val << std::endl;
-    c1_a.setBrightness(val);
-  }
-  if (p.exist("tempature"))
-  {
-    float val = c1_a.getTempature(0);
-    std::cout << "get tempature:" << val << std::endl;
-  }
+
+
 #if 0
   if (p.exist("evrefoffset"))
   {

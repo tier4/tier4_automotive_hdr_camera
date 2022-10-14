@@ -14,6 +14,7 @@
 
 #include <stdlib.h>
 
+#define DEBUG
 #include <t4cam_tools.hpp>
 
 int main(int argc, char* argv[])
@@ -25,7 +26,7 @@ int main(int argc, char* argv[])
     db = atof(argv[1]);
   }
 
-  C1 c1_a = C1(PORT_A_CAM);
+  C1 c1_a = C1(0);
   c1_a.setSharpness(db);
 
   float gain = db;
