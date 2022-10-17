@@ -1,4 +1,3 @@
-
 /dts-v1/;
 /plugin/;
  
@@ -9,7 +8,7 @@
 
 
 
-    fragment@0 {
+fragment@0{
 
         target-path = "/i2c@c240000/tca9546@70/i2c@0";
 
@@ -18,8 +17,6 @@
             i2c-mux,deselect-on-exit;
             #address-cells = <1>;
             #size-cells = <0>;
-
-
 
             ser_prim: max9295_prim@62 {
                 compatible = "nvidia,tier4_max9295";
@@ -50,7 +47,6 @@
                 reg = <0x6f>;
             };
 
-
             imx490_b@2c {
                 compatible = "nvidia,tier4_imx490";
                 def-addr = <0x1a>;
@@ -58,6 +54,7 @@
                 clock-names = "extperiph1", "pllp_grtba";
                 mclk = "extperiph1";
                 nvidia,isp-device = <&isp_b>;           // for C2 camera
+                nvidia,fpga-device  = <&t4_fpga>;
                 nvidia,gmsl-ser-device = <&ser_b>;
                 nvidia,gmsl-dser-device = <&dser>;
                 reg = <0x2c>;
@@ -238,6 +235,7 @@
                 clock-names = "extperiph1", "pllp_grtba";
                 mclk = "extperiph1";
                 nvidia,isp-device = <&isp_a>;           // for C2 camera
+                nvidia,fpga-device  = <&t4_fpga>;
                 nvidia,gmsl-ser-device = <&ser_a>;
                 nvidia,gmsl-dser-device = <&dser>;
                 reg = <0x2b>;
@@ -419,7 +417,7 @@
     };
 
 
-    fragment@1 {
+fragment@1{
 
         target-path = "/i2c@c240000/tca9546@70/i2c@1";
 
@@ -470,6 +468,7 @@
                 //clock-names = "extperiph1", "pllp_grtba";
                 mclk = "extperiph1";
                 nvidia,isp-device = <&isp_d>;           // for C2 camera
+                nvidia,fpga-device  = <&t4_fpga>;
                 nvidia,gmsl-ser-device = <&ser_d>;
                 nvidia,gmsl-dser-device = <&dsera>;
                 reg = <0x2c>;
@@ -646,6 +645,7 @@
                 //clock-names = "extperiph1", "pllp_grtba";
                 mclk = "extperiph1";
                 nvidia,isp-device = <&isp_c>;           // for C2 camera
+                nvidia,fpga-device  = <&t4_fpga>;
                 nvidia,gmsl-ser-device = <&ser_c>;
                 nvidia,gmsl-dser-device = <&dsera>;
                 reg = <0x2b>;
@@ -816,7 +816,7 @@
     };
 
 
-    fragment@2 {
+fragment@2{
 
         target-path = "/i2c@c240000/tca9546@70/i2c@2";
 
@@ -867,6 +867,7 @@
                 clock-names = "extperiph1", "pllp_grtba";
                 mclk = "extperiph1";
                 nvidia,isp-device = <&isp_f>;           // for C2 camera
+                nvidia,fpga-device  = <&t4_fpga>;
                 nvidia,gmsl-ser-device = <&ser_f>;
                 nvidia,gmsl-dser-device = <&dserb>;
                 reg = <0x2c>;
@@ -990,7 +991,7 @@
                      pix_clk_hz = "160704000";
                      serdes_pix_clk_hz = "1200000000";
                      gain_factor = "5";
-                 min_gain_val = "0";                         /* dB */
+                     min_gain_val = "0";                         /* dB */
                      max_gain_val = "300";                       /* dB */
                      step_gain_val = "1";                        /* 0.3 */
                      default_gain = "0";
@@ -1043,6 +1044,7 @@
                  clock-names = "extperiph1", "pllp_grtba";
                  mclk = "extperiph1";
                  nvidia,isp-device = <&isp_e>;          // for C2 camera
+                 nvidia,fpga-device  = <&t4_fpga>;
                  nvidia,gmsl-ser-device = <&ser_e>;
                  nvidia,gmsl-dser-device = <&dserb>;
                  reg = <0x2b>;
@@ -1213,7 +1215,7 @@
     };
 
 
-    fragment@3 {
+fragment@3{
         target-path = "/i2c@c240000/tca9546@70/i2c@3";
         __overlay__ {
             i2c-mux,deselect-on-exit;
@@ -1260,6 +1262,7 @@
                 clock-names = "extperiph1", "pllp_grtba";
                 mclk = "extperiph1";
                 nvidia,isp-device = <&isp_h>;           // for C2 camera
+                nvidia,fpga-device  = <&t4_fpga>;
                 nvidia,gmsl-ser-device = <&ser_h>;
                 nvidia,gmsl-dser-device = <&dserc>;
                 reg = <0x2c>;
@@ -1436,6 +1439,7 @@
                 clock-names = "extperiph1", "pllp_grtba";
                 mclk = "extperiph1";
                 nvidia,isp-device = <&isp_g>;           // for C2 camera
+                nvidia,fpga-device  = <&t4_fpga>;
                 nvidia,gmsl-ser-device = <&ser_g>;
                 nvidia,gmsl-dser-device = <&dserc>;
                 reg = <0x2b>;
@@ -1606,7 +1610,7 @@
     };
 
 
-    fragment@4 {
+fragment@4{
       target = <&vi_port0>;
       __overlay__ {
         reg = <0>;
@@ -1614,7 +1618,7 @@
       };
     };
 
-    fragment@5 {
+fragment@5{
       target = <&vi_in0>;
       __overlay__ {
         status = "okay";
@@ -1626,7 +1630,7 @@
     };
 
 
-    fragment@6 {
+fragment@6{
       target = <&vi_port1>;
       __overlay__ {
         reg = <1>;
@@ -1634,7 +1638,7 @@
       };
     };
 
-    fragment@7 {
+fragment@7{
       target = <&vi_in1>;
       __overlay__ {
         status = "okay";
@@ -1646,7 +1650,7 @@
     };
 
 
-    fragment@8 {
+fragment@8{
       target = <&vi_port2>;
       __overlay__ {
         reg = <2>;
@@ -1654,7 +1658,7 @@
       };
     };
 
-    fragment@9 {
+fragment@9{
       target = <&vi_in2>;
       __overlay__ {
         status = "okay";
@@ -1666,7 +1670,7 @@
     };
 
 
-    fragment@10 {
+fragment@10{
       target = <&vi_port3>;
       __overlay__ {
         reg = <3>;
@@ -1674,7 +1678,7 @@
       };
     };
 
-    fragment@11 {
+fragment@11{
       target = <&vi_in3>;
       __overlay__ {
         status = "okay";
@@ -1686,7 +1690,7 @@
     };
 
 
-    fragment@12 {
+fragment@12{
       target = <&vi_port4>;
       __overlay__ {
         reg = <4>;
@@ -1694,7 +1698,7 @@
       };
     };
 
-    fragment@13 {
+fragment@13{
       target = <&vi_in4>;
       __overlay__ {
         status = "okay";
@@ -1706,7 +1710,7 @@
     };
 
 
-    fragment@14 {
+fragment@14{
       target = <&vi_port5>;
       __overlay__ {
         reg = <5>;
@@ -1714,7 +1718,7 @@
       };
     };
 
-    fragment@15 {
+fragment@15{
       target = <&vi_in5>;
       __overlay__ {
         status = "okay";
@@ -1726,7 +1730,7 @@
     };
 
 
-    fragment@16 {
+fragment@16{
       target = <&vi_port6>;
       __overlay__ {
         reg = <6>;
@@ -1734,7 +1738,7 @@
       };
     };
 
-    fragment@17 {
+fragment@17{
       target = <&vi_in6>;
       __overlay__ {
         status = "okay";
@@ -1746,7 +1750,7 @@
     };
 
 
-    fragment@18 {
+fragment@18{
       target = <&vi_port7>;
       __overlay__ {
         reg = <7>;
@@ -1754,7 +1758,7 @@
       };
     };
 
-    fragment@19 {
+fragment@19{
       target = <&vi_in7>;
       __overlay__ {
         status = "okay";
@@ -1767,7 +1771,7 @@
 
 
     /* channel 0 */
-    fragment@20 {
+fragment@20{
       target = <&csi_chan0>;
       __overlay__ {
         reg = <0>;
@@ -1775,7 +1779,7 @@
       };
     };
 
-    fragment@21 {
+fragment@21{
       target = <&csi_chan0_port0>;
       __overlay__ {
         reg = <0>;
@@ -1783,7 +1787,7 @@
       };
     };
 
-    fragment@22 {
+fragment@22{
       target = <&csi_chan0_port1>;
       __overlay__ {
         reg = <1>;
@@ -1791,7 +1795,7 @@
       };
     };
 
-    fragment@23 {
+fragment@23{
       target = <&csi_in0>;
       __overlay__ {
         status = "okay";
@@ -1801,7 +1805,7 @@
       };
     };
 
-    fragment@24 {
+fragment@24{
       target = <&csi_out0>;
       __overlay__ {
         status = "okay";
@@ -1811,7 +1815,7 @@
 
 
     /* channel 1 */
-    fragment@25 {
+fragment@25{
       target = <&csi_chan1>;
       __overlay__ {
         reg = <1>;
@@ -1819,7 +1823,7 @@
       };
     };
 
-    fragment@26 {
+fragment@26{
       target = <&csi_chan1_port0>;
       __overlay__ {
         reg = <0>;
@@ -1827,7 +1831,7 @@
       };
     };
 
-    fragment@27 {
+fragment@27{
       target = <&csi_chan1_port1>;
       __overlay__ {
         reg = <1>;
@@ -1835,7 +1839,7 @@
       };
     };
 
-    fragment@28 {
+fragment@28{
       target = <&csi_in1>;
       __overlay__ {
         status = "okay";
@@ -1845,7 +1849,7 @@
       };
     };
 
-    fragment@29 {
+fragment@29{
       target = <&csi_out1>;
       __overlay__ {
         status = "okay";
@@ -1855,7 +1859,7 @@
 
 
     /* channel 2 */
-    fragment@30 {
+fragment@30{
       target = <&csi_chan2>;
       __overlay__ {
         reg = <2>;
@@ -1863,7 +1867,7 @@
       };
     };
 
-    fragment@31 {
+fragment@31{
       target = <&csi_chan2_port0>;
       __overlay__ {
         reg = <0>;
@@ -1871,7 +1875,7 @@
       };
     };
 
-    fragment@32 {
+fragment@32{
       target = <&csi_chan2_port1>;
       __overlay__ {
         reg = <1>;
@@ -1879,7 +1883,7 @@
       };
     };
 
-    fragment@33 {
+fragment@33{
       target = <&csi_in2>;
       __overlay__ {
         status = "okay";
@@ -1889,7 +1893,7 @@
       };
     };
 
-    fragment@34 {
+fragment@34{
       target = <&csi_out2>;
       __overlay__ {
         status = "okay";
@@ -1899,7 +1903,7 @@
 
 
     /* channel 3 */
-    fragment@35 {
+fragment@35{
       target = <&csi_chan3>;
       __overlay__ {
         reg = <3>;
@@ -1907,7 +1911,7 @@
       };
     };
 
-    fragment@36 {
+fragment@36{
       target = <&csi_chan3_port0>;
       __overlay__ {
         reg = <0>;
@@ -1915,7 +1919,7 @@
       };
     };
 
-    fragment@37 {
+fragment@37{
       target = <&csi_chan3_port1>;
       __overlay__ {
         reg = <1>;
@@ -1923,7 +1927,7 @@
       };
     };
 
-    fragment@38 {
+fragment@38{
       target = <&csi_in3>;
       __overlay__ {
         status = "okay";
@@ -1933,7 +1937,7 @@
       };
     };
 
-    fragment@39 {
+fragment@39{
       target = <&csi_out3>;
       __overlay__ {
         status = "okay";
@@ -1943,7 +1947,7 @@
 
 
     /* channel 4 */
-    fragment@40 {
+fragment@40{
       target = <&csi_chan4>;
       __overlay__ {
         reg = <4>;
@@ -1951,7 +1955,7 @@
       };
     };
 
-    fragment@41 {
+fragment@41{
       target = <&csi_chan4_port0>;
       __overlay__ {
         reg = <0>;
@@ -1959,7 +1963,7 @@
       };
     };
 
-    fragment@42 {
+fragment@42{
       target = <&csi_chan4_port1>;
       __overlay__ {
         reg = <1>;
@@ -1967,7 +1971,7 @@
       };
     };
 
-    fragment@43 {
+fragment@43{
       target = <&csi_in4>;
       __overlay__ {
         status = "okay";
@@ -1977,7 +1981,7 @@
       };
     };
 
-    fragment@44 {
+fragment@44{
       target = <&csi_out4>;
       __overlay__ {
         status = "okay";
@@ -1987,7 +1991,7 @@
 
 
     /* channel 5 */
-    fragment@45 {
+fragment@45{
       target = <&csi_chan5>;
       __overlay__ {
         reg = <5>;
@@ -1995,7 +1999,7 @@
       };
     };
 
-    fragment@46 {
+fragment@46{
       target = <&csi_chan5_port0>;
       __overlay__ {
         reg = <0>;
@@ -2003,7 +2007,7 @@
       };
     };
 
-    fragment@47 {
+fragment@47{
       target = <&csi_chan5_port1>;
       __overlay__ {
         reg = <1>;
@@ -2011,7 +2015,7 @@
       };
     };
 
-    fragment@48 {
+fragment@48{
       target = <&csi_in5>;
       __overlay__ {
         status = "okay";
@@ -2021,7 +2025,7 @@
       };
     };
 
-    fragment@49 {
+fragment@49{
       target = <&csi_out5>;
       __overlay__ {
         status = "okay";
@@ -2031,7 +2035,7 @@
 
 
     /* channel 6 */
-    fragment@50 {
+fragment@50{
       target = <&csi_chan6>;
       __overlay__ {
         reg = <6>;
@@ -2039,7 +2043,7 @@
       };
     };
 
-    fragment@51 {
+fragment@51{
       target = <&csi_chan6_port0>;
       __overlay__ {
         reg = <0>;
@@ -2047,7 +2051,7 @@
       };
     };
 
-    fragment@52 {
+fragment@52{
       target = <&csi_chan6_port1>;
       __overlay__ {
         reg = <1>;
@@ -2055,7 +2059,7 @@
       };
     };
 
-    fragment@53 {
+fragment@53{
       target = <&csi_in6>;
       __overlay__ {
         status = "okay";
@@ -2065,7 +2069,7 @@
       };
     };
 
-    fragment@54 {
+fragment@54{
       target = <&csi_out6>;
       __overlay__ {
         status = "okay";
@@ -2075,7 +2079,7 @@
 
 
     /* channel 7 */
-    fragment@55 {
+fragment@55{
       target = <&csi_chan7>;
       __overlay__ {
         reg = <7>;
@@ -2083,7 +2087,7 @@
       };
     };
 
-    fragment@56 {
+fragment@56{
       target = <&csi_chan7_port0>;
       __overlay__ {
         reg = <0>;
@@ -2091,7 +2095,7 @@
       };
     };
 
-    fragment@57 {
+fragment@57{
       target = <&csi_chan7_port1>;
       __overlay__ {
         reg = <1>;
@@ -2099,7 +2103,7 @@
       };
     };
 
-    fragment@58 {
+fragment@58{
       target = <&csi_in7>;
       __overlay__ {
         status = "okay";
@@ -2109,7 +2113,7 @@
       };
     };
 
-    fragment@59 {
+fragment@59{
       target = <&csi_out7>;
       __overlay__ {
         status = "okay";
@@ -2119,7 +2123,7 @@
 
 
     /* camera 0 */
-    fragment@60 {
+fragment@60{
       target = <&camera_module0>;
       __overlay__ {
         status = "okay";
@@ -2136,7 +2140,7 @@
     }; 
 
 
-    fragment@61 {
+fragment@61{
       target = <&camera_module1>;
       __overlay__ {
         status = "okay";
@@ -2153,7 +2157,7 @@
     }; 
 
 
-    fragment@62 {
+fragment@62{
       target = <&camera_module2>;
       __overlay__ {
         status = "okay";
@@ -2170,7 +2174,7 @@
     }; 
 
 
-    fragment@63 {
+fragment@63{
       target = <&camera_module3>;
       __overlay__ {
         status = "okay";
@@ -2187,7 +2191,7 @@
     }; 
 
 
-    fragment@64 {
+fragment@64{
       target = <&camera_module4>;
       __overlay__ {
         status = "okay";
@@ -2204,7 +2208,7 @@
     }; 
 
 
-    fragment@65 {
+fragment@65{
       target = <&camera_module5>;
       __overlay__ {
         status = "okay";
@@ -2221,7 +2225,7 @@
     }; 
 
 
-    fragment@66 {
+fragment@66{
       target = <&camera_module6>;
       __overlay__ {
         status = "okay";
@@ -2238,7 +2242,7 @@
     }; 
 
 
-    fragment@67 {
+fragment@67{
       target = <&camera_module7>;
       __overlay__ {
         status = "okay";
@@ -2255,41 +2259,51 @@
     }; 
 
 
-    fragment@68 {
+fragment@68{
       target = <&dser>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
     }; 
 
-    fragment@69 {
+fragment@69{
       target = <&dsera>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
     }; 
 
-    fragment@70 {
+fragment@70{
       target = <&dserb>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
     }; 
 
-    fragment@71 {
+fragment@71{
       target = <&dserc>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
     }; 
 
-    fragment@72 {
+fragment@72{
       target-path = "/host1x/vi@15c10000";
       __overlay__ {
         num-channels = <8>;
       };
     };
 
-
+fragment@73{
+      target-path = "/i2c@3180000";
+      __overlay__ {
+       t4_fpga: tier4_fpga@66 {
+          compatible = "nvidia,tier4_fpga";
+          reg = <0x66>;
+          generate-fsync = "false";
+          status = "okay";
+        };
+      };
+    };
 };
 

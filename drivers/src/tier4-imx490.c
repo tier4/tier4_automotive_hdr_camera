@@ -35,9 +35,12 @@
 #include "tier4-max9296.h"
 
 #include "tier4-isx021-extern.h"
+#include "tier4-hw-model.h"
+#include "tier4-fpga.h"
 
 #include <media/tegracam_core.h>
 
+MODULE_SOFTDEP("pre: tier4_gw5300");
 MODULE_SOFTDEP("pre: tier4_isx021");
 
 // Register Address
@@ -63,6 +66,8 @@ MODULE_SOFTDEP("pre: tier4_isx021");
 #define SENSOR_ID_IMX490							490
 
 #define MAX_NUM_CAMERA								8
+
+#define	FSYNC_FREQ_HZ								10
 
 enum {
 	IMX490_MODE_2880x1860_CROP_30FPS,
@@ -110,6 +115,7 @@ struct tier4_imx490 {
 	int								fsync_mode;
 	bool 							distortion_correction;
 	bool							auto_exposure;
+	struct 	device					*fpga_dev;
 };
 
 static const struct regmap_config tier4_sensor_regmap_config = {
@@ -124,21 +130,23 @@ static int trigger_mode ;
 module_param(trigger_mode, int, 0644);
 
 // ------------------------
+static char upper(char c){
+    if('a' <= c && c <= 'z'){
+        c = c - ('a' - 'A');
+    }
+    return c;
+}
 
-//static struct mutex tier4_sensor_lock__;
-//
-//void tier4_imx490_sensor_mutex_lock(void)
-//{
-//	mutex_lock(&tier4_sensor_lock__);
-//}
-//EXPORT_SYMBOL(tier4_imx490_sensor_mutex_lock);
-//
-//void tier4_imx490_sensor_mutex_unlock(void)
-//{
-//	mutex_unlock(&tier4_sensor_lock__);
-//}
-//EXPORT_SYMBOL(tier4_imx490_sensor_mutex_unlock);
-//
+static void to_upper_string(char *out, const char *in){
+    int i;
+
+    i = 0;
+    while(in[i] != '\0'){
+        out[i] = upper(in[i]);
+        i++;
+    }
+}
+
 static inline int tier4_imx490_read_reg(struct camera_common_data *s_data, u16 addr, u8 *val)
 {
 	int err 	= 0;
@@ -177,6 +185,32 @@ static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv)
 {
 	int 			err 	= 0;
 	struct device 	*dev 	= priv->s_data->dev;
+	int				des_num = 0;
+
+	if ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+
+		dev_info(dev, "[%s] : generate-fsync =%d\n", __func__, priv->g_ctx.fpga_generate_fsync );
+
+		if ( priv->g_ctx.fpga_generate_fsync == false ) {
+			err = tier4_fpga_disable_generate_fsync_signal(priv->fpga_dev);
+			if ( err ) {
+				dev_err(dev, "[%s] : Disabling FPGA generate fsync failed.\n", __func__);
+				return err;
+			}
+		} else {
+			err = tier4_fpga_enable_generate_fsync_signal(priv->fpga_dev);
+			if ( err ) {
+				dev_err(dev, "[%s] : Enabling FPGA generate fsync failed.\n", __func__);
+				return err;
+			}
+			des_num = priv->g_ctx.reg_mux;
+			err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num, FSYNC_FREQ_HZ );
+			if ( err ) {
+				dev_err(dev, "[%s] : Setting the frequency of fsync genrated by FPGA failed.\n", __func__);
+				return err;
+			}
+		}
+	}
 
 	err = tier4_max9296_setup_gpi(priv->dser_dev);
 
@@ -645,6 +679,8 @@ static const struct v4l2_subdev_internal_ops tier4_imx490_subdev_internal_ops = 
 	.open = tier4_imx490_open,
 };
 
+static const char *of_stdout_options;
+
 static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 {
 	struct tegracam_device 		*tc_dev 		= priv->tc_dev;
@@ -652,22 +688,68 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 	struct device_node 			*node 			= dev->of_node;
 	struct device_node 			*ser_node;
 	struct i2c_client 			*ser_i2c 		= NULL;
-
-#if defined(TIER4_C2_CAMERA)
-	struct device_node 			*isp_node;
-	struct i2c_client 			*isp_i2c 		= NULL;
-#endif
-
 	struct device_node 			*dser_node;
 	struct i2c_client 			*dser_i2c 		= NULL;
+	struct device_node 			*isp_node;
+	struct i2c_client 			*isp_i2c 		= NULL;
+	struct device_node 			*fpga_node		= NULL;
+	struct i2c_client 			*fpga_i2c 		= NULL;
 	struct device_node 			*gmsl;
+	struct device_node 			*root_node;
 	int 						value 			= 0xFFFF;
 	const char 					*str_value;
 	const char 					*str_value1[2];
 	int  						i;
 	int 						err;
+	const char					*str_model;
+	char						upper_str_model[64];
+	char						*str_err;
 
+	root_node = of_find_node_opts_by_path("/", &of_stdout_options);
+
+	err = of_property_read_string(root_node, "model", &str_model);
+
+	if (err < 0) {
+		dev_err(dev, "[%s] : model not found\n", __func__);
+		goto error;
+	}
+
+	memset(upper_str_model, 0, 64);
+
+	to_upper_string(upper_str_model, str_model);
+
+	str_err = strstr(upper_str_model, "ORIN");
+
+ 	priv->g_ctx.hardware_model = HW_MODEL_UNKNOWN;
+
+	if ( str_err  ) {
+		 priv->g_ctx.hardware_model = HW_MODEL_NVIDIA_ORIN_DEVKIT;
+	}
+
+	str_err = strstr(upper_str_model, "XAVIER");
+	if ( str_err  ) {
+		 priv->g_ctx.hardware_model = HW_MODEL_NVIDIA_XAVIER_DEVKIT;
+	}
+
+	str_err = strstr(upper_str_model, "ROSCUBE");
+	if ( str_err  ) {
+		 priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
+	}
+
+	dev_info(dev, "[%s] : model=%s\n", __func__, str_model);
+	dev_info(dev, "[%s] : hardware_model=%d\n", __func__, priv->g_ctx.hardware_model) ;
+
+	if ( priv->g_ctx.hardware_model == HW_MODEL_UNKNOWN ) {
+		dev_err(dev, "[%s] : Unknown Hardware Sysytem !\n", __func__);
+		goto error;
+	}
+		
 	err = of_property_read_u32(node, "reg", &priv->g_ctx.sdev_isp_reg);
+
+	if (err < 0) {
+		dev_err(dev, "[%s] : def-addr not found\n", __func__);
+		goto error;
+	}
 
 	if (err < 0) {
 		dev_err(dev, "[%s] : reg not found\n", __func__);
@@ -727,6 +809,28 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 		priv->auto_exposure = false;
 	}
 
+#if 0
+	priv->g_ctx.fpga_generate_fsync = false;
+
+	if ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+
+		err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
+
+		if ( err < 0) {
+			if ( err == -EINVAL ) {
+				dev_info(dev, "[%s] : Parameter of fpga-generate-fsync does not exist.\n", __func__);
+			} else {
+				dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
+				goto error;
+			}
+		} else {                                                                                                     	if (!strcmp(str_value, "true")) {
+				priv->g_ctx.fpga_generate_fsync = true;
+			}
+		}
+	}
+#endif
+
+	// For Ser node
 	ser_node = of_parse_phandle(node, "nvidia,gmsl-ser-device", 0);
 
 	if (ser_node == NULL) {
@@ -740,8 +844,6 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 		dev_err(dev, "[%s] : Serializer reg not found\n", __func__);
 		goto error;
 	}
-
-	dev_dbg(dev, "[%s] : ser_reg= 0x%x \n", __func__, priv->g_ctx.ser_reg);
 
 	ser_i2c = of_find_i2c_device_by_node(ser_node);
 
@@ -757,6 +859,8 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 	}
 
 	priv->ser_dev = &ser_i2c->dev;
+
+	// For ISP node
 
 	isp_node = of_parse_phandle(node, "nvidia,isp-device", 0);
 
@@ -797,6 +901,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
    priv->g_ctx.sdev_reg = priv->g_ctx.sdev_isp_reg;
    priv->g_ctx.sdev_def = priv->g_ctx.sdev_isp_def;
 
+	// For Dser node
 
 	dser_node = of_parse_phandle(node, "nvidia,gmsl-dser-device", 0);
 
@@ -820,6 +925,40 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 	}
 
 	priv->dser_dev = &dser_i2c->dev;
+
+	if ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+
+		// for FPGA node
+
+		fpga_node = of_parse_phandle(node, "nvidia,fpga-device", 0);
+
+		if (fpga_node == NULL) {
+			dev_err(dev, "[%s] : Missing %s handle\n", __func__, "nvidia,fpga-device");
+			goto error;
+		}
+
+		err = of_property_read_u32(fpga_node, "reg", &priv->g_ctx.sdev_fpga_reg);
+
+		if (err < 0) {
+			dev_err(dev, "[%s] : FPGA reg not found\n", __func__);
+			goto error;
+		}
+
+		fpga_i2c = of_find_i2c_device_by_node(fpga_node);
+
+		of_node_put(fpga_node);
+
+		if (fpga_i2c == NULL) {
+			dev_err(dev, "[%s] : Missing FPGA Dev Handle\n", __func__);
+			goto error;
+		}
+		if (fpga_i2c->dev.driver == NULL) {
+			dev_err(dev, "[%s] : Missing FPGA driver\n", __func__);
+			goto error;
+		}
+
+		priv->fpga_dev = &fpga_i2c->dev;
+	}
 
 	/* populate g_ctx from DT */
 

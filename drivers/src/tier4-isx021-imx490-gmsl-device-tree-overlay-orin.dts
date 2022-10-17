@@ -1,3 +1,4 @@
+
 /dts-v1/;
 /plugin/;
 
@@ -10,24 +11,24 @@
 
 / {
   overlay-name = "TIERIV ISX021 IMX490 GMSL2 Camera Device Tree Overlay";
-  jetson-header-name = "Jetson AGX Xavier CSI Connector";
+  jetson-header-name = "Jetson AGX CSI Connector";
   compatible = "nvidia,p3737-0000+p3701-0000", "nvidia,tegra234", "nvidia,tegra23x";
 
-  fragment@1{
+fragment@0{
     target-path = "/tegra-capture-vi";
     __overlay__ {
       num-channels = <0x04>;
     };
   };
   //diff view    
-  fragment@2{
+fragment@1{
     target-path = "/tegra-capture-vi/ports/port@0";
     __overlay__ {
       status = "okay";
     };
   };
 
-  fragment@3{
+fragment@2{
     target-path = "/tegra-capture-vi/ports/port@0/endpoint";
     __overlay__ {
       status = "okay";
@@ -37,14 +38,14 @@
     };
   };
 
-  fragment@4{
+fragment@3{
     target-path = "/tegra-capture-vi/ports/port@1";
     __overlay__ {
       status = "okay";
     };
   };
 
-  fragment@5{
+fragment@4{
     target-path = "/tegra-capture-vi/ports/port@1/endpoint";
     __overlay__ {
       status = "okay";
@@ -54,7 +55,7 @@
     };
   };
   
-fragment@6{
+fragment@5{
     target-path = "/tegra-capture-vi/ports/port@2";
     __overlay__ {
       status = "okay";
@@ -62,7 +63,7 @@ fragment@6{
   };
   };
   
-  fragment@7{
+fragment@6{
     target-path = "/tegra-capture-vi/ports/port@2/endpoint";
     __overlay__ {
       status = "okay";
@@ -72,14 +73,14 @@ fragment@6{
     };
   };
   
-  fragment@8{
+fragment@7{
     target-path = "/tegra-capture-vi/ports/port@3";
     __overlay__ {
       status = "okay";
     };
   };
   
-  fragment@9{
+fragment@8{
     target-path = "/tegra-capture-vi/ports/port@3/endpoint";
     __overlay__ {
       status = "okay";
@@ -93,19 +94,19 @@ fragment@6{
 /**********************/
 
 
-  fragment@10{
+fragment@9{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@0";
     __overlay__ {
       status = "okay";
     };
   };
-  fragment@11{
+fragment@10{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0";
     __overlay__ {
       status = "okay";
     };
   };
-  fragment@12{
+fragment@11{
     // target = csi_in0
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0/endpoint@0";
     __overlay__ {
@@ -115,14 +116,14 @@ fragment@6{
     };
   };
 
-  fragment@13{
+fragment@12{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@1";
     __overlay__ {
       status = "okay";
     };
   };
 
-  fragment@14{
+fragment@13{
     // target = csi_out0
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@1/endpoint@1";
     __overlay__ {
@@ -132,19 +133,19 @@ fragment@6{
   };
 
   // channel@1
-  fragment@15{
+fragment@14{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@1";
     __overlay__ {
       status = "okay";
     };
   };
-  fragment@16{
+fragment@15{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@0";
     __overlay__ {
       status = "okay";
     };
   };
-  fragment@17{
+fragment@16{
     // target = csi_in1
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@0/endpoint@2";
     __overlay__ {
@@ -155,7 +156,7 @@ fragment@6{
     };
   };
 
-  fragment@18{
+fragment@17{
     // target = csi_out1
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@1/endpoint@3";
     __overlay__ {
@@ -165,19 +166,19 @@ fragment@6{
   };
 
   // channel@2
-  fragment@19{
+fragment@18{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@2";
     __overlay__ {
       status = "okay";
     };
   };
-  fragment@20{
+fragment@19{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@0";
     __overlay__ {
       status = "okay";
     };
   };
-  fragment@21{
+fragment@20{
     // target = csi_in0
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@0/endpoint@4";
     __overlay__ {
@@ -188,14 +189,14 @@ fragment@6{
     };
   };
 
-  fragment@22{
+fragment@21{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@1";
     __overlay__ {
       status = "okay";
     };
   };
 
-  fragment@23{
+fragment@22{
     // target = csi_out0
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@1/endpoint@5";
     __overlay__ {
@@ -205,19 +206,19 @@ fragment@6{
   };
 
   // channel@3
-  fragment@24{
+fragment@23{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@3";
     __overlay__ {
       status = "okay";
     };
   };
-  fragment@25{
+fragment@24{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@0";
     __overlay__ {
       status = "okay";
     };
   };
-  fragment@26{
+fragment@25{
     // target = csi_in0
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@0/endpoint@6";
     __overlay__ {
@@ -228,14 +229,14 @@ fragment@6{
     };
   };
 
-  fragment@27{
+fragment@26{
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@1";
     __overlay__ {
       status = "okay";
     };
   };
 
-  fragment@28{
+fragment@27{
     // target = csi_out0
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@1/endpoint@7";
     __overlay__ {
@@ -245,16 +246,14 @@ fragment@6{
   };
 
   // channel@6-7
-  fragment@29{
+fragment@28{
     target-path = "/host1x@13e00000/nvcsi@15a00000";
     __overlay__ {
       num-channels = <4>;
     };
   };
 
-
-  ////////////////////////////////////
-  fragment@30{
+fragment@29{
     //tcp
     target-path = "/tegra-camera-platform";
     __overlay__ {
@@ -263,7 +262,7 @@ fragment@6{
     };
   };
 
-  fragment@31{
+fragment@30{
     target-path = "/tegra-camera-platform/modules/module0";
     __overlay__ {
       badge = "isx021_rear";
@@ -273,7 +272,7 @@ fragment@6{
     };
   };
 
-  fragment@32{
+fragment@31{
     target-path = "/tegra-camera-platform/modules/module0/drivernode0";
     __overlay__ {
       status = "okay";
@@ -283,7 +282,7 @@ fragment@6{
     };
   };
 
-  fragment@33{
+fragment@32{
     target-path = "/tegra-camera-platform/modules/module1";
     __overlay__ {
       badge = "isx021_front";
@@ -293,7 +292,7 @@ fragment@6{
     };
   };
 
-  fragment@34{
+fragment@33{
     target-path = "/tegra-camera-platform/modules/module1/drivernode0";
     __overlay__ {
       status = "okay";
@@ -303,7 +302,7 @@ fragment@6{
     };
   };
 
-  fragment@35{
+fragment@34{
     target-path = "/tegra-camera-platform/modules/module2";
     __overlay__ {
       badge = "isx021_topright";
@@ -313,7 +312,7 @@ fragment@6{
     };
   };
 
-  fragment@36{
+fragment@35{
     target-path = "/tegra-camera-platform/modules/module2/drivernode0";
     __overlay__ {
       status = "okay";
@@ -323,7 +322,7 @@ fragment@6{
     };
   };
 
-  fragment@37{
+fragment@36{
     target-path = "/tegra-camera-platform/modules/module3";
     __overlay__ {
       badge = "isx021_bottomright";
@@ -333,7 +332,7 @@ fragment@6{
     };
   };
 
-  fragment@38{
+fragment@37{
     target-path = "/tegra-camera-platform/modules/module3/drivernode0";
     __overlay__ {
       status = "okay";
@@ -343,7 +342,7 @@ fragment@6{
     };
   };
 
-  fragment@39{
+fragment@38{
     target-path = "/tegra-camera-platform/modules/module4";
     __overlay__ {
       badge = "isx021_topleft";
@@ -353,7 +352,7 @@ fragment@6{
     };
   };
 
-  fragment@40{
+fragment@39{
     target-path = "/tegra-camera-platform/modules/module4/drivernode0";
     __overlay__ {
       status = "okay";
@@ -363,7 +362,7 @@ fragment@6{
     };
   };
 
-  fragment@41{
+fragment@40{
     target-path = "/tegra-camera-platform/modules/module5";
     __overlay__ {
       badge = "isx021_centerright";
@@ -373,7 +372,7 @@ fragment@6{
     };
   };
 
-  fragment@42{
+fragment@41{
     target-path = "/tegra-camera-platform/modules/module5/drivernode0";
     __overlay__ {
       status = "okay";
@@ -384,7 +383,7 @@ fragment@6{
   };
 
   // cam
-  fragment@43{
+fragment@42{
     //cami2c/i2c@0
     target-path = "/i2c@3180000/tca9546@70";
     __overlay__ {
@@ -392,7 +391,7 @@ fragment@6{
     };
   };
 
-  fragment@44{
+fragment@43{
     //cami2c/i2c@0
     target-path = "/i2c@3180000/tca9546@70/i2c@0/max9296@48";
     __overlay__ {
@@ -401,7 +400,7 @@ fragment@6{
     };
   };
 
-  fragment@45{
+fragment@44{
     //cami2c/i2c@0
     target-path = "/i2c@3180000/tca9546@70/i2c@0/max9295_prim@62";
     __overlay__ {
@@ -410,7 +409,7 @@ fragment@6{
     };
   };
 
-  fragment@46{
+fragment@45{
     //cami2c/i2c@0
     target-path = "/i2c@3180000/tca9546@70/i2c@0/max9295_b@60";
     __overlay__ {
@@ -420,7 +419,7 @@ fragment@6{
     };
   };
 
-  fragment@47{
+fragment@46{
     //cami2c/i2c@0
     target-path = "/i2c@3180000/tca9546@70/i2c@0";
     __overlay__ {
@@ -657,7 +656,7 @@ fragment@6{
     };
   };
 
-  fragment@48{
+fragment@47{
     target-path = "/i2c@3180000/tca9546@70";
     __overlay__ {
       i2c@1 {
@@ -895,8 +894,6 @@ fragment@6{
             streams = "ued-u1","yuv8"; 				/* Types of streams sensor is streaming. */
           };
         };
-
-
       };
     };
   };

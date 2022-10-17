@@ -124,6 +124,13 @@
 
 #define MAX9295_MAX_PIPES 				0x4
 
+#if 0
+#define	dev_dbg2	dev_bg
+#else
+#undef 	dev_dbg2
+#define	dev_dbg2	dev_info
+#endif
+
 struct tier4_max9295_client_ctx {
 	struct gmsl_link_ctx *g_ctx;
 	bool st_done;

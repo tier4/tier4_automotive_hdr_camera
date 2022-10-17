@@ -27,6 +27,7 @@
 
 #include "tier4-max9296.h"
 #include "tier4-gmsl-link.h"
+#include "tier4-hw-model.h"
 
 struct tier4_max9296_source_ctx {
 	struct gmsl_link_ctx *g_ctx;
@@ -88,6 +89,7 @@ struct tier4_max9296_source_ctx {
 
 //#define MAX9296_PHY1_CLK 					0x32
 #define MAX9296_PHY1_CLK 					0x2F
+#define MAX9296_PHY1_CLK_1400MHZ			0x2E
 //#define MAX9296_PHY1_CLK 					0x2C
 
 #define MAX9296_RESET_ALL 					0x80
@@ -914,8 +916,13 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 			MAX9296_LANE_MAP1_ADDR, priv->lane_mp1);
 		tier4_max9296_write_reg(dev,
 			MAX9296_LANE_MAP2_ADDR, priv->lane_mp2);
-		tier4_max9296_write_reg(dev,
-			MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK);
+		if ( g_ctx->hardware_model == HW_MODEL_NVIDIA_ORIN_DEVKIT ) {
+			tier4_max9296_write_reg(dev,
+				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
+		} else {
+			tier4_max9296_write_reg(dev,
+				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK);
+		}
 
 		priv->lane_setup = true;
 	}
