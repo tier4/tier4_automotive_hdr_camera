@@ -30,31 +30,31 @@ int8_t C1::checkES3()
 
   return 0;
 }
-  float C1::getAEError(){
-	  float ret;
-	  uint8_t l,u;
-	  uint16_t d;
+float C1::getAEError()
+{
+  float ret;
+  uint8_t l, u;
+  uint16_t d;
 
-	  i2c::read16(dev_name, i2c_dev_addr, ERRSCL_L, &l);
-	  i2c::read16(dev_name, i2c_dev_addr, ERRSCL_U, &u);
-	  
-	  d = l + (u << 8);
+  i2c::read16(dev_name, i2c_dev_addr, ERRSCL_L, &l);
+  i2c::read16(dev_name, i2c_dev_addr, ERRSCL_U, &u);
 
-	  ret = (int16_t)d * 6.02 / 1024.0;
-	  return ret;
-  }
+  d = l + (u << 8);
 
+  ret = (int16_t)d * 6.02 / 1024.0;
+  return ret;
+}
 
 bool C1::isAvailableCamera(void)
 {
-	uint8_t data;
-	bool ret=true;
-	if(i2c::read16(dev_name, i2c_dev_addr, AE_MODE, &data) < 0){
-		ret = false;
-	}
-	
-	return ret;
+  uint8_t data;
+  bool ret = true;
+  if (i2c::read16(dev_name, i2c_dev_addr, AE_MODE, &data) < 0)
+  {
+    ret = false;
+  }
 
+  return ret;
 }
 
 float C1::getTempature(int type)
@@ -100,7 +100,8 @@ float C1::getTempatureS1(void)
   return data;
 }
 
-uint8_t C1::getAEMode(){
+uint8_t C1::getAEMode()
+{
   uint8_t aemode;
   i2c::read16(dev_name, i2c_dev_addr, AE_MODE, &aemode);
   return aemode;
@@ -108,33 +109,29 @@ uint8_t C1::getAEMode(){
 
 int8_t C1::setAEMode(int mode)
 {
-  
-  if(getAEMode() != mode)
+  if (getAEMode() != mode)
   {
-    //set aemode
-    i2c::write16(dev_name, i2c_dev_addr,AE_MODE, mode);
+    // set aemode
+    i2c::write16(dev_name, i2c_dev_addr, AE_MODE, mode);
   }
 }
-
 
 int8_t C1::setShutterSpeedforFME(int val)
 {
 #define FME_SHTVAL 0xABEC
 
-    i2c::write16(dev_name, i2c_dev_addr,AE_MODE, val);
-
+  i2c::write16(dev_name, i2c_dev_addr, AE_MODE, val);
 }
-
 
 int8_t C1::setDigitalGain(int db)
 {
   uint8_t u;
   uint8_t l;
 
-  if(getAEMode() != AE_MODE_ME){
+  if (getAEMode() != AE_MODE_ME)
+  {
     fprintf(stderr, "[WARN]: AEMode is not ME. DigitalGain parameter has not effect in this mode.\n");
   }
-
 
   if (db < DIGITAL_GAIN_MIN || DIGITAL_GAIN_MAX < db)
   {
@@ -168,8 +165,8 @@ int8_t C1::setHue(int deg)
 {
   if (deg < HUE_MIN || HUE_MAX < deg)
   {
-    fprintf(stderr, "[WARN][%s:%x]: please set in the range of %d ≤ deg ≤ %d. Hue is not set.\n", __func__, i2c_dev_addr,HUE_MIN,
-            HUE_MAX);
+    fprintf(stderr, "[WARN][%s:%x]: please set in the range of %d ≤ deg ≤ %d. Hue is not set.\n", __func__,
+            i2c_dev_addr, HUE_MIN, HUE_MAX);
     return -1;
   }
 
@@ -225,7 +222,6 @@ int8_t C1::setContrast(float gain)
 
   return 0;
 }
-
 
 int8_t C1::setAutoWhiteBalance(bool on)
 {
@@ -301,7 +297,6 @@ int8_t C1::setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float
 int8_t C1::setExposureOffsetFlag(bool flag)
 {
   i2c::write16(dev_name, i2c_dev_addr, EVREF_CTRL_SEL, flag);
-
 }
 
 int8_t C1::setExposureOffset(float offset)
@@ -315,8 +310,7 @@ int8_t C1::setExposureOffset(float offset)
     return -1;
   }
 
-
-  fprintf(stderr,"%s:%f\n", __func__,getAEError());
+  fprintf(stderr, "%s:%f\n", __func__, getAEError());
 
   int8_t data = offset / EVREF_OFFSET_UNIT;
 
