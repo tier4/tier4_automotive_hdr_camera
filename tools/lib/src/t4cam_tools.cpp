@@ -147,6 +147,18 @@ int8_t C1::setDigitalGain(int db)
   return 0;
 }
 
+int C1::getDigitalGain(void)
+{
+  uint8_t l, u;
+  int16_t data;
+
+  i2c::read16(dev_name, i2c_dev_addr, DIGITAL_GAIN_L, &l);
+  i2c::read16(dev_name, i2c_dev_addr, DIGITAL_GAIN_U, &u);
+  data = (int16_t)(l + (u << 8));
+
+  return (int)data;
+}
+
 int8_t C1::setSharpness(float gain)
 {
   if (gain < SHARPNESS_MIN || SHARPNESS_MAX < gain)
@@ -159,8 +171,23 @@ int8_t C1::setSharpness(float gain)
   data = (uint8_t)(gain / SHARPNESS_UNIT);
   i2c::write16(dev_name, i2c_dev_addr, UISHARPNESS, data);
 
+  fprintf(stderr, "%x, %f\n", data, gain);
   return 0;
 }
+
+float C1::getSharpness(void)
+{
+  uint8_t data;
+  float ret;
+
+  i2c::read16(dev_name, i2c_dev_addr, UISHARPNESS, &data);
+  ret = (float)data * (SHARPNESS_UNIT);
+
+  fprintf(stderr, "%x, %f\n", data, ret);
+
+  return ret;
+}
+
 int8_t C1::setHue(int deg)
 {
   if (deg < HUE_MIN || HUE_MAX < deg)
@@ -176,6 +203,14 @@ int8_t C1::setHue(int deg)
   i2c::write16(dev_name, i2c_dev_addr, UIHUE, data);
   return 0;
 }
+
+int C1::getHue(void)
+{
+  uint8_t data;
+  i2c::read16(dev_name, i2c_dev_addr, UIHUE, &data);
+  return (int)(int8_t)data * HUE_UNIT;
+}
+
 int8_t C1::setSaturation(float gain)
 {
   if (gain < SATURATION_MIN || SATURATION_MAX < gain)
@@ -188,6 +223,16 @@ int8_t C1::setSaturation(float gain)
   data = (uint8_t)(gain / SATURATION_UNIT);
   i2c::write16(dev_name, i2c_dev_addr, UISATURATION, data);
   return 0;
+}
+
+float C1::getSaturation(void)
+{
+  float gain;
+  uint8_t data;
+
+  i2c::read16(dev_name, i2c_dev_addr, UISATURATION, &data);
+  gain = (float)data * SATURATION_UNIT;
+  return gain;
 }
 
 int8_t C1::setBrightness(float offset)
@@ -208,6 +253,20 @@ int8_t C1::setBrightness(float offset)
   return 0;
 }
 
+float C1::getBrightness(void)
+{
+  int16_t data;
+  uint8_t l, u;
+
+  i2c::read16(dev_name, i2c_dev_addr, UIBRIGHTNESS_L, &l);
+  i2c::read16(dev_name, i2c_dev_addr, UIBRIGHTNESS_U, &u);
+
+  data = (int16_t)(u << 8 + l);
+
+  float ret = data / 10 * BRIGHTNESS_UNIT;
+  return ret;
+}
+
 int8_t C1::setContrast(float gain)
 {
   if (gain < CONTRAST_MIN || CONTRAST_MAX < gain)
@@ -221,6 +280,15 @@ int8_t C1::setContrast(float gain)
   i2c::write16(dev_name, i2c_dev_addr, UICONTRAST, data);
 
   return 0;
+}
+
+float C1::getContrast(void)
+{
+  uint8_t data;
+  i2c::read16(dev_name, i2c_dev_addr, UICONTRAST, &data);
+  float ret = (float)(data)*CONTRAST_UNIT;
+  fprintf(stderr, "%x,%f\n", data, ret);
+  return ret;
 }
 
 int8_t C1::setAutoWhiteBalance(bool on)

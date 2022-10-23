@@ -6,7 +6,7 @@ find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
 find_package(yaml-cpp REQUIRED)
 
-add_executable(gui gui.cpp)
+add_executable(gui gui.cpp gui_callback.cpp)
 target_include_directories(gui  PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../lib/include>
   $<INSTALL_INTERFACE:.>

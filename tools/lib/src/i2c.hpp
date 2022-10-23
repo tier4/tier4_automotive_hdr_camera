@@ -5,37 +5,41 @@
 #ifndef _I2C_LIB__
 #define _I2C_LIB__
 
-#include <stdint.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <string>
-#include <stdio.h>
 #include <errno.h>
-#include <string.h>
-
-#include <linux/i2c.h>
+#include <fcntl.h>
 #include <linux/i2c-dev.h>
+#include <linux/i2c.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
+#include <string>
+
+#define DEBUG
 #ifdef DEBUG
-# define DEBUG_PRINT printf
+#define DEBUG_PRINT printf
 #else
-# define DEBUG_PRINT(...) do {} while (0)
+#define DEBUG_PRINT(...)                                                                                               \
+  do                                                                                                                   \
+  {                                                                                                                    \
+  } while (0)
 #endif
 
 class i2c
 {
-  private:
-  public:
-    i2c()
-    {
-    }
+private:
+public:
+  i2c()
+  {
+  }
 
-    // 16, 8 are address size. not data size;
-    static int8_t read16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, uint8_t* data);
-    static int8_t read8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uint8_t* data);
-    static int8_t write16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, uint8_t data);
-    static int8_t write8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uint8_t data);
-    static int8_t write(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, const uint8_t* data, uint16_t length);
+  // 16, 8 are address size. not data size;
+  static int8_t read16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, uint8_t* data);
+  static int8_t read8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uint8_t* data);
+  static int8_t write16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, uint8_t data);
+  static int8_t write8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uint8_t data);
+  static int8_t write(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, const uint8_t* data, uint16_t length);
 };
 #endif

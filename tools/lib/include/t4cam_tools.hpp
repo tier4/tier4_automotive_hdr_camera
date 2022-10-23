@@ -67,16 +67,14 @@ public:
     fprintf(stdout, "dev_addr: 0x%x\n", i2c_dev_addr);
 #endif
 
-    initialized_default_value_from_file(param_file);
+    initialized_default_value_from_default();
+    initialized_load_value_from_file(param_file);
   }
 
   std::unordered_map<std::string, Param> default_value_map;
+  std::unordered_map<std::string, Param> load_value_map;
 
-  template <class T>
-  T void :
-
-    void
-    initialized_default_value_from_default()
+  void initialized_default_value_from_default()
   {
     default_value_map["ae_mode"] = 1.0;
     default_value_map["digital_gain"] = 1.0;
@@ -90,9 +88,8 @@ public:
     default_value_map["sharpness"] = 1.0;
   }
 
-  void initialized_default_value_from_file(const std::string &file_name)
+  void initialized_load_value_from_file(const std::string &file_name)
   {
-    initialized_default_value_from_default();
     YAML::Node node;
     try
     {
@@ -104,7 +101,7 @@ public:
         float val = node["config"][i]["value"].as<float>();
         std::cout << "param_name:" << param_name << std::endl;
         std::cout << "value:" << val << std::endl;
-        default_value_map[param_name] = val;
+        load_value_map[param_name] = val;
       }
     }
     catch (const std::exception &e)
@@ -122,9 +119,22 @@ public:
     setExposureOffset(default_value_map["ev_offset"]);
     setHue(default_value_map["hue"]);
     setSaturation(default_value_map["saturation"]);
-    setBrightness(default_value_map["contrast"]);
-    setContrast(default_value_map["brightness"]);
+    setContrast(default_value_map["contrast"]);
+    setBrightness(default_value_map["brightness"]);
     setSharpness(default_value_map["sharpness"]);
+  }
+  void setLoadValue(void)
+  {
+    setAEMode(load_value_map["ae_mode"]);
+    setDigitalGain(load_value_map["digital_gain"]);
+    setShutterSpeedforFME(load_value_map["shutter_speed"]);
+    setExposureOffsetFlag(load_value_map["ev_offset_flag"]);
+    setExposureOffset(load_value_map["ev_offset"]);
+    setHue(load_value_map["hue"]);
+    setSaturation(load_value_map["saturation"]);
+    setBrightness(load_value_map["brightness"]);
+    setContrast(load_value_map["contrast"]);
+    setSharpness(load_value_map["sharpness"]);
   }
 
   bool isAvailableCamera(void);
@@ -138,6 +148,13 @@ public:
   int8_t setSaturation(float gain);
   int8_t setBrightness(float offset);
   int8_t setContrast(float gain);
+
+  int getDigitalGain();
+  float getSharpness();
+  int getHue();
+  float getSaturation();
+  float getBrightness();
+  float getContrast();
 
   int8_t setAutoWhiteBalance(bool on);
   int8_t setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float b_gain);

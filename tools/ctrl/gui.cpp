@@ -1,103 +1,11 @@
-#include <gtkmm.h>
+#include "gui.h"
 
-#define DEBUG
-#include <t4cam_tools.hpp>
-
-// スペーサ
-class Spacer : public Gtk::Widget
+int main(int argc, char *argv[])
 {
-public:
-  Spacer()
-  {
-    set_has_window(false);
-  }
-};
-
-class SampleWindow : public Gtk::Window
-{
-public:
-  SampleWindow(int width, int height);
-  virtual ~SampleWindow() = default;
-
-private:
-  // non gui
-  std::array<std::shared_ptr<C1>, 8> camera_ptr_array;
-  uint16_t getAvailableCamera();
-  std::array<Gtk::CheckButton, 8> buttons;
-
-  // GUI
-  // Frame
-  // Select Port
-  void createSelectPortFrame(void);
-  Gtk::Frame select_port_frame;
-
-  //
-  void createAEFrame(void);
-
-  //
-  void createImageTuningFrame(void);
-
-  void createControlFrame(void);
-
-  Gtk::Scale hue_scale;
-  Gtk::Scale b_scale;
-  Gtk::Scale c_scale;
-  Gtk::Scale m_scale;
-
-  Gtk::Scale digital_gain_scale;
-  Gtk::Scale shutter_speed_scale;
-  // Gtk::Scale shutter_min_scale;
-  // Gtk::Scale shutter_max_scale;
-
-  Gtk::Grid m_grid;
-  void m_callback_scale();
-  void a_callback_scale();
-  void b_callback_scale();
-  void c_callback_scale();
-  void save_callback();
-  void digitalgain_callback();
-
-  void callback_check(int i);
-  void callback_radio(int i);
-  void callback_default_button();
-
-  Spacer spacer[5];
-
-  uint16_t available_mask = 0;
-
-  Gtk::VBox v_box;
-  Gtk::HBox h_check_box;
-  Gtk::HBox h_control_box;
-  Gtk::HBox ae_radio_box;
-
-  Gtk::Grid ae_grid;
-  Gtk::Label digital_gain_label;
-  Gtk::Label shutter_speed_label;
-
-  Gtk::Label evref_label;
-  Gtk::CheckButton evref_check;
-  Gtk::Scale evref_scale;
-
-  Gtk::Frame AE_frame;
-  Gtk::Frame image_tune_frame;
-
-  Gtk::RadioButton ae_radio[4];
-
-  Gtk::CheckButton ae_toggle;
-
-  Gtk::Label title_label;
-
-  Gtk::Label hue_scale_label;
-  Gtk::Label b_scale_label;
-  Gtk::Label c_scale_label;
-  Gtk::Label m_scale_label;
-  Gtk::Button save_button;
-
-  // control frame
-  Gtk::Frame control_frame;
-  Gtk::Button load_button;
-  Gtk::Button default_button;
-};
+  auto app = Gtk::Application::create(argc, argv);
+  SampleWindow window(640, 480);
+  return app->run(window);
+}
 
 void scaleConfig(Gtk::Scale &scale)
 {
@@ -229,15 +137,17 @@ void SampleWindow::createAEFrame(void)
 void SampleWindow::createImageTuningFrame(void)
 {
   scaleConfig(hue_scale, -90, 90, 0);
-  scaleConfig(b_scale, 0.0, 1.992188, 1.0);
-  scaleConfig(c_scale, 0.0, 1.992188, 1.0);
-  scaleConfig(m_scale, -256.0, 255.75, 0);
+  scaleConfig(saturation_scale, 0.0, 1.992188, 1.0);
+  scaleConfig(contrast_scale, 0.0, 1.992188, 1.0);
+  scaleConfig(brightness_scale, -256.0, 255.75, 0);
+  scaleConfig(sharpness_scale, 0.0, 3.984375, 1.0);
 
   digital_gain_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::digitalgain_callback));
-  m_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::m_callback_scale));
-  hue_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::a_callback_scale));
-  b_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::b_callback_scale));
-  c_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::c_callback_scale));
+  brightness_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::brightness_callback_scale));
+  hue_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::hue_callback_scale));
+  saturation_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::saturation_callback_scale));
+  contrast_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::contrast_callback_scale));
+  sharpness_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::sharpness_callback_scale));
 
   image_tune_frame.set_label("Image tuning");
   image_tune_frame.add(m_grid);
@@ -249,14 +159,18 @@ void SampleWindow::createImageTuningFrame(void)
   m_grid.attach(hue_scale_label, 0, row, 1, 1);
   m_grid.attach(hue_scale, 1, row, 4, 1);
   row += 1;
-  m_grid.attach(b_scale_label, 0, row, 1, 1);
-  m_grid.attach(b_scale, 1, row, 4, 1);
+  m_grid.attach(saturation_scale_label, 0, row, 1, 1);
+  m_grid.attach(saturation_scale, 1, row, 4, 1);
   row += 1;
-  m_grid.attach(c_scale_label, 0, row, 1, 1);
-  m_grid.attach(c_scale, 1, row, 4, 1);
+  m_grid.attach(contrast_scale_label, 0, row, 1, 1);
+  m_grid.attach(contrast_scale, 1, row, 4, 1);
   row += 1;
-  m_grid.attach(m_scale_label, 0, row, 1, 1);
-  m_grid.attach(m_scale, 1, row, 4, 1);
+  m_grid.attach(brightness_scale_label, 0, row, 1, 1);
+  m_grid.attach(brightness_scale, 1, row, 4, 1);
+
+  row += 1;
+  m_grid.attach(sharpness_scale_label, 0, row, 1, 1);
+  m_grid.attach(sharpness_scale, 1, row, 4, 1);
 }
 
 void SampleWindow::createControlFrame(void)
@@ -271,84 +185,28 @@ void SampleWindow::createControlFrame(void)
   default_button.set_label("default");
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &SampleWindow::save_callback));
   default_button.signal_clicked().connect(sigc::mem_fun(*this, &SampleWindow::callback_default_button));
+  load_button.signal_clicked().connect(sigc::mem_fun(*this, &SampleWindow::callback_load_button));
 }
 
 ////
 
-void SampleWindow::callback_default_button(void)
+void SampleWindow::load_all_value()
 {
-  Gtk::MessageDialog Save("Parameter initializing", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK_CANCEL);
-  Save.set_secondary_text("Current values will be overwritten, are you sure you want to continue?");
-  int response = Save.run();
-
-  if (response == Gtk::RESPONSE_OK)
-  {
-    Gtk::MessageDialog res("Parameter initializing...", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
-    res.set_secondary_text("Completed.");
-    res.run();
-  }
-}
-
-void SampleWindow::callback_radio(int i)
-{
-  if ((int)ae_radio[i].get_active() == 1)
-  {
-    for (int j = 0; j < 8; j++)
-    {
-      if (available_mask & (1 << j))
-      {
-        camera_ptr_array[j]->setAEMode(i);
-      }
-    }
-    if (i == 3)
-    {
-      digital_gain_scale.set_sensitive(true);
-      shutter_speed_scale.set_sensitive(true);
-    }
-    else
-    {
-      digital_gain_scale.set_sensitive(false);
-      shutter_speed_scale.set_sensitive(false);
-    }
-  }
-}
-
-/////
-
-void SampleWindow::digitalgain_callback()
-{
-  for (int j = 0; j < 8; j++)
-  {
-    if (available_mask & (1 << j))
-    {
-      camera_ptr_array[j]->setDigitalGain(digital_gain_scale.get_value());
-      fprintf(stderr, "AEError: %f\n", camera_ptr_array[j]->getAEError());
-    }
-  }
-}
-
-void SampleWindow::callback_check(int i)
-{
-  printf("%d:%d\n", i, (int)buttons[i].get_active());
-
-  if (buttons[i].get_active() == 0)
-  {
-    available_mask &= ~(1 << i);
-  }
-  else
-  {
-    available_mask |= 1 << i;
-  }
-  fprintf(stderr, "0x%x\n", available_mask);
+  hue_scale.set_value(camera_ptr_array[0]->getHue());
+  saturation_scale.set_value(camera_ptr_array[0]->getSaturation());
+  contrast_scale.set_value(camera_ptr_array[0]->getContrast());
+  brightness_scale.set_value(camera_ptr_array[0]->getBrightness());
+  sharpness_scale.set_value(camera_ptr_array[0]->getSharpness());
 }
 
 SampleWindow::SampleWindow(int width, int height)
   : title_label("select_port")
-  , hue_scale_label("hue")
-  , b_scale_label("saturation")
-  , c_scale_label("contrast")
-  , m_scale_label("brightness")
-  , digital_gain_label("digital gain")
+  , hue_scale_label("Hue")
+  , saturation_scale_label("Saturation")
+  , contrast_scale_label("Contrast")
+  , brightness_scale_label("Brightness")
+  , sharpness_scale_label("Sharpness")
+  , digital_gain_label("Digital gain")
 {
   ///
   for (int i = 0; i < 8; i++)
@@ -382,6 +240,8 @@ SampleWindow::SampleWindow(int width, int height)
 
   v_box.pack_end(h_control_box);
 
+  load_all_value();
+
   show_all_children();
   //  v_box.show();
 }
@@ -400,68 +260,4 @@ uint16_t SampleWindow::getAvailableCamera()
   }
 
   return ret;
-}
-
-/*
- * create Freme
- */
-
-/*
- * Callback
- */
-
-void SampleWindow::save_callback()
-{
-  Gtk::MessageDialog Save("This feature is not implemented!", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
-  Save.set_secondary_text("This feature is not implemented.");
-  Save.run();
-}
-
-void SampleWindow::m_callback_scale()
-{
-  for (int i = 0; i < 8; i++)
-  {
-    if (available_mask & (1 << i))
-    {
-      fprintf(stderr, "%d\n", i);
-      camera_ptr_array[i]->setBrightness(m_scale.get_value());
-    }
-  }
-}
-void SampleWindow::a_callback_scale()
-{
-  for (int i = 0; i < 8; i++)
-  {
-    if (available_mask & (1 << i))
-    {
-      camera_ptr_array[i]->setHue(hue_scale.get_value());
-    }
-  }
-}
-void SampleWindow::b_callback_scale()
-{
-  for (int i = 0; i < 8; i++)
-  {
-    if (available_mask & (1 << i))
-    {
-      camera_ptr_array[i]->setSaturation(b_scale.get_value());
-    }
-  }
-}
-void SampleWindow::c_callback_scale()
-{
-  for (int i = 0; i < 8; i++)
-  {
-    if (available_mask & (1 << i))
-    {
-      camera_ptr_array[i]->setContrast(c_scale.get_value());
-    }
-  }
-}
-
-int main(int argc, char *argv[])
-{
-  auto app = Gtk::Application::create(argc, argv);
-  SampleWindow window(640, 480);
-  return app->run(window);
 }
