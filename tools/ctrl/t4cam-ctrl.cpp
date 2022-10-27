@@ -14,24 +14,25 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+
 #include "cmdline.h"
 
 #define DEBUG
 #include <t4cam_tools.hpp>
 
-
 int main(int argc, char* argv[])
 {
   cmdline::parser p;
 
-  //config
-  p.add<int>("port-num",'p',"set port number [0-7]", false, 0, cmdline::range(0,7));
-  p.add<std::string>("config-file",'f',"set config file name", false);
-  
+  // config
+  p.add<int>("port-num", 'p', "set port number [0-7]", false, 0, cmdline::range(0, 7));
+  p.add<std::string>("input", 'i', "Sets the name of the file to read parameter values", false, "./default.yaml");
+  p.add<std::string>("output", 'o', "Sets the name of the file to save the current parameter values.", false);
+
   // get
   p.add("tempature", 't', "get Tempature val");
-  
-  //set
+
+  // set
   p.add<float>("brightness", 'B', "set Brightness val", false);
   p.add<float>("contrast", 'C', "set Contrast val", false);
   p.add<int>("hue", 'H', "set Hue val", false);
@@ -42,16 +43,28 @@ int main(int argc, char* argv[])
 #endif
   p.parse_check(argc, argv);
 
+  std::string file_name = p.get<std::string>("input");
   int port_num = p.get<int>("port-num");
 
   C1 c1_a = C1(port_num);
 
   int ret = 0;
 
-  if (p.exist("config-file"))
+  if (p.exist("input"))
   {
+    if (c1_a.initialized_load_value_from_file(p.get<std::string>("input")) < 0)
+    {
+      return -1;
+    }
+    c1_a.setLoadValue();
     return 0;
-  }else{
+  }
+  else if (p.exist("output"))
+  {
+    c1_a.saveCurrentValue(p.get<std::string>("output"));
+  }
+  else
+  {
     if (p.exist("hue"))
     {
       int val = p.get<int>("hue");
@@ -83,10 +96,10 @@ int main(int argc, char* argv[])
     }
   }
 
-  if (ret<0){
-    std::cerr << "Failed set parameter. please check parameter and hardware connection"<< std::endl;
+  if (ret < 0)
+  {
+    std::cerr << "Failed set parameter. please check parameter and hardware connection" << std::endl;
   }
-
 
 #if 0
   if (p.exist("evrefoffset"))

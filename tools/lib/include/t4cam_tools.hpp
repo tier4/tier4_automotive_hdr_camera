@@ -6,6 +6,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <unordered_map>
@@ -68,7 +69,7 @@ public:
 #endif
 
     initialized_default_value_from_default();
-    initialized_load_value_from_file(param_file);
+    // initialized_load_value_from_file(param_file);
   }
 
   std::unordered_map<std::string, Param> default_value_map;
@@ -76,38 +77,84 @@ public:
 
   void initialized_default_value_from_default()
   {
-    default_value_map["ae_mode"] = 1.0;
-    default_value_map["digital_gain"] = 1.0;
-    default_value_map["shutter_speed"] = 1.0;
-    default_value_map["ev_offset_flag"] = 1.0;
-    default_value_map["ev_offset"] = 1.0;
-    default_value_map["hue"] = 1.0;
+    default_value_map["ae_mode"] = 0.0;
+    default_value_map["digital_gain"] = 30.0;
+    default_value_map["shutter_speed"] = 11.0;
+    default_value_map["ev_offset_flag"] = 0.0;
+    default_value_map["ev_offset"] = 0;
+    default_value_map["hue"] = 0;
     default_value_map["saturation"] = 1.0;
     default_value_map["contrast"] = 1.0;
-    default_value_map["brightness"] = 1.0;
+    default_value_map["brightness"] = 0;
     default_value_map["sharpness"] = 1.0;
   }
 
-  void initialized_load_value_from_file(const std::string &file_name)
+  void saveCurrentValue(std::string output)
+  {
+    fprintf(stdout, "output file: %s\n", output.c_str());
+
+    YAML::Node item[10];
+
+    item[0]["param_name"] = "ae_mode";
+    item[0]["value"] = std::to_string(getAEMode());
+    item[1]["param_name"] = "digital_gain";
+    item[1]["value"] = std::to_string(getDigitalGain());
+    item[2]["param_name"] = "shutter_speed";
+    item[2]["value"] = std::to_string(getShutterSpeedforFME());
+    item[3]["param_name"] = "ev_offset_flag";
+    item[3]["value"] = std::to_string(getExposureOffsetFlag());
+    item[4]["param_name"] = "ev_offset";
+    item[4]["value"] = std::to_string(getExposureOffset());
+    item[5]["param_name"] = "hue";
+    item[5]["value"] = std::to_string(getHue());
+    item[6]["param_name"] = "saturation";
+    item[6]["value"] = std::to_string(getSaturation());
+    item[7]["param_name"] = "contrast";
+    item[7]["value"] = std::to_string(getContrast());
+    item[8]["param_name"] = "brightness";
+    item[8]["value"] = std::to_string(getBrightness());
+    item[9]["param_name"] = "sharpness";
+    item[9]["value"] = std::to_string(getSharpness());
+
+    YAML::Node root;
+
+    for (size_t i = 0; i < 10; i++)
+    {
+      root["config"].push_back(item[i]);
+    }
+
+    YAML::Emitter out;
+    out << root;
+
+    std::ofstream file(output);
+    file << out.c_str();
+    file.close();
+  }
+
+  int initialized_load_value_from_file(const std::string &file_name)
   {
     YAML::Node node;
     try
     {
       node = YAML::LoadFile(file_name);
-      std::cout << node["config"].size() << std::endl;
       for (size_t i = 0; i < node["config"].size(); i++)
       {
         std::string param_name = node["config"][i]["param_name"].as<std::string>();
         float val = node["config"][i]["value"].as<float>();
+#if 0
         std::cout << "param_name:" << param_name << std::endl;
         std::cout << "value:" << val << std::endl;
+#endif
         load_value_map[param_name] = val;
       }
     }
     catch (const std::exception &e)
     {
       std::cerr << "Can not open yaml file:" << e.what() << std::endl;
+      return -1;
     }
+
+    return 0;
   }
 
   void setDefaultValue(void)
@@ -158,7 +205,11 @@ public:
 
   int8_t setAutoWhiteBalance(bool on);
   int8_t setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float b_gain);
+
+  int8_t setExposureOffsetFlag(bool flag);
+  int getExposureOffsetFlag();
   int8_t setExposureOffset(float offset);
+  float getExposureOffset();
 
   int8_t checkES3();
 
@@ -166,13 +217,13 @@ public:
   float getTempatureS0();
   float getTempatureS1();
 
-  int8_t setShutterSpeedforFME(int val);
+  int8_t setShutterSpeedforFME(float val);
+  float getShutterSpeedforFME();
 
 #define ERRSCL_L 0x617C
 #define ERRSCL_U 0x617D
 
   float getAEError();
-  int8_t setExposureOffsetFlag(bool flag);
 };
 
 #endif

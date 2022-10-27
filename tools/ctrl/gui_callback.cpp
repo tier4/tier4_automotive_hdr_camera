@@ -6,6 +6,11 @@
  * Callback
  */
 
+void SampleWindow::callback_quit(void)
+{
+  this->app->quit();
+}
+
 void SampleWindow::callback_default_button(void)
 {
   Gtk::MessageDialog Save("Parameter initializing", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK_CANCEL);
@@ -22,6 +27,7 @@ void SampleWindow::callback_default_button(void)
       }
     }
 
+    load_all_value();
     Gtk::MessageDialog res("Parameter initializing...", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
     res.set_secondary_text("Completed.");
     res.run();
@@ -34,8 +40,8 @@ void SampleWindow::callback_load_button(void)
   dialog.set_transient_for(*this);
   dialog.set_select_multiple(false);
 
-  dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
   dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
 
   // add filters
   // *** Fix it necessary ***
@@ -72,7 +78,6 @@ void SampleWindow::callback_load_button(void)
             camera_ptr_array[j]->setLoadValue();
           }
         }
-        std::cout << "set the paarameter from file" << std::endl;
         load_all_value();
       }
       break;
@@ -92,9 +97,54 @@ void SampleWindow::callback_load_button(void)
 
 void SampleWindow::save_callback()
 {
-  Gtk::MessageDialog Save("This feature is not implemented!", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
-  Save.set_secondary_text("This feature is not implemented.");
-  Save.run();
+  Gtk::FileChooserDialog dialog("Please choose a save file", Gtk::FILE_CHOOSER_ACTION_SAVE);
+  dialog.set_transient_for(*this);
+  dialog.set_select_multiple(false);
+
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_OK);
+
+  // add filters
+  // *** Fix it necessary ***
+  // select folder = use pattern("*")
+  auto filter_text = Gtk::FileFilter::create();
+  filter_text->set_name("yaml");
+  filter_text->add_pattern("*.yaml");
+  dialog.add_filter(filter_text);
+  auto filter_any = Gtk::FileFilter::create();
+  filter_any->set_name("any files");
+  filter_any->add_pattern("*");
+  dialog.add_filter(filter_any);
+
+  int result = dialog.run();
+
+  switch (result)
+  {
+    case (Gtk::RESPONSE_OK):
+    {
+      std::vector<std::string> filenames = dialog.get_filenames();
+      for (std::string& filename : filenames)
+      {
+        std::cout << "save to  :" << filename << std::endl;
+        for (int j = 0; j < 8; j++)
+        {
+          if (available_mask & (1 << j))
+          {
+            camera_ptr_array[j]->saveCurrentValue(filename);
+          }
+        }
+      }
+      break;
+    }
+    case (Gtk::RESPONSE_CANCEL):
+    {
+      break;
+    }
+    default:
+    {
+      break;
+    }
+  }
 }
 
 void SampleWindow::callback_radio(int i)
@@ -130,15 +180,12 @@ void SampleWindow::digitalgain_callback()
     if (available_mask & (1 << j))
     {
       camera_ptr_array[j]->setDigitalGain(digital_gain_scale.get_value());
-      fprintf(stderr, "AEError: %f\n", camera_ptr_array[j]->getAEError());
     }
   }
 }
 
 void SampleWindow::callback_check(int i)
 {
-  printf("%d:%d\n", i, (int)buttons[i].get_active());
-
   if (buttons[i].get_active() == 0)
   {
     available_mask &= ~(1 << i);
@@ -156,7 +203,6 @@ void SampleWindow::brightness_callback_scale()
   {
     if (available_mask & (1 << i))
     {
-      fprintf(stderr, "%d\n", i);
       camera_ptr_array[i]->setBrightness(brightness_scale.get_value());
     }
   }

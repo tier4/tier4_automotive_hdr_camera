@@ -16,6 +16,7 @@ int8_t i2c::read16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, ui
 
   uint8_t reg_addr_mask_u = (reg_addr >> 8) & 0xff;
   uint8_t reg_addr_mask_l = reg_addr & 0xff;
+  fprintf(stderr, "%x, %x\n", reg_addr_mask_u, reg_addr_mask_l);
 
   if (write8(dev_name, dev_addr, reg_addr_mask_u, reg_addr_mask_l) < 0)
   {
@@ -26,6 +27,41 @@ int8_t i2c::read16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, ui
     return -1;
   }
   DEBUG_PRINT("[0x%02X-0x%04X-read]: = 0x%02X\n", dev_addr, reg_addr, *data);
+
+  close(fd);
+  return 0;
+}
+
+int8_t i2c::check_device(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr)
+{
+  int8_t ret = 0;
+  int32_t fd = open(dev_name.c_str(), O_RDWR);
+  if (fd == -1)
+  {
+    return -1;
+  }
+
+  uint8_t reg_addr_mask_u = (reg_addr >> 8) & 0xff;
+  uint8_t reg_addr_mask_l = reg_addr & 0xff;
+
+  uint8_t buffer[2] = { reg_addr_mask_u, reg_addr_mask_l };
+
+  struct i2c_msg messages[1];
+  messages[0].addr = dev_addr;
+  messages[0].flags = 0;  // write
+  messages[0].len = 2;    // length
+  messages[0].buf = buffer;
+
+  struct i2c_rdwr_ioctl_data ioctl_data;
+  ioctl_data.msgs = messages;
+  ioctl_data.nmsgs = 1;
+
+  if (ioctl(fd, I2C_RDWR, &ioctl_data) != 1)
+  {
+    close(fd);
+    return -1;
+  }
+  usleep(1000);
 
   close(fd);
   return 0;
@@ -61,6 +97,7 @@ int8_t i2c::read8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uint
     close(fd);
     return -1;
   }
+  usleep(1000);
 
   close(fd);
   return 0;
@@ -94,6 +131,7 @@ int8_t i2c::write8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uin
     close(fd);
     return -1;
   }
+  usleep(1000);
 
   close(fd);
   return 0;

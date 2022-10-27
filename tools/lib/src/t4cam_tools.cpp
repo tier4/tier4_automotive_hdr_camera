@@ -9,9 +9,11 @@ static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &d
 {
   uint16_t temp;
 
-  temp = ((uint16_t)(raw / unit) + offset) & mask;
+  temp = ((uint16_t)(raw / unit) + offset);
   data_l = temp & 0xFF;
   data_u = temp >> 8;
+
+  fprintf(stderr, "[%s]:%f-%d, %d, %d\n", __func__, raw, temp, data_l, data_u);
   return;
 }
 
@@ -47,9 +49,8 @@ float C1::getAEError()
 
 bool C1::isAvailableCamera(void)
 {
-  uint8_t data;
   bool ret = true;
-  if (i2c::read16(dev_name, i2c_dev_addr, AE_MODE, &data) < 0)
+  if (i2c::check_device(dev_name, i2c_dev_addr, AE_MODE) < 0)
   {
     ret = false;
   }
@@ -109,18 +110,44 @@ uint8_t C1::getAEMode()
 
 int8_t C1::setAEMode(int mode)
 {
+  int8_t ret = 0;
   if (getAEMode() != mode)
   {
     // set aemode
-    i2c::write16(dev_name, i2c_dev_addr, AE_MODE, mode);
+    ret = i2c::write16(dev_name, i2c_dev_addr, AE_MODE, mode);
   }
+  return ret;
 }
 
-int8_t C1::setShutterSpeedforFME(int val)
-{
 #define FME_SHTVAL 0xABEC
+int8_t C1::setShutterSpeedforFME(float val)
+{
+  int8_t ret;
 
-  i2c::write16(dev_name, i2c_dev_addr, AE_MODE, val);
+  uint32_t data = (val * 1000);
+  for (int i = 0; i < 4; i++)
+  {
+    i2c::write16(dev_name, i2c_dev_addr, FME_SHTVAL + i, (uint8_t)data & 0xFF);
+    data = data >> 8;
+  }
+
+  fprintf(stderr, "-------\n");
+
+  return ret;
+}
+
+float C1::getShutterSpeedforFME()
+{
+  uint8_t ret;
+  int data = 0;
+
+  for (int i = 0; i < 4; i++)
+  {
+    i2c::read16(dev_name, i2c_dev_addr, FME_SHTVAL + i, &ret);
+    data |= ret << (i * 8);
+  }
+
+  return data / 1000;
 }
 
 int8_t C1::setDigitalGain(int db)
@@ -141,6 +168,7 @@ int8_t C1::setDigitalGain(int db)
   }
 
   calcHexVal((float)db, 0.1, 0, u, l, 0xFF);
+  fprintf(stderr, "%d, %x, %x\n", db, u, l);
   i2c::write16(dev_name, i2c_dev_addr, DIGITAL_GAIN_L, l);
   i2c::write16(dev_name, i2c_dev_addr, DIGITAL_GAIN_U, u);
 
@@ -156,7 +184,9 @@ int C1::getDigitalGain(void)
   i2c::read16(dev_name, i2c_dev_addr, DIGITAL_GAIN_U, &u);
   data = (int16_t)(l + (u << 8));
 
-  return (int)data;
+  fprintf(stderr, "%x:%x, %x:%x, %d\n", DIGITAL_GAIN_L, l, DIGITAL_GAIN_U, u, data);
+
+  return (int)(data / 10);
 }
 
 int8_t C1::setSharpness(float gain)
@@ -171,7 +201,6 @@ int8_t C1::setSharpness(float gain)
   data = (uint8_t)(gain / SHARPNESS_UNIT);
   i2c::write16(dev_name, i2c_dev_addr, UISHARPNESS, data);
 
-  fprintf(stderr, "%x, %f\n", data, gain);
   return 0;
 }
 
@@ -182,8 +211,6 @@ float C1::getSharpness(void)
 
   i2c::read16(dev_name, i2c_dev_addr, UISHARPNESS, &data);
   ret = (float)data * (SHARPNESS_UNIT);
-
-  fprintf(stderr, "%x, %f\n", data, ret);
 
   return ret;
 }
@@ -261,9 +288,10 @@ float C1::getBrightness(void)
   i2c::read16(dev_name, i2c_dev_addr, UIBRIGHTNESS_L, &l);
   i2c::read16(dev_name, i2c_dev_addr, UIBRIGHTNESS_U, &u);
 
-  data = (int16_t)(u << 8 + l);
+  data = (int16_t)((u << 8) + l);
 
   float ret = data / 10 * BRIGHTNESS_UNIT;
+  fprintf(stderr, "%s: %d, 0x%x, 0x%x, %f\n", __func__, data, u, l, ret);
   return ret;
 }
 
@@ -287,7 +315,6 @@ float C1::getContrast(void)
   uint8_t data;
   i2c::read16(dev_name, i2c_dev_addr, UICONTRAST, &data);
   float ret = (float)(data)*CONTRAST_UNIT;
-  fprintf(stderr, "%x,%f\n", data, ret);
   return ret;
 }
 
@@ -364,7 +391,17 @@ int8_t C1::setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float
 
 int8_t C1::setExposureOffsetFlag(bool flag)
 {
-  i2c::write16(dev_name, i2c_dev_addr, EVREF_CTRL_SEL, flag);
+  int8_t ret;
+  ret = i2c::write16(dev_name, i2c_dev_addr, EVREF_CTRL_SEL, flag);
+  return ret;
+}
+int C1::getExposureOffsetFlag()
+{
+  uint8_t ret;
+
+  i2c::read16(dev_name, i2c_dev_addr, EVREF_CTRL_SEL, &ret);
+  ret = ret & 0x1;
+  return (int)ret;
 }
 
 int8_t C1::setExposureOffset(float offset)
@@ -378,11 +415,21 @@ int8_t C1::setExposureOffset(float offset)
     return -1;
   }
 
-  fprintf(stderr, "%s:%f\n", __func__, getAEError());
-
   int8_t data = offset / EVREF_OFFSET_UNIT;
 
   i2c::write16(dev_name, i2c_dev_addr, EVREF_OFFSET, data);
 #endif
   return 0;
+}
+
+float C1::getExposureOffset()
+{
+  float ret;
+  uint8_t data;
+
+  i2c::read16(dev_name, i2c_dev_addr, EVREF_OFFSET, &data);
+
+  ret = (float)(int8_t)data * EVREF_OFFSET_UNIT;
+
+  return ret;
 }

@@ -1,9 +1,16 @@
+#include "cmdline.h"
 #include "gui.h"
 
 int main(int argc, char *argv[])
 {
-  auto app = Gtk::Application::create(argc, argv);
-  SampleWindow window(640, 480);
+  auto app = Gtk::Application::create();
+
+  cmdline::parser p;
+  p.add("debug-print", 'v', "print debug message");
+  p.parse_check(argc, argv);
+
+  bool debug_print = p.exist("debug-print");
+  SampleWindow window(app, 640, 480, debug_print);
   return app->run(window);
 }
 
@@ -83,7 +90,7 @@ void SampleWindow::createAEFrame(void)
   evref_label.set_label("evref_offset");
   scaleConfig(evref_scale, -12.61, 12.7, 0);
 
-  scaleConfig(shutter_speed_scale, 0, 1000, 11);
+  scaleConfig(shutter_speed_scale, 0, 99.0, 11);
   shutter_speed_scale.set_sensitive(false);
   shutter_speed_label.set_label("shutter_speed_fme");
 
@@ -137,10 +144,10 @@ void SampleWindow::createAEFrame(void)
 void SampleWindow::createImageTuningFrame(void)
 {
   scaleConfig(hue_scale, -90, 90, 0);
-  scaleConfig(saturation_scale, 0.0, 1.992188, 1.0);
-  scaleConfig(contrast_scale, 0.0, 1.992188, 1.0);
+  scaleConfig(saturation_scale, 0.0, 1.99, 1.0);
+  scaleConfig(contrast_scale, 0.0, 1.99, 1.0);
   scaleConfig(brightness_scale, -256.0, 255.75, 0);
-  scaleConfig(sharpness_scale, 0.0, 3.984375, 1.0);
+  scaleConfig(sharpness_scale, 0.0, 3.98, 1.0);
 
   digital_gain_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::digitalgain_callback));
   brightness_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::brightness_callback_scale));
@@ -175,7 +182,7 @@ void SampleWindow::createImageTuningFrame(void)
 
 void SampleWindow::createControlFrame(void)
 {
-  save_button.set_sensitive(false);
+#if 0
   h_control_box.pack_end(save_button);
   h_control_box.pack_start(default_button);
   h_control_box.pack_start(load_button);
@@ -186,21 +193,44 @@ void SampleWindow::createControlFrame(void)
   save_button.signal_clicked().connect(sigc::mem_fun(*this, &SampleWindow::save_callback));
   default_button.signal_clicked().connect(sigc::mem_fun(*this, &SampleWindow::callback_default_button));
   load_button.signal_clicked().connect(sigc::mem_fun(*this, &SampleWindow::callback_load_button));
+#endif
 }
 
 ////
 
 void SampleWindow::load_all_value()
 {
-  hue_scale.set_value(camera_ptr_array[0]->getHue());
-  saturation_scale.set_value(camera_ptr_array[0]->getSaturation());
-  contrast_scale.set_value(camera_ptr_array[0]->getContrast());
-  brightness_scale.set_value(camera_ptr_array[0]->getBrightness());
-  sharpness_scale.set_value(camera_ptr_array[0]->getSharpness());
+  for (int i = 0; i < 8; i++)
+  {
+    if (this->available_mask & (1 << i))
+    {
+      fprintf(stderr, "[%d]\n", i);
+      uint8_t aemode = camera_ptr_array[i]->getAEMode();
+      for (int j = 0; j < 4; j++)
+      {
+        ae_radio[j].set_active(j == aemode);
+      }
+
+      digital_gain_scale.set_value(camera_ptr_array[i]->getDigitalGain());
+      shutter_speed_scale.set_value(camera_ptr_array[i]->getShutterSpeedforFME());
+      evref_check.set_active(camera_ptr_array[i]->getExposureOffsetFlag());
+      evref_scale.set_value(camera_ptr_array[i]->getExposureOffset());
+
+      hue_scale.set_value(camera_ptr_array[i]->getHue());
+      saturation_scale.set_value(camera_ptr_array[i]->getSaturation());
+      contrast_scale.set_value(camera_ptr_array[i]->getContrast());
+      brightness_scale.set_value(camera_ptr_array[i]->getBrightness());
+      sharpness_scale.set_value(camera_ptr_array[i]->getSharpness());
+
+      // read configuration file for youngest port
+      break;
+    }
+  }
 }
 
-SampleWindow::SampleWindow(int width, int height)
-  : title_label("select_port")
+SampleWindow::SampleWindow(Glib::RefPtr<Gtk::Application> _app, int width, int height, bool _debug_print)
+  : debug_print(_debug_print)
+  , title_label("select_port")
   , hue_scale_label("Hue")
   , saturation_scale_label("Saturation")
   , contrast_scale_label("Contrast")
@@ -208,21 +238,54 @@ SampleWindow::SampleWindow(int width, int height)
   , sharpness_scale_label("Sharpness")
   , digital_gain_label("Digital gain")
 {
+  app = _app;
+
+  std::string title_name("t4cam_ctrl");
+  std::string version_name("Preview release");
+  std::string title = title_name + " : " + version_name;
   ///
   for (int i = 0; i < 8; i++)
   {
     camera_ptr_array[i] = std::make_shared<C1>(i);
   }
-  ///
-  ///
-  //
 
   available_mask = getAvailableCamera();
 
-  set_title("t4cam_ctrl");
+  set_title(title);
   set_default_size(width, height);
-  set_border_width(16);
+  // set_border_width(16);
 
+  // アクショングループの作成とアクション登録
+  m_actiongroup = Gtk::ActionGroup::create();
+  m_actiongroup->add(Gtk::Action::create("OpenMenu", Gtk::Stock::OPEN),
+                     sigc::mem_fun(*this, &SampleWindow::callback_load_button));
+  m_actiongroup->add(Gtk::Action::create("InitMenu", "Parameter initialize"),
+                     sigc::mem_fun(*this, &SampleWindow::callback_default_button));
+  m_actiongroup->add(Gtk::Action::create("SaveMenu", Gtk::Stock::SAVE_AS), Gtk::AccelKey('s', Gdk::CONTROL_MASK),
+                     sigc::mem_fun(*this, &SampleWindow::save_callback));
+  m_actiongroup->add(Gtk::Action::create("QuitMenu", Gtk::Stock::QUIT),
+                     sigc::mem_fun(*this, &SampleWindow::callback_quit));
+
+  menu = Gtk::manage(new Gtk::MenuBar());
+  Gtk::MenuItem *menuitem = Gtk::manage(new Gtk::MenuItem("File"));
+  menu->append(*menuitem);
+  Gtk::Menu *submenu = Gtk::manage(new Gtk::Menu());
+  menuitem->set_submenu(*submenu);
+
+  Glib::RefPtr<Gtk::Action> action;
+  (action = m_actiongroup->get_action("InitMenu"))->set_accel_group(get_accel_group());
+  submenu->append(*Gtk::manage(action->create_menu_item()));
+
+  (action = m_actiongroup->get_action("OpenMenu"))->set_accel_group(get_accel_group());
+  submenu->append(*Gtk::manage(action->create_menu_item()));
+
+  (action = m_actiongroup->get_action("SaveMenu"))->set_accel_group(get_accel_group());
+  submenu->append(*Gtk::manage(action->create_menu_item()));
+
+  (action = m_actiongroup->get_action("QuitMenu"))->set_accel_group(get_accel_group());
+  submenu->append(*Gtk::manage(action->create_menu_item()));
+
+  v_box.pack_start(*menu, Gtk::PACK_SHRINK, 0);
   add(v_box);
   // v_box.pack_start(title_label);
   //
@@ -232,15 +295,15 @@ SampleWindow::SampleWindow(int width, int height)
   createImageTuningFrame();
   createControlFrame();
 
-  v_box.pack_start(select_port_frame);
-  v_box.pack_start(AE_frame);
-  v_box.pack_start(spacer[0]);
-  v_box.pack_start(image_tune_frame);
-  v_box.pack_start(spacer[1]);
-
-  v_box.pack_end(h_control_box);
-
+  v_box_content.set_border_width(10);
+  v_box_content.pack_start(select_port_frame, Gtk::PACK_EXPAND_WIDGET, 5);
+  v_box_content.pack_start(AE_frame, Gtk::PACK_EXPAND_WIDGET, 5);
+  v_box_content.pack_start(image_tune_frame, Gtk::PACK_EXPAND_WIDGET, 5);
+  v_box_content.pack_end(h_control_box, Gtk::PACK_EXPAND_WIDGET, 5);
+  v_box.pack_start(v_box_content);
   load_all_value();
+
+  debug_printf("show display\n");
 
   show_all_children();
   //  v_box.show();

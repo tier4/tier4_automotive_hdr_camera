@@ -19,14 +19,17 @@ public:
 class SampleWindow : public Gtk::Window
 {
 public:
-  SampleWindow(int width, int height);
+  SampleWindow(Glib::RefPtr<Gtk::Application> _app, int width, int height, bool _debug_print = false);
   virtual ~SampleWindow() = default;
 
 private:
+  Glib::RefPtr<Gtk::Application> app;
+
   // non gui
   std::array<std::shared_ptr<C1>, 8> camera_ptr_array;
   uint16_t getAvailableCamera();
   std::array<Gtk::CheckButton, 8> buttons;
+  bool debug_print = false;
 
   // GUI
   // Frame
@@ -41,6 +44,9 @@ private:
   void createImageTuningFrame(void);
 
   void createControlFrame(void);
+
+  Gtk::MenuBar *menu;
+  Glib::RefPtr<Gtk::ActionGroup> m_actiongroup;
 
   Gtk::Scale hue_scale;
   Gtk::Scale saturation_scale;
@@ -67,6 +73,8 @@ private:
   void callback_default_button();
   void callback_load_button();
 
+  void callback_quit();
+
   void load_all_value();
 
   Spacer spacer[5];
@@ -74,6 +82,7 @@ private:
   uint16_t available_mask = 0;
 
   Gtk::VBox v_box;
+  Gtk::VBox v_box_content;
   Gtk::HBox h_check_box;
   Gtk::HBox h_control_box;
   Gtk::HBox ae_radio_box;
@@ -100,12 +109,30 @@ private:
   Gtk::Label contrast_scale_label;
   Gtk::Label brightness_scale_label;
   Gtk::Label sharpness_scale_label;
-  Gtk::Button save_button;
 
-  // control frame
-  Gtk::Frame control_frame;
-  Gtk::Button load_button;
-  Gtk::Button default_button;
+  void debug_printf(const char *format, ...)
+  {
+    if (debug_print)
+    {
+      va_list va;
+      va_start(va, format);
+      // int vprintf(const char *format, va_list ap);
+      vprintf(format, va);
+      va_end(va);
+    }
+  }
+
+#if 0
+  template <typename... Args>
+  void debug_printf(const char *forma, Args const &... args)
+  {
+    // int printf(const char *format, ...);
+    if (debug_print)
+    {
+      fprintf(stderr, forma, args...);
+    }
+  }
+#endif
 };
 
 /*

@@ -2,7 +2,7 @@ config:
   - param_name: ae_mode
     value: 0
   - param_name: digital_gain
-    value: 1.0
+    value: 30.0
   - param_name: shutter_speed
     value: 1.0
   - param_name: ev_offset_flag
@@ -12,10 +12,10 @@ config:
   - param_name: hue
     value: 0.0
   - param_name: saturation
-    value: 0.0
+    value: 1.0
   - param_name: contrast
-    value: 0.0
+    value: 1.0
   - param_name: brightness
     value: 0.0
   - param_name: sharpness
-    value: 0.0
+    value: 1.0
