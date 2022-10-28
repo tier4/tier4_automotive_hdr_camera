@@ -62,7 +62,7 @@ void SampleWindow::createAEFrame(void)
 {
   // get digital gain
   float digital_gain = 30;
-  scaleConfig(digital_gain_scale, 0.0, 1023, digital_gain);
+  scaleConfig(digital_gain_scale, 0.0, 48.0, digital_gain);
   digital_gain_scale.set_sensitive(false);
 
   ae_radio[0].set_label("AE(Auto)");
