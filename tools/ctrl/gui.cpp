@@ -66,24 +66,24 @@ void SampleWindow::createAEFrame(void)
   digital_gain_scale.set_sensitive(false);
 
   ae_radio[0].set_label("AE(Auto)");
-  ae_radio[1].set_label("AE(Hold)");
-  ae_radio[1].set_sensitive(false);
+  // ae_radio[1].set_label("AE(Hold)");
+  // ae_radio[1].set_sensitive(false);
 
-  ae_radio[2].set_label("Scale ME");
-  ae_radio[2].set_sensitive(false);
-  ae_radio[3].set_label("Full ME");
+  // ae_radio[2].set_label("Scale ME");
+  // ae_radio[2].set_sensitive(false);
+  ae_radio[3].set_label("Manual");
+
   ae_radio[0].set_active(true);
 
   Gtk::RadioButton::Group ae_radio_group = ae_radio[0].get_group();
-  ae_radio[1].set_group(ae_radio_group);
-  ae_radio[2].set_group(ae_radio_group);
+  //  ae_radio[1].set_group(ae_radio_group);
+  //  ae_radio[2].set_group(ae_radio_group);
   ae_radio[3].set_group(ae_radio_group);
 
-  for (int i = 0; i < 4; i++)
-  {
-    ae_radio_box.pack_start(ae_radio[i]);
-    ae_radio[i].signal_toggled().connect([this, i] { this->callback_radio(i); });
-  }
+  ae_radio_box.pack_start(ae_radio[0]);
+  ae_radio[0].signal_toggled().connect([this] { this->callback_radio(0); });
+  ae_radio_box.pack_start(ae_radio[3]);
+  ae_radio[3].signal_toggled().connect([this] { this->callback_radio(3); });
 
   // evref
 
