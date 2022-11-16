@@ -466,8 +466,8 @@ int tier4_max9296_setup_control(struct device *dev, struct device *s_dev)
 	}
 
 	/* Enable splitter mode */
-	if ((priv->max_src > 1U) &&	
-		(priv->num_src_found > 0U) && 
+	if ((priv->max_src > 1U) &&
+		(priv->num_src_found > 0U) &&
 		(priv->splitter_enabled == false)) {
 
 		tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x03);
@@ -479,7 +479,7 @@ int tier4_max9296_setup_control(struct device *dev, struct device *s_dev)
 		msleep(500);
 	}
 
-#if _USE_CHECK_LINK_LOCKED_	
+#if _USE_CHECK_LINK_LOCKED_
 	// Check GMSL link
 	err = tier4_max9296_link_locked(dev);
 	if (err) {
@@ -521,19 +521,19 @@ error:
 }
 EXPORT_SYMBOL(tier4_max9296_setup_control);
 
-int tier4_max9296_reset_control(struct device *dev, struct device *s_dev)
+int tier4_max9296_reset_control(struct device *dev, struct device *s_dev, bool force_reset )
 {
 	struct tier4_max9296 *priv = dev_get_drvdata(dev);
 	int err = 0;
 
 	mutex_lock(&priv->lock);
-	if (!priv->sdev_ref) {
+	if (!priv->sdev_ref && force_reset == false ) {
 		dev_info(dev, "[%s] : dev is already in reset state\n", __func__);
 		goto ret;
 	}
 
 	priv->sdev_ref--;
-	if (priv->sdev_ref == 0) {
+	if ( priv->sdev_ref == 0 || force_reset == true ) {
 		tier4_max9296_reset_ctx(priv);
 		tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, MAX9296_RESET_ALL);
 
@@ -986,7 +986,7 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv,
 		dev_err(&client->dev, "[%s] : No max-src info\n", __func__);
 		return err;
 	}
-  
+
   	printk("%s-maxsrc:%d\n",__func__, value);
 	priv->max_src = value;
 

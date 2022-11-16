@@ -124,6 +124,17 @@ static const struct regmap_config tier4_sensor_regmap_config = {
 	.cache_type = REGCACHE_RBTREE,
 };
 
+struct st_priv {
+	struct 	i2c_client 	*p_client;
+	struct 	tier4_imx490 *p_priv;
+	bool	isp_ser_shutdown;
+	bool	des_shutdown;
+};
+
+static struct st_priv wst_priv[MAX_NUM_CAMERA];
+
+static int camera_channel_count = 0;
+
 // --- module parameter ---
 
 static int trigger_mode ;
@@ -293,7 +304,7 @@ static void tier4_imx490_gmsl_serdes_reset(struct tier4_imx490 *priv)
 	/* reset serdes addressing and control pipeline */
 	tier4_max9295_reset_control(priv->ser_dev);
 
-	tier4_max9296_reset_control(priv->dser_dev, &priv->i2c_client->dev);
+	tier4_max9296_reset_control(priv->dser_dev, &priv->i2c_client->dev, true);
 
 	tier4_max9296_power_off(priv->dser_dev);
 
@@ -451,7 +462,7 @@ static int tier4_imx490_set_distortion_correction(struct tegracam_device *tc_dev
 	return err;
 }
 // --------------------------------------------------------------------------------------
-//  If you add new ioctl VIDIOC_S_EXT_CTRLS function, 
+//  If you add new ioctl VIDIOC_S_EXT_CTRLS function,
 //  please add the new memeber and the function at the following table.
 
 static struct tegracam_ctrl_ops tier4_imx490_ctrl_ops = {
@@ -528,12 +539,12 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
 		goto exit;
 	}
 
-#if defined(TIER4_C1_CAMERA)
-
-	err = tier4_max9295_control_sensor_power_seq(priv->ser_dev);
+//#if defined(TIER4_C1_CAMERA)
+#if 0
+	err = tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX490, true);
 
 	if (err) {
-		dev_err(dev, "[%s] : Powerup Camera Sensor failed\n", __func__);
+		dev_err(dev, "[%s] : Powerup Camera ISP failed\n", __func__);
 		goto exit;
 	}
 
@@ -608,7 +619,7 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
 
 			break;
 
-		default:		//   case of  fsync_mode  < 0 
+		default:		//   case of  fsync_mode  < 0
 
 			dev_err(dev, "[%s] : The camera sensor mode(fsync mode) is invalid.\n", __func__);
 
@@ -743,7 +754,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 		dev_err(dev, "[%s] : Unknown Hardware Sysytem !\n", __func__);
 		goto error;
 	}
-		
+
 	err = of_property_read_u32(node, "reg", &priv->g_ctx.sdev_isp_reg);
 
 	if (err < 0) {
@@ -776,7 +787,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 		dev_err(dev, "[%s] : No fsync-mode found\n", __func__);
 		goto error;
 	}
-	
+
 	if (!strcmp(str_value, "true")) {
 		priv->fsync_mode = true;
 	} else {
@@ -1193,6 +1204,17 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
 		goto error_exit;
 	}
 
+	if ( err ) {
+		wst_priv[camera_channel_count].p_client = NULL;
+		wst_priv[camera_channel_count].p_priv   = NULL;
+	} else {
+		wst_priv[camera_channel_count].p_client = client;
+		wst_priv[camera_channel_count].p_priv   = priv;
+	}
+
+	wst_priv[camera_channel_count].isp_ser_shutdown = false;
+	wst_priv[camera_channel_count].des_shutdown = false;
+
 	tier4_isx021_sensor_mutex_unlock();
 
 	dev_info(&client->dev, "Detected Tier4 IMX490 sensor\n");
@@ -1202,6 +1224,8 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
 error_exit:
 
 	tier4_isx021_sensor_mutex_unlock();
+
+	camera_channel_count++;
 
 	//return err;
 	return NO_ERROR;// err;
@@ -1221,6 +1245,89 @@ static int tier4_imx490_remove(struct i2c_client *client)
 	return NO_ERROR;
 }
 
+static void tier4_imx490_shutdown(struct i2c_client *client)
+{
+	struct 	tier4_imx490 *priv = NULL;
+	int 	i;
+
+	tier4_isx021_sensor_mutex_lock();
+
+	for( i = 0 ; i < camera_channel_count ; i++ ) {
+		if ( client == wst_priv[i].p_client ) {
+			priv =  wst_priv[i].p_priv;
+			if ( i & 0x1 ) {	// Even number port ( i = port_number -1 )
+				if ( wst_priv[i-1].p_client ) {  					 	//  Is a camera is connected to another port on the same Des
+					if ( wst_priv[i-1].isp_ser_shutdown ) {		 		//  The ISP and Ser on another port are already shut down
+						if ( wst_priv[i-1].des_shutdown == false ) { 	//  Des is not shut down yet.
+		 					wst_priv[i].isp_ser_shutdown = true;
+		 					wst_priv[i].des_shutdown = true;
+						} else {	// The Des is already shut down at another port. This is Error case.
+	 						wst_priv[i].isp_ser_shutdown = false; 		// Unable to shut down ISP, Ser and Des
+	 						wst_priv[i].des_shutdown = false;
+						}
+					} else { // The ISP and Ser on another port are not shut down yet.
+						if ( wst_priv[i-1].des_shutdown == false ) {	// Des is not shut down yet.
+		 					wst_priv[i].isp_ser_shutdown = true;		//  The ISP and Ser will be shut down.
+		 					wst_priv[i].des_shutdown = false;			//  The Des won't be shut down.
+						} else {	// Only Des on another port is already shut down. This is Error case.
+	 						wst_priv[i].isp_ser_shutdown = false;		// Unable to shut down Camera sensor, Ser and Des
+	 						wst_priv[i].des_shutdown = false;
+						}
+					}
+				} else {  //  Another Camera is not connected with another port on the same Des. Single camera is connected with the Des.
+	 				wst_priv[i].isp_ser_shutdown = true;				//  The Camera ISP and Ser will be shut down.
+	 				wst_priv[i].des_shutdown = true;					//  The Des will be shut down.
+				}
+			} else {	// Camera is connected with Odd number port
+				if ( wst_priv[i+1].p_client ) { 						// Another camera is connected with another port on the same Des
+					if ( wst_priv[i+1].isp_ser_shutdown ) { 			// The camera ISP and Ser on another port are already shut down
+						if ( wst_priv[i+1].des_shutdown == false ) {	// Des is not shut down yet.
+		 					wst_priv[i].isp_ser_shutdown = true;		// The Camera ISP and Ser will be shut down.
+		 					wst_priv[i].des_shutdown = true;			// The Des will be shut down.
+						} else {	// Des is already shut down. This is Error case.
+	 						wst_priv[i].isp_ser_shutdown = false;		// Unable to shut down Camera ISP, Ser and Des
+	 						wst_priv[i].des_shutdown = false;
+						}
+					} else { // The ISPr and Ser on another port are not shut down yet.
+						if ( wst_priv[i+1].des_shutdown == false ) {	// Des is not shut down yet.
+		 					wst_priv[i].isp_ser_shutdown = true;		//  The Camera ISP and Ser will be shut down.
+		 					wst_priv[i].des_shutdown = false;			//  The Des won't be shut down.
+						} else {	// Only Des on another port is already shut down. This is Error case.
+	 						wst_priv[i].isp_ser_shutdown = false;		// Unable to shut down Camera ISP, Ser and Des
+	 						wst_priv[i].des_shutdown = false;
+						}
+					}
+				} else { // Another camera is not connected with another port on the same des
+	 				wst_priv[i].isp_ser_shutdown = true;
+	 				wst_priv[i].des_shutdown = true;
+				}
+			}
+			break;
+		}
+	}
+
+	if ( priv == NULL || i >= camera_channel_count ) {
+		tier4_isx021_sensor_mutex_unlock();
+		return;
+	}
+
+	if ( wst_priv[i].isp_ser_shutdown ) {
+		// Reset camera sensor
+		tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX490, false);
+
+		// S/W Reset max9295
+		tier4_max9295_reset_control(priv->ser_dev);
+	}
+
+	if ( wst_priv[i].des_shutdown ) {
+		// S/W Reset max9296
+		tier4_max9296_reset_control(priv->dser_dev, &client->dev, 1 );
+	}
+
+	tier4_isx021_sensor_mutex_unlock();
+
+}
+
 static const struct i2c_device_id tier4_imx490_id[] = {
 	{ "tier4_imx490", 0 },
 	{ }
@@ -1236,6 +1343,7 @@ static struct i2c_driver tier4_imx490_i2c_driver = {
 	},
 	.probe 		= tier4_imx490_probe,
 	.remove 	= tier4_imx490_remove,
+	.shutdown 	= tier4_imx490_shutdown,
 	.id_table 	= tier4_imx490_id,
 };
 
@@ -1258,7 +1366,8 @@ static void __exit tier4_imx490_exit(void)
 module_init(tier4_imx490_init);
 module_exit(tier4_imx490_exit);
 
-MODULE_DESCRIPTION("Media Controller driver for Tier4 C2 Camera");
+MODULE_DESCRIPTION("TIERIV Automotive HDR Camera driver");
 MODULE_AUTHOR("Originaly NVIDIA Corporation");
 MODULE_AUTHOR("K.Iwasaki");
+MODULE_AUTHOR("Y.Fujii");
 MODULE_LICENSE("GPL v2");

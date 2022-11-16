@@ -61,13 +61,13 @@ MODULE_SOFTDEP("pre: tier4_fpga");
 
 #define ISX021_MIN_EXPOSURE_TIME   					0
 #define ISX021_MID_EXPOSURE_TIME   					11010	// 11 milisecond
-#define ISX021_MAX_EXPOSURE_TIME   					33000	// 33 milisecond 
+#define ISX021_MAX_EXPOSURE_TIME   					33000	// 33 milisecond
 
 #define ISX021_GAIN_DEFAULT_VALUE					6
 
 #define ISX021_DEFAULT_FRAME_LENGTH    				(1125)
 
-// ---   Start of Register definition   ------------------ 
+// ---   Start of Register definition   ------------------
 
 #define TIER4_ISX021_REG_0_ADDR    0
 #define TIER4_ISX021_REG_1_ADDR    1
@@ -193,7 +193,7 @@ MODULE_SOFTDEP("pre: tier4_fpga");
 
 #define TIER4_ISX021_REG_79_ADDR    79
 
-// --- End of  Register definition ------------------------ 
+// --- End of  Register definition ------------------------
 
 
 #define	MAX_NUM_OF_REG								(100)
@@ -274,6 +274,16 @@ static const struct regmap_config tier4_sensor_regmap_config = {
 	.cache_type = REGCACHE_RBTREE,
 };
 
+struct st_priv {
+	struct 	i2c_client 	*p_client;
+	struct 	tier4_isx021 *p_priv;
+	bool	sensor_ser_shutdown;
+	bool	des_shutdown;
+};
+
+static struct st_priv wst_priv[MAX_NUM_CAMERA];
+
+static int camera_channel_count = 0;
 
 static int trigger_mode = 0xCAFE;
 static int enable_auto_exposure = 0xCAFE;
@@ -341,7 +351,7 @@ static inline int tier4_isx021_read_reg(struct camera_common_data *s_data, u16 a
 
 	if (err) {
 		dev_err(s_data->dev, "[%s ] : ISX021 I2C Read failed. Address = 0x%04X\n", __func__, reg_addr);
-	} 
+	}
 
 	return err;
 }
@@ -554,7 +564,7 @@ static int tier4_isx021_set_response_mode(struct tier4_isx021 *priv)
 	int err = 0;
 	struct camera_common_data *s_data = priv->s_data;
 	u8	r_val;
-  
+
 	usleep_range(100000, 110000);
 
   err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_62_ADDR, 0x00);
@@ -563,7 +573,7 @@ static int tier4_isx021_set_response_mode(struct tier4_isx021 *priv)
 	}
 
 	usleep_range(100000, 110000); 	// For ES3
-	
+
 	err = tier4_isx021_read_reg(s_data,TIER4_ISX021_REG_66_ADDR, &r_val);
 
 	if ( r_val == 0x04 ) {
@@ -638,7 +648,7 @@ static void tier4_isx021_gmsl_serdes_reset(struct tier4_isx021 *priv)
 	/* reset serdes addressing and control pipeline */
 	tier4_max9295_reset_control(priv->ser_dev);
 
-	tier4_max9296_reset_control(priv->dser_dev, &priv->i2c_client->dev);
+	tier4_max9296_reset_control(priv->dser_dev, &priv->i2c_client->dev, false );
 
 	tier4_max9296_power_off(priv->dser_dev);
 
@@ -905,7 +915,7 @@ static int tier4_isx021_set_gain(struct tegracam_device *tc_dev, s64 val)
 
 	msleep(100);		// For ES3
 
-	// Change AE mode 
+	// Change AE mode
 
 	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_67_ADDR, 0x03);
 
@@ -1011,7 +1021,7 @@ static int tier4_isx021_set_auto_exposure(struct tegracam_device *tc_dev)
 	}
 
 fail:
-	
+
   return err;
 }
 
@@ -1126,11 +1136,11 @@ static int tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_
     if(r_val != 0x02 || r_val != 0x04){
       err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_73_ADDR, 0x02);
     }
- 
+
     err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_62_ADDR, 0x00);
-      
+
   	usleep_range(35000,36000);
-    
+
     if(is_enabled){
 
       err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_74_ADDR, 0x01);
@@ -1173,7 +1183,7 @@ static int tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_
     return err;
 }
 // --------------------------------------------------------------------------------------
-//  If you add new ioctl VIDIOC_S_EXT_CTRLS function, 
+//  If you add new ioctl VIDIOC_S_EXT_CTRLS function,
 //  please add the new memeber and the function at the following table.
 
 static struct tegracam_ctrl_ops tier4_isx021_ctrl_ops = {
@@ -1249,7 +1259,7 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 		goto exit;
 	}
 
-	err = tier4_max9295_control_sensor_power_seq(priv->ser_dev);
+	err = tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_ISX021, true);
 	if (err) {
 		dev_err(dev, "[%s] : Failed to powerup Camera Sensor.\n", __func__);
 		goto exit;
@@ -1274,7 +1284,7 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 	if (err) {
 		dev_err(dev, "[%s] : Failed to make Digital Gain set to the default value.\n", __func__);
 	}
-	
+
   if ( trigger_mode == 1 ) {
 		priv->fsync_mode = true;
 		dev_info(dev, "[%s] : Enabled Slave(fsync triggered) mode.\n", __func__ );
@@ -1718,7 +1728,7 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 #endif
 
   tier4_isx021_sensor_mutex_lock();
-	
+
   dev_info(dev, "[%s] : Probing V4L2 Sensor.\n", __func__);
 
 	if (!IS_ENABLED(CONFIG_OF) || !node) {
@@ -1844,7 +1854,7 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 		goto errret;
 	}
 
-  tier4_isx021_sensor_mutex_unlock();
+  	tier4_isx021_sensor_mutex_unlock();
 
 	err = tier4_isx021_set_response_mode(priv);
 	if (err) {
@@ -1853,9 +1863,22 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 
 	dev_info(&client->dev, "Detected ISX021 sensor\n");
 
+	if ( err ) {
+		wst_priv[camera_channel_count].p_client = NULL;
+		wst_priv[camera_channel_count].p_priv   = NULL;
+	} else {
+		wst_priv[camera_channel_count].p_client = client;
+		wst_priv[camera_channel_count].p_priv   = priv;
+	}
+
+	wst_priv[camera_channel_count].sensor_ser_shutdown = false;
+	wst_priv[camera_channel_count].des_shutdown = false;
+
 errret:
 
-  tier4_isx021_sensor_mutex_unlock();
+  	tier4_isx021_sensor_mutex_unlock();
+
+	camera_channel_count++;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
 
@@ -1880,6 +1903,88 @@ static int tier4_isx021_remove(struct i2c_client *client)
 	return NO_ERROR;
 }
 
+static void tier4_isx021_shutdown(struct i2c_client *client)
+{
+	struct 	tier4_isx021 *priv = NULL;
+	int 	i;
+
+	tier4_isx021_sensor_mutex_lock();
+
+	for( i = 0 ; i < camera_channel_count ; i++ ) {
+		if ( client == wst_priv[i].p_client ) {
+			priv =  wst_priv[i].p_priv;
+			if ( i & 0x1 ) {	// Even number port ( i = port_number -1 )
+				if ( wst_priv[i-1].p_client ) {  					 		// Is the camera connected to another port on the same Des ?
+					if ( wst_priv[i-1].sensor_ser_shutdown ) {		 		//  Are the ISP and Ser on another port already shut down ?
+						if ( wst_priv[i-1].des_shutdown == false ) { 		// Des is not shut down yet.
+		 					wst_priv[i].sensor_ser_shutdown = true;
+		 					wst_priv[i].des_shutdown = true;
+						} else {	// The Des on the another port is already shut down. This is Error case.
+	 						wst_priv[i].sensor_ser_shutdown = false; 		// Unable to shut down ISP, Ser and Des
+	 						wst_priv[i].des_shutdown = false;
+						}
+					} else { // The camera ISP and Ser on another port are not shut down yet.
+						if ( wst_priv[i-1].des_shutdown == false ) {		// Des is not shut down yet.
+		 					wst_priv[i].sensor_ser_shutdown = true;			//  The ISP and Ser will be shut down.
+		 					wst_priv[i].des_shutdown = false;				//  The Des won't be shut down.
+						} else {	// Only Des on another port is already shut down. This is Error case.
+	 						wst_priv[i].sensor_ser_shutdown = false;		// Unable to shut down ISP, Ser and Des
+	 						wst_priv[i].des_shutdown = false;
+						}
+					}
+				} else {  //   Camera is not connected to another port on the same Des. The case of Single camera connected to one Des .
+	 				wst_priv[i].sensor_ser_shutdown = true;					//  The ISP and Ser will be shut down.
+	 				wst_priv[i].des_shutdown = true;						//  The Des won't be shut down.
+				}
+			} else {	// Camera is connected to Odd number port
+				if ( wst_priv[i+1].p_client ) { 							// Another camera is connected to another port on the same Des
+					if ( wst_priv[i+1].sensor_ser_shutdown ) { 				// The ISP and Ser on another port are already shut down
+						if ( wst_priv[i+1].des_shutdown == false ) {		// Des is not shut down yet.
+		 					wst_priv[i].sensor_ser_shutdown = true;			// The ISP and Ser will be shut down.
+		 					wst_priv[i].des_shutdown = true;				// The Des will be shut down.
+						} else {	// Des is already shut down. This is Error case.
+	 						wst_priv[i].sensor_ser_shutdown = false;		// Unable to shut down ISP, Ser and Des
+	 						wst_priv[i].des_shutdown = false;
+						}
+					} else { // The ISPr and Ser on another port are not shut down yet.
+						if ( wst_priv[i+1].des_shutdown == false ) {		// Des is not shut down yet.
+		 					wst_priv[i].sensor_ser_shutdown = true;			//  The ISP and Ser will be shut down.
+		 					wst_priv[i].des_shutdown = false;				//  The Des won't be shut down.
+						} else {	// Only Des on another port is already shut down. This is Error case.
+	 						wst_priv[i].sensor_ser_shutdown = false;		// Unable to shut down ISP, Ser and Des
+	 						wst_priv[i].des_shutdown = false;
+						}
+					}
+				} else { // Another camera is not connected with another port on the same des
+	 				wst_priv[i].sensor_ser_shutdown = true;
+	 				wst_priv[i].des_shutdown = true;
+				}
+			}
+			break;
+		}
+	}
+
+	if ( priv == NULL || i >= camera_channel_count ) {
+		tier4_isx021_sensor_mutex_unlock();
+		return;
+	}
+
+	if ( wst_priv[i].sensor_ser_shutdown ) {
+		// Reset camera sensor
+		tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_ISX021, false);
+
+		// S/W Reset max9295
+		tier4_max9295_reset_control(priv->ser_dev);
+	}
+
+	if ( wst_priv[i].des_shutdown ) {
+		// S/W Reset max9296
+		tier4_max9296_reset_control(priv->dser_dev, &client->dev, true );
+	}
+
+	tier4_isx021_sensor_mutex_unlock();
+
+}
 
 static const struct i2c_device_id tier4_isx021_id[] = {
 	{ "tier4_isx021", 0 },
@@ -1896,6 +2001,7 @@ static struct i2c_driver tier4_isx021_i2c_driver = {
 	},
 	.probe 		= tier4_isx021_probe,
 	.remove 	= tier4_isx021_remove,
+	.shutdown 	= tier4_isx021_shutdown,
 	.id_table 	= tier4_isx021_id,
 };
 
@@ -1911,6 +2017,8 @@ static int __init tier4_isx021_init(void)
 static void __exit tier4_isx021_exit(void)
 {
 	mutex_destroy(&tier4_sensor_lock__);
+
+	printk("[%s]: tier4_isx021 driver is exitted.\n",__func__);
 
 	i2c_del_driver(&tier4_isx021_i2c_driver);
 }

@@ -124,13 +124,6 @@
 
 #define MAX9295_MAX_PIPES 				0x4
 
-#if 0
-#define	dev_dbg2	dev_bg
-#else
-#undef 	dev_dbg2
-#define	dev_dbg2	dev_info
-#endif
-
 struct tier4_max9295_client_ctx {
 	struct gmsl_link_ctx *g_ctx;
 	bool st_done;
@@ -364,19 +357,37 @@ error:
 }
 EXPORT_SYMBOL(tier4_max9295_setup_streaming);
 
-int tier4_max9295_control_sensor_power_seq(struct device *dev)
+int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, bool power_on )
 {
+	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+	struct gmsl_link_ctx *g_ctx;
 	int err = 0;
 
-#if 0
+	g_ctx = priv->g_client.g_ctx;
+
+#if 1
 	msleep(50);
-	err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
-	msleep(50);
-	err += tier4_max9295_write_reg(dev, MAX9295_GPIO_5_ADDR, 0x04);
-	msleep(50);
-	err += tier4_max9295_write_reg(dev, MAX9295_GPIO_4_ADDR, 0x10);
-	msleep(50);
-	err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x10);
+	if ( power_on == true ) { // power up camera sensor
+		err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
+		msleep(100);
+		if ( sensor_id == SENSOR_ID_ISX021 ) {
+			err += tier4_max9295_write_reg(dev, MAX9295_GPIO_5_ADDR, 0x04);
+			msleep(50);
+			err += tier4_max9295_write_reg(dev, MAX9295_GPIO_4_ADDR, 0x10);
+			msleep(50);
+		}
+		err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x10);
+	} else {	// power down caemra sensor
+		err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
+		msleep(100);
+		if ( sensor_id == SENSOR_ID_ISX021 ) {
+			err += tier4_max9295_write_reg(dev, MAX9295_GPIO_5_ADDR, 0x04);
+			msleep(50);
+			err += tier4_max9295_write_reg(dev, MAX9295_GPIO_4_ADDR, 0x00);
+			msleep(50);
+		}
+//		err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
+	}
 
 	if ( err )
 	{
