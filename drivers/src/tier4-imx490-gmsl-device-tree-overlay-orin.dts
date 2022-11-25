@@ -376,7 +376,7 @@ fragment@43{
     };
   };
 
-  ////////////////////////////////////
+
 fragment@44{
     //tcp
     target-path = "/tegra-camera-platform";
@@ -639,7 +639,8 @@ fragment@61{
 
           pix_clk_hz = "757"; //not use
 //          serdes_pix_clk_hz =  "237500000";
-          serdes_pix_clk_hz =  "375000000";
+//          serdes_pix_clk_hz =  "375000000";
+          serdes_pix_clk_hz =  "350000000";
 
           gain_factor = "10";
           min_gain_val = "0";                       /* dB */
@@ -746,7 +747,8 @@ fragment@61{
 
           pix_clk_hz = "757"; //not use
 //          serdes_pix_clk_hz =  "237500000";
-          serdes_pix_clk_hz =  "375000000";
+//          serdes_pix_clk_hz =  "375000000";
+          serdes_pix_clk_hz =  "350000000";
           
           gain_factor = "10";
           min_gain_val = "0";                           /* dB */
@@ -909,7 +911,8 @@ fragment@62{
             
             pix_clk_hz = "757"; //not use
 //            serdes_pix_clk_hz =  "237500000";
-            serdes_pix_clk_hz =  "375000000";
+//            serdes_pix_clk_hz =  "375000000";
+            serdes_pix_clk_hz =  "350000000";
 
             gain_factor = "10";
             min_gain_val = "0"; /* dB */
@@ -1015,7 +1018,8 @@ fragment@62{
 
             pix_clk_hz = "757"; //not use
 //            serdes_pix_clk_hz =  "237500000";
-            serdes_pix_clk_hz =  "375000000";
+//            serdes_pix_clk_hz =  "375000000";
+            serdes_pix_clk_hz =  "350000000";
 
             gain_factor = "10";
             min_gain_val = "0";                         /* dB */
@@ -1180,7 +1184,8 @@ fragment@63{
             
             pix_clk_hz = "757"; //not use
 //            serdes_pix_clk_hz =  "237500000";
-            serdes_pix_clk_hz =  "375000000";
+//            serdes_pix_clk_hz =  "375000000";
+            serdes_pix_clk_hz =  "350000000";
 
             gain_factor = "10";
             min_gain_val = "0"; /* dB */
@@ -1286,7 +1291,8 @@ fragment@63{
 
             pix_clk_hz = "757"; //not use
 //          serdes_pix_clk_hz =  "237500000";
-            serdes_pix_clk_hz =  "375000000";
+//            serdes_pix_clk_hz =  "375000000";
+            serdes_pix_clk_hz =  "350000000";
 
             gain_factor = "10";
             min_gain_val = "0";                         /* dB */
