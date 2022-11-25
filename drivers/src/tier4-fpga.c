@@ -1,5 +1,5 @@
 /*
- * tier4_gw5300.c - tier4_gw5300 ISP driver
+ * tier4_fpga.c - tier4_fpga driver
  *
  * Copyright (c) 2020, Leopard Imaging Inc.  All rights reserved.
  *

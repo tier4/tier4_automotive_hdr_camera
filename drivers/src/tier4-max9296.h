@@ -71,10 +71,11 @@ int tier4_max9296_setup_control(struct device *dev, struct device *s_dev);
  *
  * @param [in]  dev             The deserializer device handle.
  * @param [in]  s_dev           The sensor device handle.
+ * @param [in]  force_reset     Force reset
  *
  * @return  0 for success, or -1 otherwise.
  */
-int tier4_max9296_reset_control(struct device *dev, struct device *s_dev);
+int tier4_max9296_reset_control(struct device *dev, struct device *s_dev, bool force_reset);
 
 /**
  * @brief  Registers a source sensor device with a deserializer device.
