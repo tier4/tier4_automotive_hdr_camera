@@ -2,8 +2,18 @@
 // Proprietary
 
 #include "c1_reg.hpp"
+#include "c2_reg.hpp"
 #include "i2c.hpp"
 #include "t4cam_tools.hpp"
+
+void C2::set_dwp_on()
+{
+  uint8_t buf[8];
+
+  i2c::write(dev_name, i2c_dev_addr, cmd_dwp_on, size_t(14));
+
+  i2c::read(dev_name, i2c_dev_addr, buf, 6);
+}
 
 static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &data_u, uint8_t &data_l, uint16_t mask)
 {
@@ -34,6 +44,8 @@ int8_t C1::checkES3()
 }
 float C1::getAEError()
 {
+#define ERRSCL_L 0x617C
+#define ERRSCL_U 0x617D
   float ret;
   uint8_t l, u;
   uint16_t d;

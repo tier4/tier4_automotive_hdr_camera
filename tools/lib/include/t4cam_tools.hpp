@@ -42,6 +42,36 @@ public:
   }
 };
 
+class C2
+{
+private:
+  int port_num;
+  std::string dev_name;
+  uint8_t i2c_dev_addr;
+
+public:
+  C2(int _port_num = 0) : port_num(_port_num)
+  {
+    if (port_num < 0 || port_num >= MAX_PORT)
+    {
+      std::cerr << "The port number has exceeded the maximum value. Please specify between 0-" << MAX_PORT - 1
+                << std::endl;
+      exit(-1);
+    }
+    dev_name = "/dev/" + portnum_table[port_num];
+    i2c_dev_addr = (port_num % 2) == 0 ? 0x2b : 0x2c;
+
+#ifdef DEBUG
+    fprintf(stdout, "model: C2\n");
+    fprintf(stdout, "port_num: %d\n", port_num);
+    fprintf(stdout, "dev_name: %s\n", dev_name.c_str());
+    fprintf(stdout, "dev_addr: 0x%x\n", i2c_dev_addr);
+#endif
+  }
+
+  void set_dwp_on();
+};
+
 class C1
 {
 private:
@@ -63,6 +93,7 @@ public:
     i2c_dev_addr = (port_num % 2) == 0 ? 0x1b : 0x1c;
 
 #ifdef DEBUG
+    fprintf(stdout, "model: C1\n");
     fprintf(stdout, "port_num: %d\n", port_num);
     fprintf(stdout, "dev_name: %s\n", dev_name.c_str());
     fprintf(stdout, "dev_addr: 0x%x\n", i2c_dev_addr);
@@ -219,9 +250,6 @@ public:
 
   int8_t setShutterSpeedforFME(float val);
   float getShutterSpeedforFME();
-
-#define ERRSCL_L 0x617C
-#define ERRSCL_U 0x617D
 
   float getAEError();
 };

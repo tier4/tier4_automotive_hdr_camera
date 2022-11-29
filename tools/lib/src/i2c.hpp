@@ -41,7 +41,10 @@ public:
   static int8_t read8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uint8_t* data);
   static int8_t write16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, uint8_t data);
   static int8_t write8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uint8_t data);
-  static int8_t write(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, const uint8_t* data, uint16_t length);
+  //  static int8_t write(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, const uint8_t* data, uint16_t
+  //  length);
+  static int8_t write(std::string dev_name, uint8_t dev_addr, const uint8_t* data, uint16_t length);
+  static int8_t read(std::string dev_name, uint8_t dev_addr, uint8_t* data, uint16_t length);
   static int8_t check_device(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr);
 };
 #endif
