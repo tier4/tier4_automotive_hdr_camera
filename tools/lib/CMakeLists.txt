@@ -1,9 +1,13 @@
+find_package(yaml-cpp REQUIRED)
+
 
 add_library(t4cam_tools SHARED  src/i2c.cpp src/t4cam_tools.cpp)
 target_include_directories(t4cam_tools  PUBLIC 
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   PRIVATE ./)
+include_directories(${YAML_INCLUDE_DIRS})
+target_link_libraries(${YAML_CPP_LIBRARIES})
 
 
 install(TARGETS t4cam_tools EXPORT t4camConfig

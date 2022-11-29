@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(t4cam_sdk)
 
+set (CMAKE_CXX_STANDARD 11)
+
+
 add_subdirectory(lib)
 add_subdirectory(example)
 add_subdirectory(ctrl)
@@ -8,6 +11,7 @@ add_subdirectory(ctrl)
 SET(CPACK_GENERATOR "DEB")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "yk.fujii")
 
+SET(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 SET(CPACK_PACKAGE_VERSION_MAJOR "1")
 SET(CPACK_PACKAGE_VERSION_MINOR "1")
 SET(CPACK_PACKAGE_VERSION_PATCH "0")

@@ -9,9 +9,11 @@ static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &d
 {
   uint16_t temp;
 
-  temp = ((uint16_t)(raw / unit) + offset) & mask;
+  temp = ((uint16_t)(raw / unit) + offset);
   data_l = temp & 0xFF;
   data_u = temp >> 8;
+
+  fprintf(stderr, "[%s]:%f-%d, %d, %d\n", __func__, raw, temp, data_l, data_u);
   return;
 }
 
@@ -29,6 +31,31 @@ int8_t C1::checkES3()
   }
 
   return 0;
+}
+float C1::getAEError()
+{
+  float ret;
+  uint8_t l, u;
+  uint16_t d;
+
+  i2c::read16(dev_name, i2c_dev_addr, ERRSCL_L, &l);
+  i2c::read16(dev_name, i2c_dev_addr, ERRSCL_U, &u);
+
+  d = l + (u << 8);
+
+  ret = (int16_t)d * 6.02 / 1024.0;
+  return ret;
+}
+
+bool C1::isAvailableCamera(void)
+{
+  bool ret = true;
+  if (i2c::check_device(dev_name, i2c_dev_addr, AE_MODE) < 0)
+  {
+    ret = false;
+  }
+
+  return ret;
 }
 
 float C1::getTempature(int type)
@@ -74,10 +101,64 @@ float C1::getTempatureS1(void)
   return data;
 }
 
+uint8_t C1::getAEMode()
+{
+  uint8_t aemode;
+  i2c::read16(dev_name, i2c_dev_addr, AE_MODE, &aemode);
+  return aemode;
+}
+
+int8_t C1::setAEMode(int mode)
+{
+  int8_t ret = 0;
+  if (getAEMode() != mode)
+  {
+    // set aemode
+    ret = i2c::write16(dev_name, i2c_dev_addr, AE_MODE, mode);
+  }
+  return ret;
+}
+
+#define FME_SHTVAL 0xABEC
+int8_t C1::setShutterSpeedforFME(float val)
+{
+  int8_t ret;
+
+  uint32_t data = (val * 1000);
+  for (int i = 0; i < 4; i++)
+  {
+    i2c::write16(dev_name, i2c_dev_addr, FME_SHTVAL + i, (uint8_t)data & 0xFF);
+    data = data >> 8;
+  }
+
+  fprintf(stderr, "-------\n");
+
+  return ret;
+}
+
+float C1::getShutterSpeedforFME()
+{
+  uint8_t ret;
+  int data = 0;
+
+  for (int i = 0; i < 4; i++)
+  {
+    i2c::read16(dev_name, i2c_dev_addr, FME_SHTVAL + i, &ret);
+    data |= ret << (i * 8);
+  }
+
+  return data / 1000;
+}
+
 int8_t C1::setDigitalGain(int db)
 {
   uint8_t u;
   uint8_t l;
+
+  if (getAEMode() != AE_MODE_ME)
+  {
+    fprintf(stderr, "[WARN]: AEMode is not ME. DigitalGain parameter has not effect in this mode.\n");
+  }
 
   if (db < DIGITAL_GAIN_MIN || DIGITAL_GAIN_MAX < db)
   {
@@ -87,10 +168,25 @@ int8_t C1::setDigitalGain(int db)
   }
 
   calcHexVal((float)db, 0.1, 0, u, l, 0xFF);
+  fprintf(stderr, "%d, %x, %x\n", db, u, l);
   i2c::write16(dev_name, i2c_dev_addr, DIGITAL_GAIN_L, l);
   i2c::write16(dev_name, i2c_dev_addr, DIGITAL_GAIN_U, u);
 
   return 0;
+}
+
+int C1::getDigitalGain(void)
+{
+  uint8_t l, u;
+  int16_t data;
+
+  i2c::read16(dev_name, i2c_dev_addr, DIGITAL_GAIN_L, &l);
+  i2c::read16(dev_name, i2c_dev_addr, DIGITAL_GAIN_U, &u);
+  data = (int16_t)(l + (u << 8));
+
+  fprintf(stderr, "%x:%x, %x:%x, %d\n", DIGITAL_GAIN_L, l, DIGITAL_GAIN_U, u, data);
+
+  return (int)(data / 10);
 }
 
 int8_t C1::setSharpness(float gain)
@@ -107,12 +203,24 @@ int8_t C1::setSharpness(float gain)
 
   return 0;
 }
+
+float C1::getSharpness(void)
+{
+  uint8_t data;
+  float ret;
+
+  i2c::read16(dev_name, i2c_dev_addr, UISHARPNESS, &data);
+  ret = (float)data * (SHARPNESS_UNIT);
+
+  return ret;
+}
+
 int8_t C1::setHue(int deg)
 {
   if (deg < HUE_MIN || HUE_MAX < deg)
   {
-    fprintf(stderr, "[WARN][%s:%x]: please set in the range of %d ≤ deg ≤ %d. Hue is not set.\n", __func__, i2c_dev_addr,HUE_MIN,
-            HUE_MAX);
+    fprintf(stderr, "[WARN][%s:%x]: please set in the range of %d ≤ deg ≤ %d. Hue is not set.\n", __func__,
+            i2c_dev_addr, HUE_MIN, HUE_MAX);
     return -1;
   }
 
@@ -122,6 +230,14 @@ int8_t C1::setHue(int deg)
   i2c::write16(dev_name, i2c_dev_addr, UIHUE, data);
   return 0;
 }
+
+int C1::getHue(void)
+{
+  uint8_t data;
+  i2c::read16(dev_name, i2c_dev_addr, UIHUE, &data);
+  return (int)(int8_t)data * HUE_UNIT;
+}
+
 int8_t C1::setSaturation(float gain)
 {
   if (gain < SATURATION_MIN || SATURATION_MAX < gain)
@@ -134,6 +250,16 @@ int8_t C1::setSaturation(float gain)
   data = (uint8_t)(gain / SATURATION_UNIT);
   i2c::write16(dev_name, i2c_dev_addr, UISATURATION, data);
   return 0;
+}
+
+float C1::getSaturation(void)
+{
+  float gain;
+  uint8_t data;
+
+  i2c::read16(dev_name, i2c_dev_addr, UISATURATION, &data);
+  gain = (float)data * SATURATION_UNIT;
+  return gain;
 }
 
 int8_t C1::setBrightness(float offset)
@@ -154,6 +280,21 @@ int8_t C1::setBrightness(float offset)
   return 0;
 }
 
+float C1::getBrightness(void)
+{
+  int16_t data;
+  uint8_t l, u;
+
+  i2c::read16(dev_name, i2c_dev_addr, UIBRIGHTNESS_L, &l);
+  i2c::read16(dev_name, i2c_dev_addr, UIBRIGHTNESS_U, &u);
+
+  data = (int16_t)((u << 8) + l);
+
+  float ret = data / 10 * BRIGHTNESS_UNIT;
+  fprintf(stderr, "%s: %d, 0x%x, 0x%x, %f\n", __func__, data, u, l, ret);
+  return ret;
+}
+
 int8_t C1::setContrast(float gain)
 {
   if (gain < CONTRAST_MIN || CONTRAST_MAX < gain)
@@ -167,6 +308,14 @@ int8_t C1::setContrast(float gain)
   i2c::write16(dev_name, i2c_dev_addr, UICONTRAST, data);
 
   return 0;
+}
+
+float C1::getContrast(void)
+{
+  uint8_t data;
+  i2c::read16(dev_name, i2c_dev_addr, UICONTRAST, &data);
+  float ret = (float)(data)*CONTRAST_UNIT;
+  return ret;
 }
 
 int8_t C1::setAutoWhiteBalance(bool on)
@@ -239,10 +388,26 @@ int8_t C1::setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float
 
   return 0;
 }
+
+int8_t C1::setExposureOffsetFlag(bool flag)
+{
+  int8_t ret;
+  ret = i2c::write16(dev_name, i2c_dev_addr, EVREF_CTRL_SEL, flag);
+  return ret;
+}
+int C1::getExposureOffsetFlag()
+{
+  uint8_t ret;
+
+  i2c::read16(dev_name, i2c_dev_addr, EVREF_CTRL_SEL, &ret);
+  ret = ret & 0x1;
+  return (int)ret;
+}
+
 int8_t C1::setExposureOffset(float offset)
 {
 // TODO
-#if 0
+#if 1
   if (offset < EVREF_OFFSET_MIN || EVREF_OFFSET_MAX < offset)
   {
     fprintf(stderr, "[WARN][%s]: please set in the range of %lf ≤ offset ≤ %lf. Contrast is not set.\n", __func__,
@@ -255,4 +420,16 @@ int8_t C1::setExposureOffset(float offset)
   i2c::write16(dev_name, i2c_dev_addr, EVREF_OFFSET, data);
 #endif
   return 0;
+}
+
+float C1::getExposureOffset()
+{
+  float ret;
+  uint8_t data;
+
+  i2c::read16(dev_name, i2c_dev_addr, EVREF_OFFSET, &data);
+
+  ret = (float)(int8_t)data * EVREF_OFFSET_UNIT;
+
+  return ret;
 }
