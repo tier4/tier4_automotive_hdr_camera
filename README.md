@@ -1,5 +1,5 @@
 # TIERIV Automotive HDR Camera C1/C2 Device Driver
-This repository contains the device driver for the TIERIV Automotive HDR Camera C1/C2. 
+This repository contains the device driver for the [TIERIV Automotive HDR Camera C1/C2](https://sensor.tier4.jp/automotive-hdr-camera). 
 
 If you want to use the official driver, please refer to the [Installation and Usage section](#installation-and-usage) and proceed with the installation.
 
