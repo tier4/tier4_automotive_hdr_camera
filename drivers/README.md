@@ -29,13 +29,13 @@ $> sudo apt install ./tier4-camera-gmsl_x.x.x_arm64.deb
 
 
 ``` 
-$> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n 2="Tier4 ISX021 GMSL2 Camera Device Tree Overlay"
+$> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n 2="TIERIV ISX021 GMSL2 Camera Device Tree Overlay"
 ```
 
 if you use r32.5.1 BSP, you should use the command below
 
 ``` 
-$> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "Tier4 ISX021 GMSL2 Camera Device Tree Overlay"
+$> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "TIERIV ISX021 GMSL2 Camera Device Tree Overlay"
 ```
 
 
