@@ -648,7 +648,7 @@ static int tier4_max9295_probe(struct i2c_client *client,
 		prim_priv__[channel_count_isx021] = priv;
 
 
-		dev_info(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
+		dev_dbg(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
 				, __func__, channel_count_isx021,prim_priv__[channel_count_isx021]);
 
 		channel_count_isx021++;
@@ -704,7 +704,7 @@ static struct i2c_driver tier4_max9295_i2c_driver = {
 
 static int __init tier4_max9295_init(void)
 {
-	printk("MAX9295 Driver for ROScube : %s\n", BUILD_STAMP);
+	printk(KERN_INFO "MAX9295 Driver for TIER4 C1 camera : %s\n", BUILD_STAMP);
 
 	return i2c_add_driver(&tier4_max9295_i2c_driver);
 }

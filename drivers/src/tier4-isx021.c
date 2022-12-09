@@ -1408,25 +1408,25 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 
 	memset(upper_str_model, 0, 64);
 	to_upper_string(upper_str_model, str_model);
-	str_err = strstr(upper_str_model, "ORIN");
+	str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ORIN);
  	priv->g_ctx.hardware_model = HW_MODEL_UNKNOWN;
 
 	if ( str_err  ) {
 		 priv->g_ctx.hardware_model = HW_MODEL_NVIDIA_ORIN_DEVKIT;
 	}
 
-	str_err = strstr(upper_str_model, "XAVIER");
+	str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_XAVIER);
 	if ( str_err  ) {
 		 priv->g_ctx.hardware_model = HW_MODEL_NVIDIA_XAVIER_DEVKIT;
 	}
 
-	str_err = strstr(upper_str_model, "ROSCUBE");
+	str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE);
 	if ( str_err  ) {
 		 priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
 	}
 
 	dev_info(dev, "[%s] : model=%s\n", __func__, str_model);
-	dev_info(dev, "[%s] : hardware_model=%d\n", __func__, priv->g_ctx.hardware_model);
+	dev_dbg(dev, "[%s] : hardware_model=%d\n", __func__, priv->g_ctx.hardware_model);
 
 	if ( priv->g_ctx.hardware_model == HW_MODEL_UNKNOWN ) {
 		dev_err(dev, "[%s] : Unknown Hardware Sysytem !\n", __func__);
@@ -2009,7 +2009,7 @@ static int __init tier4_isx021_init(void)
 {
 	mutex_init(&tier4_sensor_lock__);
 
-	printk("ISX021 Sensor Driver for ROScube: %s\n", BUILD_STAMP);
+	printk(KERN_INFO "TIERIV Automotive HDR Camera driver : %s\n", BUILD_STAMP);
 
 	return i2c_add_driver(&tier4_isx021_i2c_driver);
 }
@@ -2018,7 +2018,7 @@ static void __exit tier4_isx021_exit(void)
 {
 	mutex_destroy(&tier4_sensor_lock__);
 
-	printk("[%s]: tier4_isx021 driver is exitted.\n",__func__);
+	printk(KERN_INFO "[%s]: Exit TIERIV Automotive HDR Camera driver.\n",__func__);
 
 	i2c_del_driver(&tier4_isx021_i2c_driver);
 }

@@ -729,7 +729,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
 	to_upper_string(upper_str_model, str_model);
 
-	str_err = strstr(upper_str_model, "ORIN");
+	str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ORIN );
 
  	priv->g_ctx.hardware_model = HW_MODEL_UNKNOWN;
 
@@ -737,12 +737,12 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 		 priv->g_ctx.hardware_model = HW_MODEL_NVIDIA_ORIN_DEVKIT;
 	}
 
-	str_err = strstr(upper_str_model, "XAVIER");
+	str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_XAVIER );
 	if ( str_err  ) {
 		 priv->g_ctx.hardware_model = HW_MODEL_NVIDIA_XAVIER_DEVKIT;
 	}
 
-	str_err = strstr(upper_str_model, "ROSCUBE");
+	str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE );
 	if ( str_err  ) {
 		 priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
 	}
@@ -908,9 +908,9 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 		priv->g_ctx.sdev_isp_def = ISP_PRIM_SLAVE_ADDR;
 	}
 
-	dev_info(dev, "[%s] : ISP Prim slave address = 0x%0x.\n", __func__, priv->g_ctx.sdev_isp_def);
-   priv->g_ctx.sdev_reg = priv->g_ctx.sdev_isp_reg;
-   priv->g_ctx.sdev_def = priv->g_ctx.sdev_isp_def;
+	dev_dbg(dev, "[%s] : ISP Prim slave address = 0x%0x.\n", __func__, priv->g_ctx.sdev_isp_def);
+   	priv->g_ctx.sdev_reg = priv->g_ctx.sdev_isp_reg;
+	priv->g_ctx.sdev_def = priv->g_ctx.sdev_isp_def;
 
 	// For Dser node
 
@@ -1321,7 +1321,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
 
 	if ( wst_priv[i].des_shutdown ) {
 		// S/W Reset max9296
-		tier4_max9296_reset_control(priv->dser_dev, &client->dev, 1 );
+		tier4_max9296_reset_control(priv->dser_dev, &client->dev, true );
 	}
 
 	tier4_isx021_sensor_mutex_unlock();
@@ -1351,7 +1351,7 @@ static int __init tier4_imx490_init(void)
 {
 	mutex_init(&serdes_lock__);
 
-	printk("Tier4 IMX490 camera sensor Driver.\n");
+	printk(KERN_INFO "TIERIV Automotive HDR Camera driver.\n");
 
 	return i2c_add_driver(&tier4_imx490_i2c_driver);
 }

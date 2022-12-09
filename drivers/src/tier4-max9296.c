@@ -300,7 +300,8 @@ int tier4_max9296_power_on(struct device *dev)
 		usleep_range(1, 2);
 
 		if (priv->reset_gpio)
-			gpio_set_value(priv->reset_gpio, 0);
+//			gpio_set_value(priv->reset_gpio, 0);
+			gpio_direction_output(priv->reset_gpio, 0);
 
 		usleep_range(50, 80);
 
@@ -314,10 +315,12 @@ int tier4_max9296_power_on(struct device *dev)
 
 		/*exit reset mode: XCLR */
 		if (priv->reset_gpio) {
-			gpio_set_value(priv->reset_gpio, 0);
+//			gpio_set_value(priv->reset_gpio, 0);
+			gpio_direction_output(priv->reset_gpio, 0);
 			usleep_range(50, 80);
 			msleep(1000);
-			gpio_set_value(priv->reset_gpio, 1);
+//			gpio_set_value(priv->reset_gpio, 1);
+			gpio_direction_output(priv->reset_gpio, 1);
 			usleep_range(50, 80);
 		}
 
@@ -345,7 +348,8 @@ void tier4_max9296_power_off(struct device *dev)
 		/* enter reset mode: XCLR */
 		usleep_range(1, 2);
 		if (priv->reset_gpio)
-			gpio_set_value(priv->reset_gpio, 0);
+//			gpio_set_value(priv->reset_gpio, 0);
+			gpio_direction_output(priv->reset_gpio, 0);
 
 		if (priv->vdd_cam_1v2)
 			regulator_disable(priv->vdd_cam_1v2);
@@ -920,8 +924,13 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 			tier4_max9296_write_reg(dev,
 				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
 		} else {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
+			tier4_max9296_write_reg(dev,
+				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
+#else
 			tier4_max9296_write_reg(dev,
 				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK);
+#endif
 		}
 
 		priv->lane_setup = true;
@@ -1094,7 +1103,7 @@ static struct i2c_driver tier4_max9296_i2c_driver = {
 
 static int __init tier4_max9296_init(void)
 {
-	printk("MAX9296 Driver for ROScube : %s\n", BUILD_STAMP);
+	printk(KERN_INFO "MAX9296 Driver for TIERIV Camera : %s\n", BUILD_STAMP);
 	return i2c_add_driver(&tier4_max9296_i2c_driver);
 }
 
