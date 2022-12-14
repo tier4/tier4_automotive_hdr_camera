@@ -4,91 +4,161 @@ PWD             ?= ${shell pwd}
 BUILD_DIR       ?= $(shell pwd)
 _BUILD_DIR      ?= $(shell readlink -f $(BUILD_DIR))
 
-INST_PACKAGE_NAME    ?=  $(shell cat dkms.conf | grep 'PACKAGE_NAME' | cut -d '=' -f 2 | cut -d '"' -f 2 )
-INST_PACKAGE_VERSION ?=  $(shell cat dkms.conf | grep 'PACKAGE_VERSION' | cut -d '=' -f 2 | cut -d '"' -f 2 )
+Xavier_word           := Xavier
+Xavier_other_word_1   := Jetson-AGX
+Orin_word             := Orin
+Orin_Compatible_word  := p3737-0000+p3701-0000
+ROScube_word          := ROScube-X
+
+INST_PACKAGE_NAME     ?=  $(shell cat dkms.conf | grep 'PACKAGE_NAME' | cut -d '=' -f 2 | cut -d '"' -f 2 )
+INST_PACKAGE_VERSION  ?=  $(shell cat dkms.conf | grep 'PACKAGE_VERSION' | cut -d '=' -f 2 | cut -d '"' -f 2 )
+
 TIER4_ISX021_FIRMWARE_BINARY := tier4-isx021.bin
 
 DEST_FIRMWARE_DIR    := /lib/firmware
 SRC_FIRMWARE_BINARY  := /usr/src/$(INST_PACKAGE_NAME)-$(INST_PACKAGE_VERSION)/$(TIER4_ISX021_FIRMWARE_BINARY)
 DEST_FIRMWARE_BINARY := $(DEST_FIRMWARE_DIR)/$(TIER4_ISX021_FIRMWARE_BINARY)
 
-ifdef KERNELRELEASE
-	KERNELRELEASE := $(KERNELRELEASE)
+# KERNELRELEASE ?= $(shell uname -r)
+
+dt_model := $(shell cat /proc/device-tree/model | tr -d "\0" )
+
+L4T_RELEASE_MAIN  := $(shell cat /etc/nv_tegra_release | cut -d ' ' -f 2 )
+L4T_RELEASE_MAJOR := $(shell cat /etc/nv_tegra_release | cut -d ' ' -f 5 | cut -d ',' -f 1 | cut -d '.' -f 1 )
+L4T_RELEASE_MINOR := $(shell cat /etc/nv_tegra_release | cut -d ' ' -f 5 | cut -d ',' -f 1 | cut -d '.' -f 2 )
+L4T_RELEASE       := $(L4T_RELEASE_MAIN).$(L4T_RELEASE_MAJOR).$(L4T_RELEASE_MINOR)
+
+$(warning L4T_RELEASE_MAIN  = $(L4T_RELEASE_MAIN))
+$(warning L4T_RELEASE_MAJOR = $(L4T_RELEASE_MAJOR))
+$(warning L4T_RELEASE_MINOR = $(L4T_RELEASE_MINOR))
+
+ifeq ($(Xavier_word), $(filter $(Xavier_word),$(dt_model)))
+    MODEL := Xavier
+else ifeq ($(Xavier_other_word_1), $(filter $(Xavier_other_word_1),$(dt_model)))
+    MODEL := Xavier
+else ifeq ($(Orin_word), $(filter $(Orin_word),$(dt_model)))
+    ifeq ($(Orin_Compatible_word), $(filter $(Orin_Compatible_word),$(dt_compatible)))
+        MODEL := Orin
+    else
+        MODEL := Not_Supported
+    endif
+else ifeq ($(ROScube_word), $(filter $(ROScube_word),$(dt_model)))
+    MODEL := ROScube-X
 else
-	KERNELRELEASE ?= $(shell uname -r)
+    MODEL := Not_Supported_Model
 endif
+
+$(warning MODEL = $(MODEL))
+
+ifeq ($(L4T_RELEASE_MAIN), R32)
+    ifeq ($(L4T_RELEASE_MAJOR), 5)
+        ifeq ($(MODEL), $(ROScube_word))
+            KERNELRELEASE := 4.9.201-rqx58g
+            TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay
+            TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay
+        else ifeq ($(MODEL), $(Xavier_word))
+            KERNELRELEASE := 4.9.201-tegra
+            TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay-xavier-r32_x
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-xavier-r32_x
+            TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay-xavier-r32_x
+        else
+            KERNELRELEASE := Not_Supported
+        endif
+    else ifeq ($(L4T_RELEASE_MAJOR), 6)
+        ifeq ($(MODEL),$(ROScube_word))
+            KERNELRELEASE := 4.9.253-rqx58g
+            TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay
+            TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay
+        else ifeq ($(MODEL),$(Xavier_word))
+            KERNELRELEASE := 4.9.253-tegra 
+            TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay-xavier-r32_x
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-xavier-r32_x
+            TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay-xavier-r32_x
+        else
+            KERNELRELEASE            := 4.9.253-unknown
+            TARGET_ISX021_DTS        := Unknown
+            TARGET_ISX021_IMX490_DTS := Unknown
+            TARGET_IMX490_DTS        := Unknown
+        endif
+    endif
+else ifeq ($(L4T_RELEASE_MAIN), R34)
+    ifeq ($(L4T_RELEASE_MAJOR), 1)
+        ifeq ($(MODEL),$(Xavier_word)))
+            KERNELRELEASE            := 5.10.65-tegra
+            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-xavier
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-xavier
+            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-xavier
+        else ifeq ($(MODEL),$(Orin_word))
+            KERNELRELEASE            := 5.10.65-tegra
+            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-orin
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-orin
+            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-orin
+        else 
+            KERNELRELEASE            := 5.10.65-unknown
+            TARGET_ISX021_DTS        := Unknown
+            TARGET_ISX021_IMX490_DTS := Unknown
+            TARGET_IMX490_DTS        := Unknown
+        endif
+    endif
+else ifeq ($(L4T_RELEASE_MAIN), R35)
+    ifeq ($(L4T_RELEASE_MAJOR), 1)
+        ifeq ($(MODEL),$(Xavier_word)))
+            KERNELRELEASE            := 5.1.104-tegra
+            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-xavier
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-xavier
+            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-xavier
+        else ifeq ($(MODEL),$(Orin_word))
+            KERNELRELEASE            := 5.1.104-tegra
+            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-orin
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-orin
+            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-orin
+        else
+            KERNELRELEASE            := 5.1.104-unknown
+            TARGET_ISX021_DTS        := Unknown
+            TARGET_ISX021_IMX490_DTS := Unknown
+            TARGET_IMX490_DTS        := Unknown
+        endif
+    endif
+else
+    KERNELRELEASE := Unknown
+endif
+
+# ------------------------------------------------
 
 ifdef KERNEL_SRC_ROOT
-  KERNEL_SRC_DIR  := $(KERNEL_SRC)
+#   KERNEL_SRC_DIR  := $(ROOTFS_DIR)/usr/src/linux-headers-5.10.104-tegra-ubuntu20.04_aarch64/kernel-5.10
+    KERNEL_SRC_DIR  := $(KERNEL_SRC_ROOT)
 else
-  KERNEL_SRC_DIR  ?= /lib/modules/$(shell uname -r)/build
+    KERNEL_SRC_DIR  ?= /lib/modules/$(shell uname -r)/build
 endif
 
-#$(warning KERNELRELEASE = $(KERNELRELEASE))
+$(warning L4T_RELEASE    = $(L4T_RELEASE))
+$(warning KERNELRELEASE  = $(KERNELRELEASE))
+$(warning KERNEL_SRC_DIR = $(KERNEL_SRC_DIR))
 
-ifeq ($(KERNELRELEASE), 5.10.65-tegra)
-	MODEL=$(shell cat /proc/device-tree/model | tr -d "\0" | cut -d " " -f 2)
-endif
-
-ifeq ($(KERNELRELEASE), 5.10.104-tegra)
-	MODEL=$(shell cat /proc/device-tree/model | tr -d "\0" | cut -d " " -f 3)
-endif
-
-# MODEL := Jetson-AGX
-
-KERNEL_MAIN_VER=$(shell echo $(KERNELRELEASE) | cut -d "." -f 1-2)
-
-#$(warning KERNEL_MAIN_VER = $(KERNEL_MAIN_VER))
-#$(warning MODEL = $(MODEL))
-
-ifeq ($(MODEL), Orin)
-	TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay-orin
-	TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-orin
-	TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay-orin
-else ifeq ($(MODEL), Jetson-AGX)
-  ifeq ($(KERNEL_MAIN_VER), 5.10)
-  	TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay-xavier
-	  TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-xavier
-		TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay-xavier
-	else
-			TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay
-			TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay
-			TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay
-	endif
-else
-	TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay
-	TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay
-	TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay
-endif
-
-#ifeq ($(KERNELRELEASE), 5.10.65-tegra)
-#		DUMMY1 := $(shell sed -i -e '/^ *jetson-header-name/s/AGX  *CSI/AGX Xavier CSI/' $(TARGET_ISX021_DTS).dts )
-#		DUMMY2 := $(shell sed -i -e '/^ *jetson-header-name/s/AGX  *CSI/AGX Xavier CSI/' $(TARGET_ISX021_IMX490_DTS).dts )
-#		DUMMY3 := $(shell sed -i -e '/^ *jetson-header-name/s/AGX  *CSI/AGX Xavier CSI/' $(TARGET_IMX490_DTS).dts )
-#else ifeq ($(KERNELRELEASE), 5.10.104-tegra)
-#		DUMMY1 := $(shell sed -i -e '/^ *jetson-header-name/s/AGX  *Xavier  *CSI/AGX CSI/' $(TARGET_ISX021_DTS).dts)
-#		DUMMY2 := $(shell sed -i -e '/^ *jetson-header-name/s/AGX  *Xavier  *CSI/AGX CSI/' $(TARGET_ISX021_IMX490_DTS).dts)
-#		DUMMY3 := $(shell sed -i -e '/^ *jetson-header-name/s/AGX  *Xavier  *CSI/AGX CSI/' $(TARGET_IMX490_DTS).dts)
-#endif
-
-#$(warning TARGET_ISX021_DTS = $(TARGET_ISX021_DTS))
-#$(warning TARGET_IMX490_DTS = $(TARGET_IMX490_DTS))
-#$(warning TARGET_ISX021_IMX490_DTS = $(TARGET_ISX021_IMX490_DTS))
+$(warning TARGET_ISX021_DTS        = $(TARGET_ISX021_DTS))
+$(warning TARGET_IMX490_DTS        = $(TARGET_IMX490_DTS))
+$(warning TARGET_ISX021_IMX490_DTS = $(TARGET_ISX021_IMX490_DTS))
 
 ifeq ($(ARCH), arm)
- ifneq ($(HOST_ARCH), arm)
-   CROSS_COMPILE  ?= arm-linux-gnueabihf-
- endif
+    ifneq ($(HOST_ARCH), arm)
+        CROSS_COMPILE  ?= arm-linux-gnueabihf-
+    endif
 endif
+
 ifeq ($(ARCH), arm64)
- ifneq ($(HOST_ARCH), arm64)
-   CROSS_COMPILE  ?= aarch64-linux-gnu-
- endif
+    ifneq ($(HOST_ARCH), arm64)
+        CROSS_COMPILE  ?= aarch64-linux-gnu-
+    endif
 endif
 
 ccflags-y += -DBUILD_STAMP="\"`date +'%Y-%m-%d %H:%M:%S'`\""
 
 obj-m := tier4-max9295.o tier4-max9296.o tier4-isx021.o tier4-imx490.o tier4-gw5300.o tier4-fpga.o
+
+# ------------------------------------------------
 
 .PHONY: all
 all: binary_module modules dtbo

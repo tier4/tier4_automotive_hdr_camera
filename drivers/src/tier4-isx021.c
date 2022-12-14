@@ -2018,7 +2018,7 @@ static void __exit tier4_isx021_exit(void)
 {
 	mutex_destroy(&tier4_sensor_lock__);
 
-	printk(KERN_INFO "[%s]: Exit TIERIV Automotive HDR Camera driver.\n",__func__);
+	printk(KERN_INFO "[%s]: tier4_isx021 driver is exitted.\n",__func__);
 
 	i2c_del_driver(&tier4_isx021_i2c_driver);
 }

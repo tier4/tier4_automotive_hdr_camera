@@ -924,7 +924,8 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 			tier4_max9296_write_reg(dev,
 				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
 		} else {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
+//#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
+#if 1
 			tier4_max9296_write_reg(dev,
 				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
 #else
@@ -996,7 +997,7 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv,
 		return err;
 	}
 
-  	printk("%s-maxsrc:%d\n",__func__, value);
+  	dev_dbg(&client->dev, "[%s] maxsrc:%d\n",__func__, value);
 	priv->max_src = value;
 
 	priv->reset_gpio = of_get_named_gpio(node, "reset-gpios", 0);
@@ -1005,7 +1006,7 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv,
 		return err;
 	}
 
-  	printk("[%s] priv->reset_gpio = %d\n",__func__, priv->reset_gpio);
+  	dev_dbg(&client->dev, "[%s] priv->reset_gpio = %d\n",__func__, priv->reset_gpio);
 
 	/* digital 1.2v */
 	if (of_get_property(node, "vdd_cam_1v2-supply", NULL)) {
