@@ -15,9 +15,14 @@ If you want to modify the driver, please refer to the [How to create a package f
 The device type (i.e., C1 or C2) assignment is fixed at every GMSL2 port.
 The following table shows the default assignment:
 
-| GMSL2 port No. | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  |
-|----------------|----|----|----|----|----|----|----|----|
-| Camera type    | C1 | C1 | C2 | C2 | C1 | C1 | C2 | C2 |
+| overlay command \                                               | GMSL2 port No. | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  |
+|-----------------------------------------------------------------|----------------|----|----|----|----|----|----|----|----|
+| `TIERIV(Tier4) ISX021 GMSL2 Camera Device Tree Overlay`        |                | C1 | C1 | C1 | C1 | C1 | C1 | C1 | C1 |
+| `TIERIV(Tier4) IMX490 GMSL2 Camera Device Tree Overlay`        |                | C2 | C2 | C2 | C2 | C2 | C2 | C2 | C2 |
+| `TIERIV(Tier4) ISX021 IMX490 GMSL2 Camera Device Tree Overlay` |                | C1 | C1 | C2 | C2 | C1 | C1 | C2 | C2 |
+
+(e.g., If user executes `$ sudo /opt/nvidia/jetson-io/config-by-hardware.py -n 2="TIERIV ISX021 GMSL2 Camera Device Tree Overlay"`
+on the driver installation process, all ports are assigned for C1 cameras. Please see [drivers/README.md](drivers/README.md#combine-device-tree-overlaydtbo-with-original-dtb) for the detail of the overlay command.)
 
 This assignment can be changed by the following steps:
 
