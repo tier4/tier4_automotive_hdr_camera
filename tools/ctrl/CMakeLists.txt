@@ -6,8 +6,8 @@ find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
 find_package(yaml-cpp REQUIRED)
 
-add_executable(t4cam-ctrl-gui gui.cpp gui_callback.cpp)
-target_include_directories(t4cam-ctrl-gui  PUBLIC 
+add_executable(t4cam-ctrl-gui gui.cpp gui_callback.cpp Slider.cpp)
+target_include_directories(t4cam-ctrl-gui  PUBLIC hue_callback_
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../lib/include>
   $<INSTALL_INTERFACE:.>
   PRIVATE ./)
