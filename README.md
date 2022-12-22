@@ -1,10 +1,11 @@
-# TIERIV Automotive HDR Camera C1/C2 Device Driver
-This repository contains the device driver for the [TIERIV Automotive HDR Camera C1/C2](https://sensor.tier4.jp/automotive-hdr-camera). 
+# TIER IV Automotive HDR Camera C1/C2 Device Driver
+This repository contains the device driver for the [TIER IV Automotive HDR Camera C1/C2](https://sensor.tier4.jp/automotive-hdr-camera). 
 
 If you want to use the official driver, please refer to the [Installation and Usage section](#installation-and-usage) and proceed with the installation.
 
 If you want to modify the driver, please refer to the [How to create a package from source section](#create-debian-dkms-package).
 
+For the simple image parameter tuning tool(t4cam-ctrl), please refer to the documentation here [t4cam-ctrl](https://tier4.github.io/camera_docs/t4cam-ctrl/).
 
 ## Installation and Usage
 
@@ -73,7 +74,7 @@ You can confirm the package file with the following command.
 $> ls ../*deb
 ```
 
-## Contributing
+## Contribution
 
 We welcome contributions to the Automotive HDR Camera Device Driver. 
-If you have a bug fix or new feature that you would like to contribute, please submit a issue or pull request.
+If you have a bug fix or new feature that you would like to contribute, please submit an issue or a pull request.
