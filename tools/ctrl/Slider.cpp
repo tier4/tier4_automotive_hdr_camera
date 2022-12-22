@@ -14,6 +14,7 @@ void Slider::initialize()
 
   slider.set_draw_value(false);
   slider.show();
+  label.override_color(Gdk::RGBA("gray58"), Gtk::STATE_FLAG_NORMAL);
   label.show();
 
   set_orientation(Gtk::ORIENTATION_HORIZONTAL);
@@ -74,6 +75,11 @@ void Slider::set_label_chars(int chars)
 void Slider::set_text(std::string text)
 {
   label.set_text(text);
+}
+
+void Slider::set_sensitive(bool sensitive)
+{
+  slider.set_sensitive(sensitive);
 }
 
 double Slider::get_value()

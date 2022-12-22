@@ -21,6 +21,8 @@ public:
 
   virtual void set_text(std::string text);
 
+  virtual void set_sensitive(bool sensitive = true);
+
   virtual double get_value();
 
   /*
