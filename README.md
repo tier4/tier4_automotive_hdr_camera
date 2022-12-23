@@ -56,7 +56,7 @@ This assignment can be changed by the following steps:
     ```bash
     $ sudo shutdown -h now
     ```
-    Reboot the system manually.
+    Then, reboot (turn on) the system manually.
 
 
 ## How to create a package from source 
