@@ -52,7 +52,12 @@ This assignment can be changed by the following steps:
         -i /boot/dtb/kernel_tegra194-rqx-58g.dtb \
         /boot/${OVERLAY_DTBO_FILE}
     ```
-- Reboot the system
+- Shutdown and reboot the system
+    ```bash
+    $ sudo shutdown -h now
+    ```
+    Reboot the system manually.
+
 
 ## How to create a package from source 
 
