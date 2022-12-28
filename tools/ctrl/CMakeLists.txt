@@ -5,11 +5,7 @@ add_dependencies(ctrl t4cam-ctrl)
 find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-3.0)
 
-find_package(yaml-cpp)
-
-if (NOT yaml-cpp_FOUND)
-  error("please install yaml-cpp package")
-endif()
+find_package(yaml-cpp REQUIRED)
 
 add_executable(t4cam-ctrl-gui gui.cpp gui_callback.cpp Slider.cpp)
 target_include_directories(t4cam-ctrl-gui  PUBLIC hue_callback_
