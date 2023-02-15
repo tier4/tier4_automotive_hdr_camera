@@ -29,6 +29,8 @@
 #include "tier4-gmsl-link.h"
 #include "tier4-hw-model.h"
 
+#define dev_dbg2	dev_info
+
 struct tier4_max9296_source_ctx {
 	struct gmsl_link_ctx *g_ctx;
 	bool st_enabled;
@@ -88,9 +90,12 @@ struct tier4_max9296_source_ctx {
 #define MAX9296_ST_ID_SEL_INVALID 			0xF
 
 //#define MAX9296_PHY1_CLK 					0x32
-#define MAX9296_PHY1_CLK 					0x2F
+#define MAX9296_PHY1_CLK_1500MHZ			0x2F
 #define MAX9296_PHY1_CLK_1400MHZ			0x2E
-//#define MAX9296_PHY1_CLK 					0x2C
+#define MAX9296_PHY1_CLK_1300MHZ			0x2D
+#define MAX9296_PHY1_CLK_1200MHZ			0x2C
+
+#define MAX9296_PHY1_CLK 					MAX9296_PHY1_CLK_1500MHZ
 
 #define MAX9296_RESET_ALL 					0x80
 
@@ -167,7 +172,7 @@ static int tier4_max9296_read_reg(struct device *dev, u16 addr, u8 *val)
 	err = regmap_read(priv->regmap, addr, &reg_val);
 	*val = reg_val & 0xFF;
 
-	dev_dbg(dev,  "[%s ] : Max9296 I2C Read : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, *val );
+	dev_dbg(dev,  "[%s ] : Max9296 I2C Read Reg at 0x%04X=[0x%02X].\n", __func__, addr, *val );
 
 	if (( err == 0 ) && ( dev != NULL ) ) {
 
@@ -177,7 +182,7 @@ static int tier4_max9296_read_reg(struct device *dev, u16 addr, u8 *val)
 			strncpy(str_bus_num, &dev->kobj.name[0], 2);
 			strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
 		}
-		dev_dbg(dev, "tier4_max9296_read_reg %s  0x%s 0x%x\n", str_bus_num, str_sl_addr, addr );
+		dev_dbg(dev, "tier4_max9296_read_reg %s 0x%s 0x%x\n", str_bus_num, str_sl_addr, addr );
 	}
 	return err;
 }
@@ -202,12 +207,12 @@ static int tier4_max9296_write_reg(struct device *dev, u16 addr, u8 val)
 		strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
 	}
 
-	dev_dbg(dev,  "[%s] : Max9296 I2C Write : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, val );
+	dev_dbg(dev,  "[%s] : Max9296 I2C Write Reg at 0x%04X=[0x%02X].\n", __func__, addr, val );
 
 	err = regmap_write(priv->regmap, addr, val);
 
 	if (err) {
-		dev_err(dev,  "[%s] : Max9296 I2C write failed.    Reg Address = 0x%04X  Data= 0x%02X\n", __func__, addr, val );
+		dev_err(dev,  "[%s] : Max9296 I2C write failed Reg at 0x%04X=[0x%02X]\n", __func__, addr, val );
 		return err;
 	}
 
@@ -422,6 +427,9 @@ static int tier4_max9296_link_locked(struct device *dev)
 
 	usleep_range(100, 110);
 	tier4_max9296_read_reg(dev, MAX9296_LINK_ADDR, &val);
+
+	dev_dbg(dev, "[%s] : ISX021 I2C Read Address = 0x%04X data = 0x%02X \n", __func__, MAX9296_LINK_ADDR, val);
+
 	if (0 == (val & 0x08)) {
 		return -EINVAL;
 	}
@@ -695,6 +703,8 @@ static int tier4_max9296_get_available_pipe(struct device *dev,
 		return -ENOMEM;
 	}
 
+	dev_dbg(dev, "[%s] : dst_csi_port = %u, priv->pipe[%d].dst_csi_port = %u\n", __func__, dst_csi_port, i, priv->pipe[i].dst_csi_ctrl );
+
 	return i;
 }
 
@@ -910,6 +920,9 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 	 * as the device compatibility is already
 	 * checked during sdev registration against the des properties.
 	 */
+
+	dev_dbg(dev, "[%s] : lane_ctrl_addr = %d g_ctx->num_csi_lanes = %d\n", __func__, lane_ctrl_addr, g_ctx->num_csi_lanes );
+
 	tier4_max9296_write_reg(dev, lane_ctrl_addr,
 		MAX9296_LANE_CTRL_MAP(g_ctx->num_csi_lanes-1));
 
@@ -923,15 +936,17 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 		if ( g_ctx->hardware_model == HW_MODEL_NVIDIA_ORIN_DEVKIT ) {
 			tier4_max9296_write_reg(dev,
 				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
+		} else if ( g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
 		} else {
 //#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
-#if 1
+//#if 1
 			tier4_max9296_write_reg(dev,
 				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
-#else
-			tier4_max9296_write_reg(dev,
-				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK);
-#endif
+//#else
+//			tier4_max9296_write_reg(dev,
+//				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK);
+//#endif
 		}
 
 		priv->lane_setup = true;

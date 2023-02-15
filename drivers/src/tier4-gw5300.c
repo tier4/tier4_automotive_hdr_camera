@@ -97,7 +97,7 @@ static int tier4_gw5300_send_and_recv_msg(struct device *dev, u8 *wdata, int wda
 	{
 		dev_dbg(dev, "[%s] : i2c_transer send message. : slave addr = 0x%x\n", __func__, msg[0].addr );
 	}
-	
+
 	return err;
 }
 
@@ -119,7 +119,7 @@ int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size )
 	msg[0].flags = I2C_M_RD;			// I2C Read
 	msg[0].len = rdata_size;
 	msg[0].buf = rdata;
-	
+
 //	msg[1].addr = priv->i2c_client->addr;
 //	msg[1].addr = target_addr;
 //	msg[1].flags = I2C_M_RD;			// I2C Read
@@ -131,12 +131,12 @@ int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size )
 	if (err <= 0 ) {
 		dev_err(dev, "[%s] : i2c_transer send message failed. : slave addr = 0x%x\n", __func__, msg[0].addr );
 	}
-	else 
+	else
 	{
 		dev_dbg(dev, "[%s] : i2c_transer send message. : slave addr = 0x%x\n", __func__, msg[0].addr );
 		err = NO_ERROR;
 	}
-	
+
 	return err;
 }
 EXPORT_SYMBOL(tier4_gw5300_check_device);
@@ -147,7 +147,7 @@ int tier4_gw5300_prim_slave_addr(struct gmsl_link_ctx *g_ctx)
 		dev_err(&prim_priv__[channel_count_imx490-1]->i2c_client->dev, "[%s] : Failed. g_ctx is null\n", __func__ );
 		return -1;
 	}
-	
+
 
 	g_ctx->sdev_isp_def = prim_priv__[channel_count_imx490-1]->def_addr;
 

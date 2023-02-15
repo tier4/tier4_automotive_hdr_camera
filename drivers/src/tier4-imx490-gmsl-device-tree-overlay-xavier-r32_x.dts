@@ -577,7 +577,7 @@
           compatible = "nvidia,tier4_imx490";
           status = "okay";
           def-addr = <0x1a>;
-//         clocks = <&bpmp_clks 36>, <&bpmp_clks 36>;
+//        clocks = <&bpmp_clks 36>, <&bpmp_clks 36>;
           clock-names = "extperiph1", "pllp_grtba";
           mclk = "extperiph1";
           nvidia,isp-device = <&isp_b>;           // for C2 camera
@@ -686,7 +686,7 @@
           */
           mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_a";
             vc_id = "0";
             discontinuous_clk = "no";
@@ -862,7 +862,7 @@
           */
           mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_a";
             vc_id = "0";
             discontinuous_clk = "no";
@@ -1094,7 +1094,7 @@
           */
           mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_a";
             vc_id = "0";
             discontinuous_clk = "no";
@@ -1273,7 +1273,7 @@
           */
           mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_a";
             vc_id = "0";
             discontinuous_clk = "no";
@@ -1507,7 +1507,7 @@
           */
           mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_a";
             vc_id = "0";
             discontinuous_clk = "no";
@@ -1686,7 +1686,7 @@
           */
           mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_a";
             vc_id = "0";
             discontinuous_clk = "no";
@@ -1902,7 +1902,7 @@
 //        */
 //        mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
 //          mclk_khz = "24000";
-//          num_lanes = "2";
+//          num_lanes = "4";
 //          tegra_sinterface = "serial_a";
 //          vc_id = "0";
 //          discontinuous_clk = "no";
@@ -2079,7 +2079,7 @@
 //        */
 //        mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
 //          mclk_khz = "24000";
-//          num_lanes = "2";
+//          num_lanes = "4";
 //          tegra_sinterface = "serial_a";
 //          vc_id = "0";
 //          discontinuous_clk = "no";

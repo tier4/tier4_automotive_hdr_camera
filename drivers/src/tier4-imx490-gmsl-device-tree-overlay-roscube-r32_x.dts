@@ -1,6 +1,6 @@
 /dts-v1/;
 /plugin/;
- 
+
 / {
     overlay-name = "TIERIV IMX490 GMSL2 Camera Device Tree Overlay";
     compatible = "nvidia,p2822-0000+p2888-0001";
@@ -51,7 +51,7 @@ fragment@0{
                 compatible = "nvidia,tier4_imx490";
                 def-addr = <0x1a>;
               //  clocks = <&bpmp_clks 36>, <&bpmp_clks 36>;
-                clock-names = "extperiph1", "pllp_grtba";
+                  clock-names = "extperiph1", "pllp_grtba";
                 mclk = "extperiph1";
                 nvidia,isp-device = <&isp_b>;           // for C2 camera
                 nvidia,fpga-device  = <&t4_fpga>;
@@ -70,13 +70,13 @@ fragment@0{
                 /* sensor crop settings. Some sensors send corrupt frames after applying */
                 /* crop co-ordinates */
                 post_crop_frame_drop = "0";
-            
+
                 /* Convert Gain to unit of dB (decibel) befor passing to kernel driver */
                 use_decibel_gain = "true";
-            
+
                 /* enable CID_SENSOR_MODE_ID for sensor modes selection */
                 use_sensor_mode_id = "true";
-            
+
                 /**
                 * A modeX node is required to support v4l2 driver
                 * implementation with NVIDIA camera software stack
@@ -173,7 +173,7 @@ fragment@0{
                     csi_pixel_bit_depth = "16";
                     mode_type = "yuv";
                     pixel_phase = "uyvy";
-            
+
                     active_w = "2880";
                     active_h = "1860";
                     readout_orientation = "0";
@@ -181,7 +181,7 @@ fragment@0{
                     inherent_gain = "1";
                     pix_clk_hz = "160704000";
                     serdes_pix_clk_hz = "1200000000";
-            
+
                     gain_factor = "5";
                     min_gain_val = "0";                         /* dB */
                     max_gain_val = "300";                       /* dB */
@@ -201,7 +201,7 @@ fragment@0{
                     default_exp_time = "0";                 /* us */
                     embedded_metadata_height = "0";
                 };
-                
+
                 ports {
                     #address-cells = <1>;
                     #size-cells = <0>;
@@ -225,7 +225,7 @@ fragment@0{
                     num-lanes = <2>;
                     streams = "ued-u1","yuv8";
                 };
-            }; 
+            };
 
 
             imx490_a@2b {
@@ -256,7 +256,7 @@ fragment@0{
                 /* sensor crop settings. Some sensors send corrupt frames after applying */
                 /* crop co-ordinates */
                 post_crop_frame_drop = "0";
-                
+
                 /* Convert Gain to unit of dB (decibel) befor passing to kernel driver */
                 use_decibel_gain = "true";
 
@@ -266,7 +266,7 @@ fragment@0{
                 /**
                 * A modeX node is required to support v4l2 driver
                 * implementation with NVIDIA camera software stack
-                *   
+                *
                 * mclk_khz = "";
                 * Standard MIPI driving clock, typically 24MHz
                 *
@@ -347,7 +347,7 @@ fragment@0{
                 * Sensor embedded metadata height in units of rows.
                 * If sensor does not support embedded metadata value should be 0.
                 */
-                
+
                 mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
                     mclk_khz = "24000";
                     num_lanes = "2";
@@ -360,7 +360,7 @@ fragment@0{
                     csi_pixel_bit_depth = "16";
                     mode_type = "yuv";
                     pixel_phase = "uyvy";
-                
+
                     active_w = "2880";
                     active_h = "1860";
                     readout_orientation = "0";
@@ -368,7 +368,7 @@ fragment@0{
                     inherent_gain = "1";
                     pix_clk_hz = "160704000";
                     serdes_pix_clk_hz = "1200000000";
-                
+
                     gain_factor = "5";
                     min_gain_val = "0";                         /* dB */
                     max_gain_val = "300";                       /* dB */
@@ -2137,7 +2137,7 @@ fragment@60{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@0/imx490_a@2b";
         };
       };
-    }; 
+    };
 
 
 fragment@61{
@@ -2154,7 +2154,7 @@ fragment@61{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@0/imx490_b@2c";
         };
       };
-    }; 
+    };
 
 
 fragment@62{
@@ -2171,7 +2171,7 @@ fragment@62{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@1/imx490_c@2b";
         };
       };
-    }; 
+    };
 
 
 fragment@63{
@@ -2188,7 +2188,7 @@ fragment@63{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@1/imx490_d@2c";
         };
       };
-    }; 
+    };
 
 
 fragment@64{
@@ -2205,7 +2205,7 @@ fragment@64{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@2/imx490_e@2b";
         };
       };
-    }; 
+    };
 
 
 fragment@65{
@@ -2222,7 +2222,7 @@ fragment@65{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@2/imx490_f@2c";
         };
       };
-    }; 
+    };
 
 
 fragment@66{
@@ -2239,7 +2239,7 @@ fragment@66{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@3/imx490_g@2b";
         };
       };
-    }; 
+    };
 
 
 fragment@67{
@@ -2256,7 +2256,7 @@ fragment@67{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@3/imx490_h@2c";
         };
       };
-    }; 
+    };
 
 
 fragment@68{
@@ -2264,28 +2264,28 @@ fragment@68{
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@69{
       target = <&dsera>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@70{
       target = <&dserb>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@71{
       target = <&dserc>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@72{
       target-path = "/host1x/vi@15c10000";

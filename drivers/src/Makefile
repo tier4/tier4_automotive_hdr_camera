@@ -7,7 +7,7 @@ _BUILD_DIR      ?= $(shell readlink -f $(BUILD_DIR))
 Xavier_word           := Xavier
 Xavier_other_word_1   := Jetson-AGX
 Orin_word             := Orin
-Orin_Compatible_word  := p3737-0000+p3701-0000
+Orin_Compatible_word  := p3737-0000+p3701-0000nvidia
 ROScube_word          := ROScube-X
 
 INST_PACKAGE_NAME     ?=  $(shell cat dkms.conf | grep 'PACKAGE_NAME' | cut -d '=' -f 2 | cut -d '"' -f 2 )
@@ -23,6 +23,8 @@ DEST_FIRMWARE_BINARY := $(DEST_FIRMWARE_DIR)/$(TIER4_ISX021_FIRMWARE_BINARY)
 
 dt_model := $(shell cat /proc/device-tree/model | tr -d "\0" )
 
+dt_compatible := $(shell cat /proc/device-tree/compatible | tr -d "\0")
+
 L4T_RELEASE_MAIN  := $(shell cat /etc/nv_tegra_release | cut -d ' ' -f 2 )
 L4T_RELEASE_MAJOR := $(shell cat /etc/nv_tegra_release | cut -d ' ' -f 5 | cut -d ',' -f 1 | cut -d '.' -f 1 )
 L4T_RELEASE_MINOR := $(shell cat /etc/nv_tegra_release | cut -d ' ' -f 5 | cut -d ',' -f 1 | cut -d '.' -f 2 )
@@ -32,20 +34,23 @@ $(warning L4T_RELEASE_MAIN  = $(L4T_RELEASE_MAIN))
 $(warning L4T_RELEASE_MAJOR = $(L4T_RELEASE_MAJOR))
 $(warning L4T_RELEASE_MINOR = $(L4T_RELEASE_MINOR))
 
+$(warning dt_compatible = $(dt_compatible))
+$(warning Orin_Compatible_word = $(Orin_Compatible_word))
+
 ifeq ($(Xavier_word), $(filter $(Xavier_word),$(dt_model)))
     MODEL := Xavier
 else ifeq ($(Xavier_other_word_1), $(filter $(Xavier_other_word_1),$(dt_model)))
     MODEL := Xavier
 else ifeq ($(Orin_word), $(filter $(Orin_word),$(dt_model)))
-    ifeq ($(Orin_Compatible_word), $(filter $(Orin_Compatible_word),$(dt_compatible)))
+    ifeq ($(Orin_Compatible_word), $(findstring $(Orin_Compatible_word),$(dt_compatible)))
         MODEL := Orin
     else
-        MODEL := Not_Supported
+        MODEL := Not_Supported_Orin
     endif
 else ifeq ($(ROScube_word), $(filter $(ROScube_word),$(dt_model)))
     MODEL := ROScube-X
 else
-    MODEL := Not_Supported_Model
+    MODEL := Not_Supported_Model_ROScube
 endif
 
 $(warning MODEL = $(MODEL))
@@ -54,9 +59,9 @@ ifeq ($(L4T_RELEASE_MAIN), R32)
     ifeq ($(L4T_RELEASE_MAJOR), 5)
         ifeq ($(MODEL), $(ROScube_word))
             KERNELRELEASE := 4.9.201-rqx58g
-            TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay
-            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay
-            TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay
+            TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay-roscube-r32_x
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r32_x
+            TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay-roscube-r32_x
         else ifeq ($(MODEL), $(Xavier_word))
             KERNELRELEASE := 4.9.201-tegra
             TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay-xavier-r32_x
@@ -68,11 +73,11 @@ ifeq ($(L4T_RELEASE_MAIN), R32)
     else ifeq ($(L4T_RELEASE_MAJOR), 6)
         ifeq ($(MODEL),$(ROScube_word))
             KERNELRELEASE := 4.9.253-rqx58g
-            TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay
-            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay
-            TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay
+            TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay-roscube-r32_x
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r32_x
+            TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay-roscube-r32_x
         else ifeq ($(MODEL),$(Xavier_word))
-            KERNELRELEASE := 4.9.253-tegra 
+            KERNELRELEASE := 4.9.253-tegra
             TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay-xavier-r32_x
             TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-xavier-r32_x
             TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay-xavier-r32_x
@@ -85,17 +90,17 @@ ifeq ($(L4T_RELEASE_MAIN), R32)
     endif
 else ifeq ($(L4T_RELEASE_MAIN), R34)
     ifeq ($(L4T_RELEASE_MAJOR), 1)
-        ifeq ($(MODEL),$(Xavier_word)))
+        ifeq ($(MODEL),$(Xavier_word))
             KERNELRELEASE            := 5.10.65-tegra
-            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-xavier
-            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-xavier
-            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-xavier
+            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-xavier-r3411_r351
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-xavier-r3411_r351
+            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-xavier-r3411_r351
         else ifeq ($(MODEL),$(Orin_word))
             KERNELRELEASE            := 5.10.65-tegra
-            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-orin
-            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-orin
-            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-orin
-        else 
+            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-orin-r3411_r351
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-orin-r3411_r351
+            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-orin-r3411_r351
+        else
             KERNELRELEASE            := 5.10.65-unknown
             TARGET_ISX021_DTS        := Unknown
             TARGET_ISX021_IMX490_DTS := Unknown
@@ -104,16 +109,16 @@ else ifeq ($(L4T_RELEASE_MAIN), R34)
     endif
 else ifeq ($(L4T_RELEASE_MAIN), R35)
     ifeq ($(L4T_RELEASE_MAJOR), 1)
-        ifeq ($(MODEL),$(Xavier_word)))
+        ifeq ($(MODEL),$(Xavier_word))
             KERNELRELEASE            := 5.1.104-tegra
-            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-xavier
-            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-xavier
-            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-xavier
+            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-xavier-r3411_r351
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-xavier-r3411_r351
+            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-xavier-r3411_r351
         else ifeq ($(MODEL),$(Orin_word))
             KERNELRELEASE            := 5.1.104-tegra
-            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-orin
-            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-orin
-            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-orin
+            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-orin-r3411_r351
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-orin-r3411_r351
+            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-orin-r3411_r351
         else
             KERNELRELEASE            := 5.1.104-unknown
             TARGET_ISX021_DTS        := Unknown

@@ -1,11 +1,11 @@
 
 /dts-v1/;
 /plugin/;
- 
+
 / {
     overlay-name = "TIERIV ISX021 IMX490 GMSL2 Camera Device Tree Overlay";
     compatible = "nvidia,p2822-0000+p2888-0001";
-    jetson-header-name = "Jetson AGX CSI Connector";
+    jetson-header-name = "Jetson AGX Xavier CSI Connector";
 
 
 
@@ -18,8 +18,6 @@ fragment@0{
             i2c-mux,deselect-on-exit;
             #address-cells = <1>;
             #size-cells = <0>;
-
-
 
             ser_prim: max9295_prim@62 {
                 compatible = "nvidia,tier4_max9295";
@@ -293,7 +291,7 @@ fragment@0{
                     csi_pixel_bit_depth = "16";
                     mode_type = "yuv";
                     pixel_phase = "uyvy";
-            
+
                     active_w = "1920";
                     active_h = "1280";
                     readout_orientation = "0";
@@ -301,7 +299,7 @@ fragment@0{
                     inherent_gain = "1";
                     pix_clk_hz = "94500000";
                     serdes_pix_clk_hz = "833333333";
-            
+
                     gain_factor = "10";
                     min_gain_val = "0";                       /* dB */
                     max_gain_val = "300";                         /* dB */
@@ -916,7 +914,7 @@ fragment@2{
                 * Sensor embedded metadata height in units of rows.
                 * If sensor does not support embedded metadata value should be 0.
                 */
-    
+
                 mode0 {/*mode ISX021_MODE_1920X1280_CROP_30FPS*/
                     mclk_khz = "24000";
                     num_lanes = "2";
@@ -929,7 +927,7 @@ fragment@2{
                     csi_pixel_bit_depth = "16";
                     mode_type = "yuv";
                     pixel_phase = "uyvy";
-    
+
                     active_w = "1920";
                     active_h = "1280";
                     readout_orientation = "0";
@@ -937,7 +935,7 @@ fragment@2{
                     inherent_gain = "1";
                     pix_clk_hz = "94500000";
                     serdes_pix_clk_hz = "833333333";
-    
+
                     gain_factor = "10";
                     min_gain_val = "0"; /* dB */
                     max_gain_val = "300"; /* dB */
@@ -957,7 +955,7 @@ fragment@2{
                     default_exp_time = "33333";/* us */
                     embedded_metadata_height = "0";
             };
-    
+
                 ports {
                     #address-cells = <1>;
                     #size-cells = <0>;
@@ -2089,7 +2087,7 @@ fragment@60{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@0/isx021_a@1b";
         };
       };
-    }; 
+    };
 
 fragment@61{
       target = <&camera_module1>;
@@ -2105,7 +2103,7 @@ fragment@61{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@0/isx021_b@1c";
         };
       };
-    }; 
+    };
 
 
 fragment@62{
@@ -2122,7 +2120,7 @@ fragment@62{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@1/imx490_c@2b";
         };
       };
-    }; 
+    };
 
 fragment@63{
       target = <&camera_module3>;
@@ -2138,7 +2136,7 @@ fragment@63{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@1/imx490_d@2c";
         };
       };
-    }; 
+    };
 
 
 fragment@64{
@@ -2155,7 +2153,7 @@ fragment@64{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@2/isx021_e@1b";
         };
       };
-    }; 
+    };
 
 fragment@65{
       target = <&camera_module5>;
@@ -2171,7 +2169,7 @@ fragment@65{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@2/isx021_f@1c";
         };
       };
-    }; 
+    };
 
 
 fragment@66{
@@ -2188,7 +2186,7 @@ fragment@66{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@3/imx490_g@2b";
         };
       };
-    }; 
+    };
 
 fragment@67{
       target = <&camera_module7>;
@@ -2204,7 +2202,7 @@ fragment@67{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@3/imx490_h@2c";
         };
       };
-    }; 
+    };
 
 
 fragment@68{
@@ -2212,28 +2210,28 @@ fragment@68{
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@69{
       target = <&dsera>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@70{
       target = <&dserb>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@71{
       target = <&dserc>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@72{
       target-path = "/host1x/vi@15c10000";

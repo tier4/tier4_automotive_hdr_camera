@@ -557,13 +557,13 @@
           def-addr = <0x1a>;
           /* Define any required hw resources needed by driver */
           /* ie. clocks, io pins, power sources */
-//  clocks = <&bpmp_clks TEGRA194_CLK_EXTPERIPH1>,
+//       clocks = <&bpmp_clks TEGRA194_CLK_EXTPERIPH1>,
 //          <&bpmp_clks TEGRA194_CLK_EXTPERIPH1>;
           clock-names = "extperiph1", "pllp_grtba";
           mclk = "extperiph1";
           nvidia,gmsl-ser-device = <&ser_b>;
           nvidia,gmsl-dser-device = <&dser>;
-//              nvidia,fpga-device  = <&t4_fpga>;
+//         nvidia,fpga-device  = <&t4_fpga>;
 
           compatible = "nvidia,tier4_isx021";
           status = "okay";
@@ -679,7 +679,7 @@
           */
           mode0 {/*mode ISX021_MODE_1920X1280_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_a";
             vc_id = "1";
             discontinuous_clk = "no";
@@ -789,7 +789,7 @@
 
           mode0 {/*mode ISX021_MODE_1920X1280_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_a";
             vc_id = "0";
             discontinuous_clk = "no";
@@ -1018,7 +1018,7 @@
           */
           mode0 {/*mode ISX021_MODE_1920X1280_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_c";
             vc_id = "1";
             discontinuous_clk = "no";
@@ -1213,7 +1213,7 @@
           */
           mode0 {/*mode ISX021_MODE_1920X1280_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_c";
             vc_id = "0";
             discontinuous_clk = "no";
@@ -1444,7 +1444,7 @@
 
           mode0 {/*mode ISX021_MODE_1920X1280_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_e";
             vc_id = "1";
             discontinuous_clk = "no";
@@ -1640,7 +1640,7 @@
 
           mode0 {/*mode ISX021_MODE_1920X1280_CROP_30FPS*/
             mclk_khz = "24000";
-            num_lanes = "2";
+            num_lanes = "4";
             tegra_sinterface = "serial_e";
             vc_id = "0";
             discontinuous_clk = "no";
@@ -1862,7 +1862,7 @@
 //
 //            mode0 {/*mode ISX021_MODE_1920X1280_CROP_30FPS*/
 //                mclk_khz = "24000";
-//                num_lanes = "2";
+//                num_lanes = "4";
 //                tegra_sinterface = "serial_g";
 //                vc_id = "1";
 //                discontinuous_clk = "no";
@@ -2057,7 +2057,7 @@
 //
 //            mode0 {/*mode ISX021_MODE_1920X1280_CROP_30FPS*/
 //                mclk_khz = "24000";
-//                num_lanes = "2";
+//                num_lanes = "4";
 //                tegra_sinterface = "serial_g";
 //                vc_id = "0";
 //                discontinuous_clk = "no";
@@ -2143,7 +2143,7 @@
         proc-device-tree = "/proc/device-tree/i2c@3180000/tca9546@70/i2c@0/isx021_a@1b";
       };
     };
-  }; 
+  };
 
   fragment@60 {
     target = <&cam_module1>;
@@ -2159,7 +2159,7 @@
         proc-device-tree = "/proc/device-tree/i2c@3180000/tca9546@70/i2c@0/isx021_b@1c";
       };
     };
-  }; 
+  };
 
   fragment@61 {
     target = <&cam_module2>;
@@ -2175,7 +2175,7 @@
         proc-device-tree = "/proc/device-tree/i2c@3180000/tca9546@70/i2c@1/isx021_c@1b";
       };
     };
-  }; 
+  };
 
   fragment@62 {
     target = <&cam_module3>;
@@ -2191,7 +2191,7 @@
         proc-device-tree = "/proc/device-tree/i2c@3180000/tca9546@70/i2c@1/isx021_d@1c";
       };
     };
-  }; 
+  };
 
   fragment@63 {
     target = <&cam_module4>;
@@ -2207,7 +2207,7 @@
         proc-device-tree = "/proc/device-tree/i2c@3180000/tca9546@70/i2c@2/isx021_e@1b";
       };
     };
-  }; 
+  };
 
   fragment@64 {
     target = <&cam_module5>;
@@ -2223,7 +2223,7 @@
         proc-device-tree = "/proc/device-tree/i2c@3180000/tca9546@70/i2c@2/isx021_f@1c";
       };
     };
-  }; 
+  };
 
 //  fragment@65 {
 //      target = <&cam_module6>;
@@ -2239,7 +2239,7 @@
 //          proc-device-tree = "/proc/device-tree/i2c@3180000/tca9546@70/i2c@3/isx021_g@1b";
 //        };
 //      };
-//    }; 
+//    };
 //
 //  fragment@66 {
 //      target = <&cam_module7>;
@@ -2255,35 +2255,35 @@
 //          proc-device-tree = "/proc/device-tree/i2c@3180000/tca9546@70/i2c@3/isx021_h@1c";
 //        };
 //      };
-//    }; 
+//    };
 //
 //  fragment@67 {
 //      target = <&dser>;
 //      __overlay__ {
 //        compatible = "nvidia,tier4_max9296";
 //      };
-//    }; 
+//    };
 
 //  fragment@68 {
 //      target = <&dsera>;
 //      __overlay__ {
 //        compatible = "nvidia,tier4_max9296";
 //      };
-//    }; 
+//    };
 //
 //  fragment@69 {
 //      target = <&dserb>;
 //      __overlay__ {
 //        compatible = "nvidia,tier4_max9296";
 //      };
-//    }; 
+//    };
 
 //  fragment@70 {
 //      target = <&dserc>;
 //      __overlay__ {
 //        compatible = "nvidia,tier4_max9296";
 //      };
-//    }; 
+//    };
 //
   fragment@71 {
     target-path = "/host1x/vi@15c10000";
