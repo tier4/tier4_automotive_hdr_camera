@@ -91,13 +91,15 @@ int tier4_max9295_sdev_unpair(struct device *dev, struct device *s_dev);
  * Power up the camera sensor from serializer.
  *
  * @param  [in]  dev            The serializer device handle.
+ * @param  [in]  sensor_id      Sensor ID.  21 : ISX021 490 : IMX490
+ * @param  [in]  power_on       Power on camera sensor : true    Power off camera sensor : 0
  *
  * @return  0 for success, or -1 otherwise.
  */
-#if 0 
+#if 0
 int tier4_max9295_power_up_camera_sensor(struct device *dev);
 #else
-int tier4_max9295_control_sensor_power_seq(struct device *dev);
+int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, bool power_on);
 #endif
 /**
  * Pre-sets up the serializer device's internal pipeline for a specified
