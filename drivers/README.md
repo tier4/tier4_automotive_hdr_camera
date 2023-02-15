@@ -1,10 +1,8 @@
-# tier4-camera-gmsl-dkms
+# tier4-isx021-gmsl-dkms
 
 This driver has been developped on ROScube RQX58G/Jetson Orin Devkit, it could not be cross compiled at this moment. 
 
 ## Preparation
-
-In this directory  
 
 ```
 $> sudo apt update
@@ -22,10 +20,17 @@ $> dpkg-buildpackage -b -rfakeroot -us -uc
 ```
 $> cd ..
 $> sudo apt update
-$> sudo apt install ./tier4-camera-gmsl_x.x.x_arm64.deb
+$> sudo apt install ./tier4-isx021-gmsl_1.2.1_arm64.deb
 ```
 
-## Combine device-tree-overlay.dtbo with original dtb
+## Confirm the dtbo file exists
+
+```
+$> ls /boot/*.dtbo
+```
+
+
+## Combine dtbo file with vanilla dtb
 
 
 ``` 
@@ -39,16 +44,10 @@ $> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "TIERIV ISX021 GMSL2 Came
 ```
 
 
-## Confirm /boot/kernel_tegra194-*-user-custom.dtb has been generated
+## Confirm custom dtb file has been generated
 
 ```
-$> ls  /boot/kernel_tegra194-*-user-custom.dtb
-```
-
-if you use r32.5.1 BSP, you should use the command below
-
-```
-$> ls /boot/kernel_tegra194-rqx-58g-*.dtb
+$> ls -al  /boot/*user-custom.dtb
 ```
 
 

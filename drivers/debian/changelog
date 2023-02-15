@@ -1,8 +1,17 @@
-tier4-camera-gmsl (1.1.0) UNRELEASED; urgency=medium
+tier4-camera-gmsl (1.2.1) focal; urgency=medium
+
+  * Support to start streaming on two cameras connected to one Des separately.
+
+ -- tier4 <tier4@tier4-desktop>  Fri, 27 Jan 2023 13:00:00 +0900
+
+tier4-camera-gmsl (1.1.1) focal; urgency=medium
 
   * Support C2(IMX490) camera.
+  * Support Xavide devkit R35.1(without r32.5.1/r32.6.1.)
+  * Support warm reboot
+  * Support new trigger feature for roscube fpga
 
- -- tier4 <camera@tier4.jp>  Thu, 04 Aug 2022 16:49:40 +0900
+ -- tier4 <tier4@tier4-desktop>  Fri, 09 Dec 2022 13:12:18 +0900
 
 tier4-isx021-gmsl (1.0.3) focal; urgency=medium
 
