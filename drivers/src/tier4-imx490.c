@@ -674,7 +674,7 @@ exit:
 
 static bool tier4_imx490_is_camera_connected_to_port(int nport)
 {
-    //printk("[%s] : nport = %d  p_client = %p \n", __func__, nport, wst_priv[nport].p_client );
+//    printk("[%s] : nport = %d  p_client = %p \n", __func__, nport, wst_priv[nport].p_client );
 
     if ( wst_priv[nport].p_client ) {
         return true;
@@ -710,6 +710,11 @@ static void tier4_imx490_set_running_flag(int nport, bool flag)
 {
     wst_priv[nport].running  = flag;
 }
+
+//static void tier4_imx490_reset_running_flag(int nport)
+//{
+//    wst_priv[nport].running  = false;
+//}
 
 static int tier4_imx490_stop_streaming(struct tegracam_device *tc_dev)
 {
@@ -761,9 +766,6 @@ static int tier4_imx490_stop_streaming(struct tegracam_device *tc_dev)
 /*                         Do nothing and return                               */
 /*                  b-2) Not running :                                         */
 /*                         Start the camera on GMSL A port.                    */
-/*                         Stop the camera on GMSL B port.                     */
-/*          ( Video data keeps comming from Ser to the GMSL port B on Des )    */
-/*          ( But the data does not reach the MIPI CSI port on the SoCs )      */
 /*                                                                             */
 /*  2. In the case where a camera is connected to GMSL B port on a Des.        */
 /*                                                                             */
@@ -1569,6 +1571,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
                     tier4_imx490_set_des_shutdown(i, true);                         //  The Des will be shut down.
                 }
             } //  if ( i & 0x1 )
+//            break;
 
  	   		if ( tier4_imx490_is_isp_ser_shutdown(i)) {
         		// Reset camera sensor
@@ -1589,6 +1592,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
     		}
 
         }
+
 
     } // for loop
 

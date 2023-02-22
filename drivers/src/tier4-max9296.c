@@ -296,13 +296,24 @@ static void tier4_max9296_reset_ctx(struct tier4_max9296 *priv)
 int tier4_max9296_power_on(struct device *dev)
 {
 	struct tier4_max9296 *priv = dev_get_drvdata(dev);
-	int err = 0;
+	int i, err = 0;
 
 	mutex_lock(&priv->lock);
 
 	if (priv->pw_ref == 0) {
 
 		usleep_range(1, 2);
+
+		for (i = 0; i < priv->max_src; i++) {
+			if (priv->sources[i].g_ctx ) {
+				break;
+			}
+		}
+	
+		if ( priv->sources[i].g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+			priv->reset_gpio = 0;
+			priv->vdd_cam_1v2 = 0;
+		}
 
 		if (priv->reset_gpio)
 //			gpio_set_value(priv->reset_gpio, 0);
@@ -937,6 +948,7 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 			tier4_max9296_write_reg(dev,
 				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
 		} else if ( g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+//			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
 			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
 		} else {
 //#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)

@@ -699,6 +699,7 @@ static struct i2c_driver tier4_max9295_i2c_driver = {
 	.driver = {
 		.name = "tier4_max9295",
 		.owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(tier4_max9295_of_match),
 	},
 	.probe = tier4_max9295_probe,
 	.remove = tier4_max9295_remove,
