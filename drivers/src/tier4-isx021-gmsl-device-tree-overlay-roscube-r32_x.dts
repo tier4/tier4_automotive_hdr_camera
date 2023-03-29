@@ -1,8 +1,8 @@
 /dts-v1/;
 /plugin/;
- 
+
 / {
-    overlay-name = "Tier4 ISX021 GMSL2 Camera Device Tree Overlay";
+    overlay-name = "TIERIV ISX021 GMSL2 Camera Device Tree Overlay";
     compatible = "nvidia,p2822-0000+p2888-0001";
     jetson-header-name = "Jetson AGX Xavier CSI Connector";
 
@@ -36,7 +36,7 @@ fragment@0{
                 /* Define any required hw resources needed by driver */
                 /* ie. clocks, io pins, power sources */
             //  clocks = <&bpmp_clks TEGRA194_CLK_EXTPERIPH1>,
-            //          <&bpmp_clks TEGRA194_CLK_EXTPERIPH1>;
+            //           <&bpmp_clks TEGRA194_CLK_EXTPERIPH1>;
                 clock-names = "extperiph1", "pllp_grtba";
                 mclk = "extperiph1";
                 nvidia,gmsl-ser-device = <&ser_b>;
@@ -273,7 +273,7 @@ fragment@0{
                     csi_pixel_bit_depth = "16";
                     mode_type = "yuv";
                     pixel_phase = "uyvy";
-            
+
                     active_w = "1920";
                     active_h = "1280";
                     readout_orientation = "0";
@@ -281,7 +281,7 @@ fragment@0{
                     inherent_gain = "1";
                     pix_clk_hz = "94500000";
                     serdes_pix_clk_hz = "833333333";
-            
+
                     gain_factor = "10";
                     min_gain_val = "0";                         /* dB */
                     max_gain_val = "300";                       /* dB */
@@ -331,7 +331,7 @@ fragment@0{
 fragment@1{
       target-path = "/i2c@c240000/tca9546@70/i2c@1";
       __overlay__ {
-        
+
     //  reg = <1>;
         i2c-mux,deselect-on-exit;
         #address-cells = <1>;
@@ -2081,7 +2081,7 @@ fragment@60{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@0/isx021_a@1b";
         };
       };
-    }; 
+    };
 
 fragment@61{
       target = <&camera_module1>;
@@ -2097,7 +2097,7 @@ fragment@61{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@0/isx021_b@1c";
         };
       };
-    }; 
+    };
 
 fragment@62{
       target = <&camera_module2>;
@@ -2113,7 +2113,7 @@ fragment@62{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@1/isx021_c@1b";
         };
       };
-    }; 
+    };
 
 fragment@63{
       target = <&camera_module3>;
@@ -2129,7 +2129,7 @@ fragment@63{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@1/isx021_d@1c";
         };
       };
-    }; 
+    };
 
 fragment@64{
       target = <&camera_module4>;
@@ -2145,7 +2145,7 @@ fragment@64{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@2/isx021_e@1b";
         };
       };
-    }; 
+    };
 
 fragment@65{
       target = <&camera_module5>;
@@ -2161,7 +2161,7 @@ fragment@65{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@2/isx021_f@1c";
         };
       };
-    }; 
+    };
 
 fragment@66{
       target = <&camera_module6>;
@@ -2177,7 +2177,7 @@ fragment@66{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@3/isx021_g@1b";
         };
       };
-    }; 
+    };
 
 fragment@67{
       target = <&camera_module7>;
@@ -2193,35 +2193,35 @@ fragment@67{
           proc-device-tree = "/proc/device-tree/i2c@c240000/tca9546@70/i2c@3/isx021_h@1c";
         };
       };
-    }; 
+    };
 
 fragment@68{
       target = <&dser>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@69{
       target = <&dsera>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@70{
       target = <&dserb>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@71{
       target = <&dserc>;
       __overlay__ {
         compatible = "nvidia,tier4_max9296";
       };
-    }; 
+    };
 
 fragment@72{
       target-path = "/host1x/vi@15c10000";

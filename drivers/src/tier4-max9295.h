@@ -96,7 +96,7 @@ int tier4_max9295_sdev_unpair(struct device *dev, struct device *s_dev);
  *
  * @return  0 for success, or -1 otherwise.
  */
-#if 0 
+#if 0
 int tier4_max9295_power_up_camera_sensor(struct device *dev);
 #else
 int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, bool power_on);

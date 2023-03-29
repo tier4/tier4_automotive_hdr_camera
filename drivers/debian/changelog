@@ -1,3 +1,9 @@
+tier4-camera-gmsl (1.2.1) focal; urgency=medium
+
+  * Support to start streaming on two cameras connected to one Des separately.
+
+ -- tier4 <tier4@tier4-desktop>  Fri, 27 Jan 2023 13:00:00 +0900
+
 tier4-camera-gmsl (1.1.1) focal; urgency=medium
 
   * Support C2(IMX490) camera.
