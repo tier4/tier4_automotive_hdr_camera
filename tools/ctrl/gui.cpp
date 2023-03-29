@@ -1,5 +1,7 @@
-#include "cmdline.h"
 #include "gui.h"
+
+#include "Slider.h"
+#include "cmdline.h"
 
 int main(int argc, char *argv[])
 {
@@ -14,26 +16,15 @@ int main(int argc, char *argv[])
   return app->run(window);
 }
 
-void scaleConfig(Gtk::Scale &scale)
+void scaleConfig(Slider &slider, float min = 0.0f, float max = 256.0f, float init = 128.0f)
 {
-  scale.set_range(0, 256);
-  scale.set_value(128);
-  scale.set_digits(2);
-  scale.set_increments(0.1, 1);
-  scale.set_draw_value(true);
-  scale.set_value_pos(Gtk::POS_RIGHT);
-  // scale.set_size_request(250);
-}
-
-void scaleConfig(Gtk::Scale &scale, float min, float max, float init)
-{
-  scale.set_range(min, max);
-  scale.set_value(init);
-  scale.set_digits(4);
-  scale.set_increments(0.1, 1);
-  scale.set_draw_value(true);
-  scale.set_value_pos(Gtk::POS_RIGHT);
-  // scale.set_size_request(250);
+  slider.set_range(min, max);
+  slider.set_value(init);
+  slider.set_digits(4);
+  slider.set_increments(0.1, 1);
+  slider.set_label_chars(8);
+  // slider.set_draw_value(true);
+  // slider.set_value_pos(Gtk::POS_RIGHT);
 }
 
 // Frame
@@ -101,37 +92,43 @@ void SampleWindow::createAEFrame(void)
   ae_grid.attach(shutter_speed_label, 0, 2, 1, 1);
   ae_grid.attach(shutter_speed_scale, 1, 2, 2, 1);
 
-  shutter_speed_scale.signal_value_changed().connect([this] {
-    for (int i = 0; i < 8; i++)
-    {
-      if (this->available_mask & (1 << i))
+  shutter_speed_scale.set_callbackvaluechanged(
+      [this](double v)
       {
-        this->camera_ptr_array[i]->setShutterSpeedforFME(this->shutter_speed_scale.get_value());
-      }
-    }
-  });
+        for (int i = 0; i < 8; i++)
+        {
+          if (this->available_mask & (1 << i))
+          {
+            this->camera_ptr_array[i]->setShutterSpeedforFME(this->shutter_speed_scale.get_value());
+          }
+        }
+      });
 
   evref_check.set_label("evref_offset_enable");
   evref_check.set_active(false);
-  evref_check.signal_toggled().connect([this] {
-    for (int j = 0; j < 8; j++)
-    {
-      if (this->available_mask & (1 << j))
+  evref_check.signal_toggled().connect(
+      [this]
       {
-        this->camera_ptr_array[j]->setExposureOffsetFlag(this->evref_check.get_active());
-      }
-    }
-  });
+        for (int j = 0; j < 8; j++)
+        {
+          if (this->available_mask & (1 << j))
+          {
+            this->camera_ptr_array[j]->setExposureOffsetFlag(this->evref_check.get_active());
+          }
+        }
+      });
 
-  evref_scale.signal_value_changed().connect([this] {
-    for (int j = 0; j < 8; j++)
-    {
-      if (this->available_mask & (1 << j))
+  evref_scale.set_callbackvaluechanged(
+      [this](double v)
       {
-        this->camera_ptr_array[j]->setExposureOffset(this->evref_scale.get_value());
-      }
-    }
-  });
+        for (int j = 0; j < 8; j++)
+        {
+          if (this->available_mask & (1 << j))
+          {
+            this->camera_ptr_array[j]->setExposureOffset(this->evref_scale.get_value());
+          }
+        }
+      });
 
   ae_grid.attach(evref_check, 0, 3, 3, 1);
   ae_grid.attach(evref_label, 0, 4, 1, 1);
@@ -149,12 +146,18 @@ void SampleWindow::createImageTuningFrame(void)
   scaleConfig(brightness_scale, -256.0, 255.75, 0);
   scaleConfig(sharpness_scale, 0.0, 3.98, 1.0);
 
-  digital_gain_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::digitalgain_callback));
-  brightness_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::brightness_callback_scale));
-  hue_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::hue_callback_scale));
-  saturation_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::saturation_callback_scale));
-  contrast_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::contrast_callback_scale));
-  sharpness_scale.signal_value_changed().connect(sigc::mem_fun(*this, &SampleWindow::sharpness_callback_scale));
+  digital_gain_scale.set_callbackvaluechanged(
+      std::bind(&SampleWindow::digitalgain_callback, std::ref(*this), std::placeholders::_1));
+  brightness_scale.set_callbackvaluechanged(
+      std::bind(&SampleWindow::brightness_callback_scale, std::ref(*this), std::placeholders::_1));
+  hue_scale.set_callbackvaluechanged(
+      std::bind(&SampleWindow::hue_callback_scale, std::ref(*this), std::placeholders::_1));
+  saturation_scale.set_callbackvaluechanged(
+      std::bind(&SampleWindow::saturation_callback_scale, std::ref(*this), std::placeholders::_1));
+  contrast_scale.set_callbackvaluechanged(
+      std::bind(&SampleWindow::contrast_callback_scale, std::ref(*this), std::placeholders::_1));
+  sharpness_scale.set_callbackvaluechanged(
+      std::bind(&SampleWindow::sharpness_callback_scale, std::ref(*this), std::placeholders::_1));
 
   image_tune_frame.set_label("Image tuning");
   image_tune_frame.add(m_grid);

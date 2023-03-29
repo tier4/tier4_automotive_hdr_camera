@@ -3,6 +3,7 @@
 
 #include <gtkmm.h>
 
+#include "Slider.h"
 #define DEBUG
 #include <t4cam_tools.hpp>
 
@@ -48,25 +49,25 @@ private:
   Gtk::MenuBar *menu;
   Glib::RefPtr<Gtk::ActionGroup> m_actiongroup;
 
-  Gtk::Scale hue_scale;
-  Gtk::Scale saturation_scale;
-  Gtk::Scale contrast_scale;
-  Gtk::Scale brightness_scale;
-  Gtk::Scale sharpness_scale;
+  Slider hue_scale;
+  Slider saturation_scale;
+  Slider contrast_scale;
+  Slider brightness_scale;
+  Slider sharpness_scale;
 
-  Gtk::Scale digital_gain_scale;
-  Gtk::Scale shutter_speed_scale;
+  Slider digital_gain_scale;
+  Slider shutter_speed_scale;
   // Gtk::Scale shutter_min_scale;
   // Gtk::Scale shutter_max_scale;
 
   Gtk::Grid m_grid;
-  void brightness_callback_scale();
-  void hue_callback_scale();
-  void saturation_callback_scale();
-  void contrast_callback_scale();
-  void sharpness_callback_scale();
+  void brightness_callback_scale(double v);
+  void hue_callback_scale(double v);
+  void saturation_callback_scale(double v);
+  void contrast_callback_scale(double v);
+  void sharpness_callback_scale(double v);
   void save_callback();
-  void digitalgain_callback();
+  void digitalgain_callback(double v);
 
   void callback_check(int i);
   void callback_radio(int i);
@@ -93,7 +94,7 @@ private:
 
   Gtk::Label evref_label;
   Gtk::CheckButton evref_check;
-  Gtk::Scale evref_scale;
+  Slider evref_scale;
 
   Gtk::Frame AE_frame;
   Gtk::Frame image_tune_frame;

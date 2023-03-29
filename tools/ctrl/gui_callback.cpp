@@ -173,7 +173,7 @@ void SampleWindow::callback_radio(int i)
 
 /////
 
-void SampleWindow::digitalgain_callback()
+void SampleWindow::digitalgain_callback(double v)
 {
   for (int j = 0; j < 8; j++)
   {
@@ -197,7 +197,7 @@ void SampleWindow::callback_check(int i)
 }
 
 // image tuning
-void SampleWindow::brightness_callback_scale()
+void SampleWindow::brightness_callback_scale(double v)
 {
   for (int i = 0; i < 8; i++)
   {
@@ -207,7 +207,7 @@ void SampleWindow::brightness_callback_scale()
     }
   }
 }
-void SampleWindow::hue_callback_scale()
+void SampleWindow::hue_callback_scale(double v)
 {
   for (int i = 0; i < 8; i++)
   {
@@ -217,7 +217,7 @@ void SampleWindow::hue_callback_scale()
     }
   }
 }
-void SampleWindow::saturation_callback_scale()
+void SampleWindow::saturation_callback_scale(double v)
 {
   for (int i = 0; i < 8; i++)
   {
@@ -227,7 +227,7 @@ void SampleWindow::saturation_callback_scale()
     }
   }
 }
-void SampleWindow::contrast_callback_scale()
+void SampleWindow::contrast_callback_scale(double v)
 {
   for (int i = 0; i < 8; i++)
   {
@@ -238,7 +238,7 @@ void SampleWindow::contrast_callback_scale()
   }
 }
 
-void SampleWindow::sharpness_callback_scale()
+void SampleWindow::sharpness_callback_scale(double v)
 {
   for (int i = 0; i < 8; i++)
   {
