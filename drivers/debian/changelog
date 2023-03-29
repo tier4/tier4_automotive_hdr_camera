@@ -1,3 +1,9 @@
+tier4-camera-gmsl (1.2.2) focal; urgency=medium
+
+  * Support for L4T R35.1 on ROScube
+
+ -- tier4 <tier4@tier4-desktop>  Mon, 13 Feb 2023 01:22:00 +0900
+
 tier4-camera-gmsl (1.2.1) focal; urgency=medium
 
   * Support to start streaming on two cameras connected to one Des separately.

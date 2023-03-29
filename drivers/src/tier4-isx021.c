@@ -1345,7 +1345,7 @@ exit:
 
 static bool tier4_isx021_is_camera_connected_to_port(int nport)
 {
-  //  printk("[%s] : nport = %d  p_client = %p \n", __func__, nport, wst_priv[nport].p_client );
+    printk("[%s] : nport = %d  p_client = %p \n", __func__, nport, wst_priv[nport].p_client );
 
 	if ( wst_priv[nport].p_client ) {
 		return true;
@@ -1383,6 +1383,11 @@ static void tier4_isx021_set_running_flag(int nport, bool flag)
 	wst_priv[nport].running  = flag;
 }
 
+//static void tier4_isx021_reset_running_flag(int nport)
+//{
+//	wst_priv[nport].running  = false;
+//}
+
 static int tier4_isx021_stop_streaming(struct tegracam_device *tc_dev)
 {
 	struct 	device 	*dev  		= tc_dev->dev;
@@ -1414,7 +1419,7 @@ static int tier4_isx021_stop_streaming(struct tegracam_device *tc_dev)
 }
 
 /* *************************************************************************** */
-/*  1. In the case where a camera is connected to GMSL A port on a Des.       */
+/*  1. In the case where a  camera is connected to GMSL A port on a Des.       */
 /*                                                                             */
 /*        a > Check if another camera is connected to GMSL B port              */
 /*          a-1) Connected:                                                    */
@@ -1427,11 +1432,6 @@ static int tier4_isx021_stop_streaming(struct tegracam_device *tc_dev)
 /*                               Start the camera on GMSL A port.              */
 /*                  b-2) Not Running:                                          */
 /*                         Start the camera on GMSL B port.                    */
-/*                         wait for 200ms                                      */
-/*                         Stop the camera on GMSL B port.                     */
-/*          ( Video data keeps comming from Ser to the GMSL port B on Des )    */
-/*          ( But the data does not reach the MIPI CSI port on the SoCs )      */
-/*                                                                             */
 /*         a-2) Not connected :                                                */
 /*                b > Check if the camera on GMSL A port is running            */
 /*                  b-1) Running :                                             */
