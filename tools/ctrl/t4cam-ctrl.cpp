@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
   else
   {
     C2 c2_a = C2(port_num);
-    c2_a.set_dwp_on();
+    c2_a.setShutterTimeOnAE(330,330);
   }
 
 #if 0

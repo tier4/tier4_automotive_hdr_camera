@@ -3,6 +3,7 @@
 
 #include "c1_reg.hpp"
 #include "c2_reg.hpp"
+#include "gw5300.hpp"
 #include "i2c.hpp"
 #include "t4cam_tools.hpp"
 
@@ -11,9 +12,59 @@ void C2::set_dwp_on()
   uint8_t buf[8];
 
   i2c::write(dev_name, i2c_dev_addr, cmd_dwp_on, size_t(14));
-
   i2c::read(dev_name, i2c_dev_addr, buf, 6);
 }
+
+void C2::setShutterTimeOnAE(uint16_t max_ms, uint16_t min_ms){
+#define MS_TO_LINE_UNIT 80
+  uint8_t buf[8];
+
+  uint8_t cmd_integration_max[] = {
+   0x33, 0x47, 0x0f, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05,
+   0x00, 0x15, 0x00, 0x01, 0x00, 0x04, 0x00, 0x70, 0x03, 0x00,
+   0x00, 0x00};
+
+    
+  uint8_t cmd_integration_min[] = {
+   0x33, 0x47, 0x0d, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05,
+   0x00, 0x21, 0x00, 0x01, 0x00, 0x02, 0x00, 0x70, 0x03, 0x00};
+
+
+  uint32_t max_line =  max_ms * MS_TO_LINE_UNIT;
+  uint32_t min_line =  min_ms * MS_TO_LINE_UNIT;
+
+  uint8_t b1 = max_line &0xFF;
+  uint8_t b2 = (max_line >> 8)&0xFF;
+  uint8_t b3 = 0;
+  uint8_t b4 = 0;
+
+  const size_t max_val_pos = 17;
+  const size_t min_val_pos = 17;
+
+  cmd_integration_max[max_val_pos] = b1;
+  cmd_integration_max[max_val_pos+1] = b2;
+  cmd_integration_max[max_val_pos+2] = b3;
+  cmd_integration_max[max_val_pos+3] = b4;
+  
+  b1 = min_line &0xFF;
+  b2 = (min_line >> 8)&0xFF;
+  
+  cmd_integration_min[min_val_pos] = b1;
+  cmd_integration_min[min_val_pos+1] = b2;
+
+  cmd_integration_max[sizeof(cmd_integration_max)-1] = calcCheckSum(cmd_integration_max, sizeof(cmd_integration_max));
+  cmd_integration_min[sizeof(cmd_integration_min)-1] = calcCheckSum(cmd_integration_min, sizeof(cmd_integration_min));
+
+
+  i2c::write(dev_name, i2c_dev_addr, cmd_integration_max, sizeof(cmd_integration_max));
+  i2c::read(dev_name, i2c_dev_addr, buf, 6);
+  
+  i2c::write(dev_name, i2c_dev_addr, cmd_integration_min, sizeof(cmd_integration_min));
+  i2c::read(dev_name, i2c_dev_addr, buf, 6);
+
+  return;
+}
+
 
 static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &data_u, uint8_t &data_l, uint16_t mask)
 {

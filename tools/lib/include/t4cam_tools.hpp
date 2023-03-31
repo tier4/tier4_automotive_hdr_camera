@@ -69,6 +69,7 @@ public:
 #endif
   }
 
+void setShutterTimeOnAE(uint16_t max_ms, uint16_t min_ms);
   void set_dwp_on();
 };
 
@@ -108,16 +109,6 @@ public:
 
   void initialized_default_value_from_default()
   {
-    default_value_map["ae_mode"] = 0.0;
-    default_value_map["digital_gain"] = 30.0;
-    default_value_map["shutter_speed"] = 11.0;
-    default_value_map["ev_offset_flag"] = 0.0;
-    default_value_map["ev_offset"] = 0;
-    default_value_map["hue"] = 0;
-    default_value_map["saturation"] = 1.0;
-    default_value_map["contrast"] = 1.0;
-    default_value_map["brightness"] = 0;
-    default_value_map["sharpness"] = 1.0;
   }
 
   void saveCurrentValue(std::string output)
@@ -190,29 +181,11 @@ public:
 
   void setDefaultValue(void)
   {
-    setAEMode(default_value_map["ae_mode"]);
-    setDigitalGain(default_value_map["digital_gain"]);
-    setShutterSpeedforFME(default_value_map["shutter_speed"]);
-    setExposureOffsetFlag(default_value_map["ev_offset_flag"]);
-    setExposureOffset(default_value_map["ev_offset"]);
-    setHue(default_value_map["hue"]);
-    setSaturation(default_value_map["saturation"]);
-    setContrast(default_value_map["contrast"]);
-    setBrightness(default_value_map["brightness"]);
-    setSharpness(default_value_map["sharpness"]);
+    std::cerr << "not present this function." << std::endl;
   }
   void setLoadValue(void)
   {
-    setAEMode(load_value_map["ae_mode"]);
-    setDigitalGain(load_value_map["digital_gain"]);
-    setShutterSpeedforFME(load_value_map["shutter_speed"]);
-    setExposureOffsetFlag(load_value_map["ev_offset_flag"]);
-    setExposureOffset(load_value_map["ev_offset"]);
-    setHue(load_value_map["hue"]);
-    setSaturation(load_value_map["saturation"]);
-    setBrightness(load_value_map["brightness"]);
-    setContrast(load_value_map["contrast"]);
-    setSharpness(load_value_map["sharpness"]);
+    std::cerr << "not present this function." << std::endl;
   }
 
   bool isAvailableCamera(void);

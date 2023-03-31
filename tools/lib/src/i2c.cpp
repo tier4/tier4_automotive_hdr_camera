@@ -182,7 +182,7 @@ int8_t i2c::write(std::string dev_name, uint8_t dev_addr, const uint8_t* data, u
   if (fd == -1)
   {
     fprintf(stderr, "%s: failed to open %s: %s\n", __func__, dev_name.c_str(), strerror(errno));
-    return -1;
+ //   return -1;
   }
 
   uint8_t* buffer = (uint8_t*)malloc(length + 1);
@@ -194,10 +194,12 @@ int8_t i2c::write(std::string dev_name, uint8_t dev_addr, const uint8_t* data, u
   }
   memcpy(&buffer[0], data, length);
 
+
+  //debug print
   fprintf(stderr, "[%s]:", __func__);
   for (int i = 0; i < length; i++)
   {
-    fprintf(stderr, " 0x%x", buffer[i]);
+    fprintf(stderr, " 0x%02x", buffer[i]);
   }
   fprintf(stderr, "\n");
 
@@ -211,7 +213,6 @@ int8_t i2c::write(std::string dev_name, uint8_t dev_addr, const uint8_t* data, u
   ioctl_data.msgs = messages;
   ioctl_data.nmsgs = 1;
 
-  DEBUG_PRINT("[0x%02X-0x%04X-write]: = 0x%02X\n", dev_addr, length, *data);
   /* i2c-writeを行う. */
   if (ioctl(fd, I2C_RDWR, &ioctl_data) != 1)
   {
@@ -281,6 +282,7 @@ int8_t i2c::write(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, cons
 int8_t i2c::write16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, uint8_t data)
 {
   int32_t fd = open(dev_name.c_str(), O_RDWR);
+ 
   if (fd == -1)
   {
     fprintf(stderr, "%s: failed to open %s: %s\n", __func__, dev_name.c_str(), strerror(errno));
