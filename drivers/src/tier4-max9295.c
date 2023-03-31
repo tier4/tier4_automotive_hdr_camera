@@ -153,6 +153,8 @@ struct map_ctx {
 	u8 st_id;
 };
 
+#if 0
+
 static int tier4_max9295_read_reg(struct device *dev, u16 addr, u8 *val)
 {
 	int err = 0;
@@ -168,7 +170,7 @@ static int tier4_max9295_read_reg(struct device *dev, u16 addr, u8 *val)
 
 	*val = reg_val & 0xFF;
 
-	dev_dbg(dev,  "[%s ] : Max9295 I2C Read  : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, *val );
+	dev_dbg(dev,  "[%s ] : Max9295 I2C Read at 0x%04X=[0x%02X].\n", __func__, addr, *val );
 
 	if (( err == 0 ) && ( dev != NULL ) ) {
 
@@ -178,16 +180,17 @@ static int tier4_max9295_read_reg(struct device *dev, u16 addr, u8 *val)
 			strncpy(str_bus_num, &dev->kobj.name[0], 2);
 			strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
 		}
-		dev_dbg(dev, "tier4_max9295_read_reg %s  0x%s 0x%x.\n", str_bus_num, str_sl_addr, addr );
+		dev_dbg(dev, "tier4_max9295_read_reg %s 0x%s 0x%x.\n", str_bus_num, str_sl_addr, addr );
 	}
 	return err;
 }
+#endif
 
 static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 {
 	struct tier4_max9295 *priv = dev_get_drvdata(dev);
 	int err = 0;
-	u8 e;
+//	u8 e;
 	char str_bus_num[4],str_sl_addr[4];
 	int				len;
 
@@ -201,19 +204,19 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 		strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
 	}
 
-	dev_dbg(dev,  "[%s] : Max9295 I2C Write : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, val );
+	dev_dbg(dev,  "[%s] : Max9295 I2C Write Reg at 0x%04X=[0x%02X].\n", __func__, addr, val );
 
 	err = regmap_write(priv->regmap, addr, val);
 
 	if (err) {
-		dev_err(dev, "[%s] : Max9295 I2C write failed.    Reg Address = 0x%04X  Data= 0x%02X.\n",
+		dev_err(dev, "[%s] : Max9295 I2C write failed Reg at 0x%04X=[0x%02X].\n",
 			__func__, addr, val);
 	}
 
 	/* delay before next i2c command as required for SERDES link */
 
 	usleep_range(100, 110);
-	tier4_max9295_read_reg(dev, addr, &e);
+//	tier4_max9295_read_reg(dev, addr, &e);
 	usleep_range(100, 110);
 
 	return err;
@@ -648,7 +651,7 @@ static int tier4_max9295_probe(struct i2c_client *client,
 		prim_priv__[channel_count_isx021] = priv;
 
 
-		dev_info(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
+		dev_dbg(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
 				, __func__, channel_count_isx021,prim_priv__[channel_count_isx021]);
 
 		channel_count_isx021++;
@@ -696,6 +699,7 @@ static struct i2c_driver tier4_max9295_i2c_driver = {
 	.driver = {
 		.name = "tier4_max9295",
 		.owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(tier4_max9295_of_match),
 	},
 	.probe = tier4_max9295_probe,
 	.remove = tier4_max9295_remove,
@@ -704,7 +708,7 @@ static struct i2c_driver tier4_max9295_i2c_driver = {
 
 static int __init tier4_max9295_init(void)
 {
-	printk("MAX9295 Driver for ROScube : %s\n", BUILD_STAMP);
+	printk(KERN_INFO "MAX9295 Driver for TIER4 C1 camera : %s\n", BUILD_STAMP);
 
 	return i2c_add_driver(&tier4_max9295_i2c_driver);
 }

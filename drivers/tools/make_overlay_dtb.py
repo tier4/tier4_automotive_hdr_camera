@@ -68,6 +68,7 @@ str_imx490_b_2c_i2c0 = '''
                 nvidia,isp-device = <&isp_b>;           // for C2 camera
                 nvidia,gmsl-ser-device = <&ser_b>;
                 nvidia,gmsl-dser-device = <&dser>;
+                nvidia,fpga-device  = <&t4_fpga>;
                 reg = <0x2c>;
                 /* Physical dimensions of sensor */
                 physical_w = \"15.0\";
@@ -250,6 +251,7 @@ str_imx490_a_2b_i2c0 = '''
                 nvidia,isp-device = <&isp_a>;           // for C2 camera
                 nvidia,gmsl-ser-device = <&ser_a>;
                 nvidia,gmsl-dser-device = <&dser>;
+                nvidia,fpga-device  = <&t4_fpga>;
                 reg = <0x2b>;
 
                 /* Physical dimensions of sensor */
@@ -438,6 +440,7 @@ str_isx021_b_1c_i2c0 = '''
                 mclk = \"extperiph1\";
                 nvidia,gmsl-ser-device = <&ser_b>;
                 nvidia,gmsl-dser-device = <&dser>;
+                nvidia,fpga-device  = <&t4_fpga>;
 
                 compatible = \"nvidia,tier4_isx021\";
 
@@ -631,6 +634,7 @@ str_isx021_a_1b_i2c0 = '''
                 mclk = \"extperiph1\";
                 nvidia,gmsl-ser-device  = <&ser_a>;
                 nvidia,gmsl-dser-device = <&dser>;
+                nvidia,fpga-device  = <&t4_fpga>;
 
                 compatible = \"nvidia,tier4_isx021\";
 
@@ -784,6 +788,7 @@ str_imx490_d_2c_i2c1 = '''
                 nvidia,isp-device = <&isp_d>;           // for C2 camera
                 nvidia,gmsl-ser-device = <&ser_d>;
                 nvidia,gmsl-dser-device = <&dsera>;
+                nvidia,fpga-device  = <&t4_fpga>;
                 reg = <0x2c>;
                 /* Physical dimensions of sensor */
                 physical_w = \"15.0\";
@@ -962,6 +967,7 @@ str_imx490_c_2b_i2c1 = '''
                 nvidia,isp-device = <&isp_c>;           // for C2 camera
                 nvidia,gmsl-ser-device = <&ser_c>;
                 nvidia,gmsl-dser-device = <&dsera>;
+                nvidia,fpga-device  = <&t4_fpga>;
                 reg = <0x2b>;
                 /* Physical dimensions of sensor */
                 physical_w = \"15.0\";
@@ -1139,8 +1145,9 @@ str_isx021_d_1c_i2c1 = '''
                 clock-names = "extperiph1\", \"pllp_grtba\";
                 mclk = \"extperiph1\";
     
-            nvidia,gmsl-ser-device = <&ser_d>;
+                nvidia,gmsl-ser-device = <&ser_d>;
                 nvidia,gmsl-dser-device = <&dsera>;
+                nvidia,fpga-device  = <&t4_fpga>;
     
             compatible = \"nvidia,tier4_isx021\";
     
@@ -1335,6 +1342,7 @@ str_isx021_c_1b_i2c1 = '''
 
                 nvidia,gmsl-ser-device = <&ser_c>;
                 nvidia,gmsl-dser-device = <&dsera>;
+                nvidia,fpga-device  = <&t4_fpga>;
 
                 compatible = \"nvidia,tier4_isx021\";
 
@@ -1573,6 +1581,7 @@ str_imx490_f_2c_i2c2 = '''
                 nvidia,isp-device = <&isp_f>;           // for C2 camera
                 nvidia,gmsl-ser-device = <&ser_f>;
                 nvidia,gmsl-dser-device = <&dserb>;
+                nvidia,fpga-device  = <&t4_fpga>;
                 reg = <0x2c>;
                 /* Physical dimensions of sensor */
                 physical_w = \"15.0\";
@@ -1751,6 +1760,7 @@ str_imx490_e_2b_i2c2 = '''
                  nvidia,isp-device = <&isp_e>;          // for C2 camera
                  nvidia,gmsl-ser-device = <&ser_e>;
                  nvidia,gmsl-dser-device = <&dserb>;
+                nvidia,fpga-device  = <&t4_fpga>;
                  reg = <0x2b>;
                  /* Physical dimensions of sensor */
                  physical_w = \"15.0\";
@@ -1931,6 +1941,7 @@ str_isx021_f_1c_i2c2 = '''
 
                 nvidia,gmsl-ser-device = <&ser_f>;
                 nvidia,gmsl-dser-device = <&dserb>;
+                nvidia,fpga-device  = <&t4_fpga>;
 
                 compatible = \"nvidia,tier4_isx021\";
 
@@ -2126,6 +2137,7 @@ str_isx021_e_1b_i2c2 = '''
 
             nvidia,gmsl-ser-device = <&ser_e>;
             nvidia,gmsl-dser-device = <&dserb>;
+            nvidia,fpga-device  = <&t4_fpga>;
 
             compatible = \"nvidia,tier4_isx021\";
 
@@ -2361,6 +2373,7 @@ str_imx490_h_2c_i2c3 = '''
                 nvidia,isp-device = <&isp_h>;           // for C2 camera
                 nvidia,gmsl-ser-device = <&ser_h>;
                 nvidia,gmsl-dser-device = <&dserc>;
+                nvidia,fpga-device  = <&t4_fpga>;
                 reg = <0x2c>;
                 /* Physical dimensions of sensor */
                 physical_w = \"15.0\";
@@ -2539,6 +2552,7 @@ str_imx490_g_2b_i2c3 = '''
                 nvidia,isp-device = <&isp_g>;           // for C2 camera
                 nvidia,gmsl-ser-device = <&ser_g>;
                 nvidia,gmsl-dser-device = <&dserc>;
+                nvidia,fpga-device  = <&t4_fpga>;
                 reg = <0x2b>;
                 /* Physical dimensions of sensor */
                 physical_w = \"15.0\";
@@ -2719,6 +2733,7 @@ str_isx021_h_1c_i2c3 = '''
 
                 nvidia,gmsl-ser-device = <&ser_h>;
                 nvidia,gmsl-dser-device = <&dserc>;
+                nvidia,fpga-device  = <&t4_fpga>;
 
                 compatible = \"nvidia,tier4_isx021\";
 
@@ -2914,6 +2929,7 @@ str_isx021_g_1b_i2c3 = '''
 
                 nvidia,gmsl-ser-device = <&ser_g>;
                 nvidia,gmsl-dser-device = <&dserc>;
+                nvidia,fpga-device  = <&t4_fpga>;
 
                 compatible = \"nvidia,tier4_isx021\";
 
@@ -3889,7 +3905,7 @@ str_isx021_cameramodule4 = '''
 
 str_isx021_cameramodule5 = '''
 
-    fragment65 {
+    fragment@65 {
       target = <&camera_module5>;
       __overlay__ {
         status = \"okay\";
@@ -3978,6 +3994,18 @@ str_dser_fragment = '''
       target-path = \"/host1x/vi@15c10000\";
       __overlay__ {
         num-channels = <8>;
+      };
+    };
+
+    fragment@73{
+      target-path = "/i2c@3180000";
+      __overlay__ {
+       t4_fpga: tier4_fpga@66 {
+          compatible = "nvidia,tier4_fpga";
+          reg = <0x66>;
+          generate-fsync = "false";
+          status = "okay";
+        };
       };
     };
 '''
