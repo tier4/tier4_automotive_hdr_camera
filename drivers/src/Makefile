@@ -9,6 +9,8 @@ Xavier_other_word_1   := Jetson-AGX
 Orin_word             := Orin
 Orin_Compatible_word  := p3737-0000+p3701-0000nvidia
 ROScube_word          := ROScube-X
+ROScube_Orin_word     := 590
+ROScube_Orin_Model_word  := ROScube-Orin
 
 INST_PACKAGE_NAME     ?=  $(shell cat dkms.conf | grep 'PACKAGE_NAME' | cut -d '=' -f 2 | cut -d '"' -f 2 )
 INST_PACKAGE_VERSION  ?=  $(shell cat dkms.conf | grep 'PACKAGE_VERSION' | cut -d '=' -f 2 | cut -d '"' -f 2 )
@@ -48,7 +50,11 @@ else ifeq ($(Orin_word), $(filter $(Orin_word),$(dt_model)))
         MODEL := Not_Supported_Orin
     endif
 else ifeq ($(ROScube_word), $(filter $(ROScube_word),$(dt_model)))
-    MODEL := ROScube-X
+    ifeq ($(ROScube_Orin_word), $(filter $(ROScube_Orin_word),$(dt_model)))
+        MODEL := ROScube-Orin
+    else
+        MODEL := ROScube-X
+    endif
 else
     MODEL := Not_Supported_Model_ROScube
 endif
@@ -113,12 +119,11 @@ else ifeq ($(L4T_RELEASE_MAIN), R34)
         endif
     endif
 else ifeq ($(L4T_RELEASE_MAIN), R35)
-    ifeq ($(L4T_RELEASE_MAJOR), 1)
         ifeq ($(MODEL),$(ROScube_word))
             KERNELRELEASE := 5.10.104-rqx58g
             TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay-roscube-r3411_r351
             TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay-roscube-r3411_r351
-            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r3411_r351
+           TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r3411_r351
         else ifeq ($(MODEL),$(Xavier_word))
             KERNELRELEASE            := 5.1.104-tegra
             TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-xavier-r3411_r351
@@ -129,15 +134,22 @@ else ifeq ($(L4T_RELEASE_MAIN), R35)
             TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-orin-r3411_r351
             TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-orin-r3411_r351
             TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-orin-r3411_r351
+        else ifeq ($(MODEL),$(ROScube_Orin_Model_word))
+            KERNELRELEASE := 5.10.104-rqx59x
+            TARGET_ISX021_DTS := tier4-isx021-gmsl-device-tree-overlay-roscube-orin-r351
+            TARGET_IMX490_DTS := tier4-imx490-gmsl-device-tree-overlay-roscube-orin-r351
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-orin-r351
         else
             KERNELRELEASE            := 5.1.104-unknown
             TARGET_ISX021_DTS        := Unknown
             TARGET_ISX021_IMX490_DTS := Unknown
             TARGET_IMX490_DTS        := Unknown
         endif
-    endif
 else
     KERNELRELEASE := Unknown
+    TARGET_ISX021_DTS        := Unknown
+    TARGET_ISX021_IMX490_DTS := Unknown
+    TARGET_IMX490_DTS        := Unknown
 endif
 
 # ------------------------------------------------

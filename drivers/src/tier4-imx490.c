@@ -922,6 +922,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
     const char                  *str_model;
     char                        upper_str_model[64];
     char                        *str_err;
+	char						*sub_str_err;
 
     root_node = of_find_node_opts_by_path("/", &of_stdout_options);
 
@@ -950,9 +951,14 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
     }
 
     str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE );
-    if ( str_err  ) {
-         priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
-    }
+	if ( str_err  ) {
+		sub_str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE_ORIN );
+		if ( sub_str_err  ) {
+		 	priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE_ORIN;
+		} else {
+		 	priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
+		}
+	}
 
     dev_info(dev, "[%s] : model=%s\n", __func__, str_model);
     dev_info(dev, "[%s] : hardware_model=%d\n", __func__, priv->g_ctx.hardware_model) ;

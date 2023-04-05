@@ -381,7 +381,7 @@ fragment@44{
     //tcp
     target-path = "/tegra-camera-platform";
     __overlay__ {
-      num_csi_lanes = <0x02>;
+      num_csi_lanes = <0x04>;
       max_lane_speed = <4000000>;
     };
   };

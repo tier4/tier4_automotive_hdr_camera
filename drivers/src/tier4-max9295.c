@@ -170,7 +170,7 @@ static int tier4_max9295_read_reg(struct device *dev, u16 addr, u8 *val)
 
 	*val = reg_val & 0xFF;
 
-	dev_dbg(dev,  "[%s ] : Max9295 I2C Read at 0x%04X=[0x%02X].\n", __func__, addr, *val );
+	dev_info(dev,  "[%s ] : Max9295 I2C Read at 0x%04X=[0x%02X].\n", __func__, addr, *val );
 
 	if (( err == 0 ) && ( dev != NULL ) ) {
 
@@ -204,7 +204,6 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 		strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
 	}
 
-	dev_dbg(dev,  "[%s] : Max9295 I2C Write Reg at 0x%04X=[0x%02X].\n", __func__, addr, val );
 
 	err = regmap_write(priv->regmap, addr, val);
 
@@ -212,7 +211,19 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 		dev_err(dev, "[%s] : Max9295 I2C write failed Reg at 0x%04X=[0x%02X].\n",
 			__func__, addr, val);
 	}
-
+	else
+//	{
+//		if ( priv == NULL ) {
+//			dev_info(dev,  "[%s] : priv is NULL].\n", __func__);
+//		} else {
+//			if ( priv->g_client.g_ctx == NULL ) {
+//				dev_info(dev,  "[%s] : priv->g_client.g_ctx is NULL].\n", __func__ );
+//			} else {
+//				dev_info(dev,  "[%s] :  Max9295 I2C write at 0x%04X=[0x%02X].\n", __func__, addr, val );
+//			}
+//		}
+//	}
+//
 	/* delay before next i2c command as required for SERDES link */
 
 	usleep_range(100, 110);
@@ -449,6 +460,8 @@ int tier4_max9295_setup_control(struct device *dev)
 
 	g_ctx = priv->g_client.g_ctx;
 
+//	dev_info(dev, "[%s]: reg_mux = %d prim_priv__[g_ctx->reg_mux]->i2c_client->dev = %p \n" , __func__, g_ctx->reg_mux, &prim_priv__[g_ctx->reg_mux]->i2c_client->dev );
+
 	/* update address reassingment */
 	tier4_max9295_write_reg(&prim_priv__[g_ctx->reg_mux]->i2c_client->dev,
 			MAX9295_DEV_ADDR, (g_ctx->ser_reg << 1));
@@ -651,8 +664,8 @@ static int tier4_max9295_probe(struct i2c_client *client,
 		prim_priv__[channel_count_isx021] = priv;
 
 
-		dev_dbg(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
-				, __func__, channel_count_isx021,prim_priv__[channel_count_isx021]);
+//		dev_info(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
+//				, __func__, channel_count_isx021,prim_priv__[channel_count_isx021]);
 
 		channel_count_isx021++;
 
