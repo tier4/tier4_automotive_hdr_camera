@@ -211,7 +211,7 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 		dev_err(dev, "[%s] : Max9295 I2C write failed Reg at 0x%04X=[0x%02X].\n",
 			__func__, addr, val);
 	}
-	else
+//	else
 //	{
 //		if ( priv == NULL ) {
 //			dev_info(dev,  "[%s] : priv is NULL].\n", __func__);
