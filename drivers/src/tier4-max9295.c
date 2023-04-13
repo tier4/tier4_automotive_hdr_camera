@@ -211,19 +211,13 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 		dev_err(dev, "[%s] : Max9295 I2C write failed Reg at 0x%04X=[0x%02X].\n",
 			__func__, addr, val);
 	}
-//	else
-//	{
-//		if ( priv == NULL ) {
-//			dev_info(dev,  "[%s] : priv is NULL].\n", __func__);
-//		} else {
-//			if ( priv->g_client.g_ctx == NULL ) {
-//				dev_info(dev,  "[%s] : priv->g_client.g_ctx is NULL].\n", __func__ );
-//			} else {
-//				dev_info(dev,  "[%s] :  Max9295 I2C write at 0x%04X=[0x%02X].\n", __func__, addr, val );
-//			}
-//		}
-//	}
-//
+	else
+	{
+		if ( priv == NULL ) {
+			dev_info(dev,  "[%s] : priv is NULL].\n", __func__);
+		}
+	}
+
 	/* delay before next i2c command as required for SERDES link */
 
 	usleep_range(100, 110);
@@ -460,7 +454,14 @@ int tier4_max9295_setup_control(struct device *dev)
 
 	g_ctx = priv->g_client.g_ctx;
 
-//	dev_info(dev, "[%s]: reg_mux = %d prim_priv__[g_ctx->reg_mux]->i2c_client->dev = %p \n" , __func__, g_ctx->reg_mux, &prim_priv__[g_ctx->reg_mux]->i2c_client->dev );
+	if ( prim_priv__[g_ctx->reg_mux] == NULL ) {
+		dev_info(dev,"[%s]: reg_mux = %d prim_priv__[reg_mux] is null \n", __func__, g_ctx->reg_mux );
+		goto error;
+	}
+	if ( &prim_priv__[g_ctx->reg_mux]->i2c_client->dev == NULL ) {
+		dev_info(dev,"[%s]: reg_mux = %d prim_priv__[g_ctx->reg_mux]->i2c_client->dev is null\n" 
+					, __func__, g_ctx->reg_mux);
+		goto error;
 
 	/* update address reassingment */
 	tier4_max9295_write_reg(&prim_priv__[g_ctx->reg_mux]->i2c_client->dev,
@@ -468,10 +469,11 @@ int tier4_max9295_setup_control(struct device *dev)
 
   msleep(100);
 
-	if (g_ctx->serdes_csi_link == GMSL_SERDES_CSI_LINK_A)
+	if (g_ctx->serdes_csi_link == GMSL_SERDES_CSI_LINK_A) {
 		err = tier4_max9295_write_reg(dev, MAX9295_CTRL0_ADDR, 0x21);
-	else
+	} else {
 		err = tier4_max9295_write_reg(dev, MAX9295_CTRL0_ADDR, 0x22);
+	}
 
 	/* check if serializer device exists */
 	if (err) {
@@ -502,7 +504,6 @@ int tier4_max9295_setup_control(struct device *dev)
 		i2c_ovrd[i+1] += (i < 4) ? offset1 : offset2;
 
 		/* i2c passthrough2 must be configured once for all devices */
-
 		if ((i2c_ovrd[i] == 0x8B) && prim_priv__[g_ctx->reg_mux]->pst2_ref)
 			continue;
 
@@ -523,7 +524,9 @@ int tier4_max9295_setup_control(struct device *dev)
 	g_ctx->serdev_found = true;
 
 error:
+
 	mutex_unlock(&priv->lock);
+
 	return err;
 }
 EXPORT_SYMBOL(tier4_max9295_setup_control);
@@ -665,7 +668,7 @@ static int tier4_max9295_probe(struct i2c_client *client,
 
 
 //		dev_info(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
-//				, __func__, channel_count_isx021,prim_priv__[channel_count_isx021]);
+//				, __func__, channel_count_isx021, prim_priv__[channel_count_isx021]);
 
 		channel_count_isx021++;
 

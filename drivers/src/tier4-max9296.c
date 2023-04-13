@@ -231,10 +231,7 @@ static int tier4_max9296_write_reg(struct device *dev, u16 addr, u8 val)
 		dev_err(dev,  "[%s] : Max9296 I2C write failed Reg at 0x%04X=[0x%02X]\n", __func__, addr, val );
 		return err;
 	} 
-	else
-	{
-		dev_info(dev,  "[%s] : Max9296 I2C Write Reg at 0x%04X=[0x%02X].\n", __func__, addr, val );
-	}
+
 	/* delay before next i2c command as required for SERDES link */
 
 	usleep_range(100, 110);
