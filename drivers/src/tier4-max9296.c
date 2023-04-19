@@ -90,6 +90,22 @@ struct tier4_max9296_source_ctx {
 #define MAX9296_ST_ID_SEL_INVALID 			0xF
 
 //#define MAX9296_PHY1_CLK 					0x32
+#define MAX9296_PHY1_CLK_3100MHZ			0x3F
+#define MAX9296_PHY1_CLK_3000MHZ			0x3E
+#define MAX9296_PHY1_CLK_2900MHZ			0x3D
+#define MAX9296_PHY1_CLK_2800MHZ			0x3C
+#define MAX9296_PHY1_CLK_2700MHZ			0x3B
+#define MAX9296_PHY1_CLK_2600MHZ			0x3A
+#define MAX9296_PHY1_CLK_2500MHZ			0x39
+#define MAX9296_PHY1_CLK_2400MHZ			0x38
+#define MAX9296_PHY1_CLK_2300MHZ			0x37
+#define MAX9296_PHY1_CLK_2200MHZ			0x36
+#define MAX9296_PHY1_CLK_2100MHZ			0x35
+#define MAX9296_PHY1_CLK_2000MHZ			0x34
+#define MAX9296_PHY1_CLK_1900MHZ			0x33
+#define MAX9296_PHY1_CLK_1800MHZ			0x32
+#define MAX9296_PHY1_CLK_1700MHZ			0x31
+#define MAX9296_PHY1_CLK_1600MHZ			0x30
 #define MAX9296_PHY1_CLK_1500MHZ			0x2F
 #define MAX9296_PHY1_CLK_1400MHZ			0x2E
 #define MAX9296_PHY1_CLK_1300MHZ			0x2D
@@ -156,6 +172,9 @@ struct tier4_max9296 {
 	struct regulator 	*vdd_cam_1v2;
 };
 
+//static int max9296_debug_i2c_write;
+//static int max9296_fsync_mfp;
+
 //#if _USE_CHECK_LINK_LOCKED_
 
 static int tier4_max9296_read_reg(struct device *dev, u16 addr, u8 *val)
@@ -172,8 +191,6 @@ static int tier4_max9296_read_reg(struct device *dev, u16 addr, u8 *val)
 	err = regmap_read(priv->regmap, addr, &reg_val);
 	*val = reg_val & 0xFF;
 
-	dev_dbg(dev,  "[%s ] : Max9296 I2C Read Reg at 0x%04X=[0x%02X].\n", __func__, addr, *val );
-
 	if (( err == 0 ) && ( dev != NULL ) ) {
 
 		len = strlen(dev->kobj.name);
@@ -182,8 +199,9 @@ static int tier4_max9296_read_reg(struct device *dev, u16 addr, u8 *val)
 			strncpy(str_bus_num, &dev->kobj.name[0], 2);
 			strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
 		}
-		dev_dbg(dev, "tier4_max9296_read_reg %s 0x%s 0x%x\n", str_bus_num, str_sl_addr, addr );
+		dev_info(dev, "tier4_max9296_read_reg %s 0x%s 0x%x\n", str_bus_num, str_sl_addr, addr );
 	}
+
 	return err;
 }
 //#endif
@@ -207,14 +225,12 @@ static int tier4_max9296_write_reg(struct device *dev, u16 addr, u8 val)
 		strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
 	}
 
-	dev_dbg(dev,  "[%s] : Max9296 I2C Write Reg at 0x%04X=[0x%02X].\n", __func__, addr, val );
-
 	err = regmap_write(priv->regmap, addr, val);
 
 	if (err) {
 		dev_err(dev,  "[%s] : Max9296 I2C write failed Reg at 0x%04X=[0x%02X]\n", __func__, addr, val );
 		return err;
-	}
+	} 
 
 	/* delay before next i2c command as required for SERDES link */
 
@@ -308,11 +324,6 @@ int tier4_max9296_power_on(struct device *dev)
 			if (priv->sources[i].g_ctx ) {
 				break;
 			}
-		}
-	
-		if ( priv->sources[i].g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
-			priv->reset_gpio = 0;
-			priv->vdd_cam_1v2 = 0;
 		}
 
 		if (priv->reset_gpio)
@@ -409,8 +420,11 @@ int tier4_max9296_setup_link(struct device *dev, struct device *s_dev)
 		return err;
 	}
 
+//	max9296_debug_i2c_write = priv->sources[i].g_ctx->debug_i2c_write;
+
 	mutex_lock(&priv->lock);
 
+	
 	if (!priv->splitter_enabled) {
 		err = tier4_max9296_write_link(dev,
 				priv->sources[i].g_ctx->serdes_csi_link);
@@ -448,15 +462,18 @@ static int tier4_max9296_link_locked(struct device *dev)
 }
 //#endif
 
-int tier4_max9296_setup_gpi(struct device *dev)
+int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp)
 {
 	int err = 0;
+	u16 gpio_mfp_base;
 
-	dev_info(dev, "[%s] : Setup max9295 for fsync mode\n", __func__);
+	dev_info(dev, "[%s] :  MFP%d is used for fsync\n", __func__, fsync_mfp);
 
-	err += tier4_max9296_write_reg(dev, MAX9296_GPIO0_CONFIG_MFP0_ADDR, 0x03);
-	err += tier4_max9296_write_reg(dev, MAX9296_GPIO0_GPIO_TX_ID_ADDR	, 0x06);
-	err += tier4_max9296_write_reg(dev, MAX9296_GPIO0_GPIO_RX_ID_ADDR	, 0x00);
+	gpio_mfp_base =  ( MAX9296_GPIO0_CONFIG_MFP0_ADDR + 3 * fsync_mfp ) & 0xFFFF;
+
+	err += tier4_max9296_write_reg(dev, gpio_mfp_base  , 0x03);
+	err += tier4_max9296_write_reg(dev, gpio_mfp_base+1, 0x06);
+	err += tier4_max9296_write_reg(dev, gpio_mfp_base+2, 0x00);
 
 	return err;
 }
@@ -945,11 +962,20 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 		tier4_max9296_write_reg(dev,
 			MAX9296_LANE_MAP2_ADDR, priv->lane_mp2);
 		if ( g_ctx->hardware_model == HW_MODEL_NVIDIA_ORIN_DEVKIT ) {
+
 			tier4_max9296_write_reg(dev,
 				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
-		} else if ( g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+
+		} else if ( g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN ) {
+
+			tier4_max9296_write_reg(dev,
+				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2500MHZ);
+//				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2000MHZ);
+		} else if ( g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE )  {
+
 //			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
 			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
+
 		} else {
 //#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
 //#if 1
