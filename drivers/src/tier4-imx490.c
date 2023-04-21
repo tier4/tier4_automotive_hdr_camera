@@ -40,7 +40,10 @@
 
 #include <media/tegracam_core.h>
 
+MODULE_SOFTDEP("pre: tier4_max9296");
+MODULE_SOFTDEP("pre: tier4_max9295");
 MODULE_SOFTDEP("pre: tier4_gw5300");
+MODULE_SOFTDEP("pre: tier4_fpga");
 MODULE_SOFTDEP("pre: tier4_isx021");
 
 // Register Address
@@ -139,10 +142,15 @@ static struct mutex tier4_imx490_lock;
 
 static int camera_channel_count = 0;
 
+
 // --- module parameter ---
 
 static int trigger_mode ;
+static int fsync_mfp = 0;
+
 module_param(trigger_mode, int, 0644);
+
+module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
 
 // ------------------------
 static char upper(char c){
@@ -227,7 +235,7 @@ static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv)
         }
     }
 
-    err = tier4_max9296_setup_gpi(priv->dser_dev);
+    err = tier4_max9296_setup_gpi(priv->dser_dev, fsync_mfp);
 
     if ( err ) {
         dev_err(dev, "[%s] :tier4_max9296_setup_gpi() failed\n", __func__);
@@ -269,7 +277,10 @@ static int tier4_imx490_gmsl_serdes_setup(struct tier4_imx490 *priv)
 
     /* For now no separate power on required for serializer device */
 
-    tier4_max9296_power_on(priv->dser_dev);
+  if (( priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE ) &&
+    ( priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
+      tier4_max9296_power_on(priv->dser_dev);
+  }
 
     /* setup serdes addressing and control pipeline */
 
@@ -310,7 +321,10 @@ static void tier4_imx490_gmsl_serdes_reset(struct tier4_imx490 *priv)
 
     tier4_max9296_reset_control(priv->dser_dev, &priv->i2c_client->dev, true);
 
-    tier4_max9296_power_off(priv->dser_dev);
+  if (( priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE ) &&
+    ( priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
+      tier4_max9296_power_off(priv->dser_dev);
+  }
 
     mutex_unlock(&serdes_lock__);
 }
@@ -800,7 +814,8 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
                         dev_err(dev, "[%s] : Failed to start one streaming.\n", __func__);
                         goto error_exit;
                     }
-                    wst_priv[i].running  = true;
+//                  wst_priv[i].running  = true;
+                    tier4_imx490_set_running_flag(i, true);
                     break;
                 }
             }
@@ -810,8 +825,8 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
                 &&  ( tier4_imx490_is_current_port(priv, i) == true )) {
 
                 if ( tier4_imx490_is_camera_connected_to_port(i+1) == false ) { // if another one camera( GMSL B port) is not
-																				//  connected to Des.
-                    if ( tier4_imx490_is_camera_running_on_port(i) == false ) { //   and if the camera is not running.
+                                                                                // connected to Des.
+                    if ( tier4_imx490_is_camera_running_on_port(i) == false ) { // and if the camera is not running.
 
                         err = tier4_imx490_start_one_streaming(wst_priv[i].p_tc_dev);
                         if (err) {
@@ -839,10 +854,10 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
                         goto error_exit;
                     }
                     tier4_imx490_set_running_flag(i+1, true);
-					usleep_range(200000, 220000);
-				    mutex_unlock(&tier4_imx490_lock);
-					tier4_imx490_stop_streaming(wst_priv[i+1].p_tc_dev);
-				    mutex_lock(&tier4_imx490_lock);
+                    usleep_range(200000, 220000);
+                    mutex_unlock(&tier4_imx490_lock);
+                    tier4_imx490_stop_streaming(wst_priv[i+1].p_tc_dev);
+                    mutex_lock(&tier4_imx490_lock);
                     tier4_imx490_set_running_flag(i+1, false);
                 }
 
@@ -854,7 +869,7 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
                     }
                     tier4_imx490_set_running_flag(i, true);
                 }
-            }
+          }
         }
     } // for loop
 
@@ -922,6 +937,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
     const char                  *str_model;
     char                        upper_str_model[64];
     char                        *str_err;
+  char            *sub_str_err;
 
     root_node = of_find_node_opts_by_path("/", &of_stdout_options);
 
@@ -950,9 +966,14 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
     }
 
     str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE );
-    if ( str_err  ) {
-         priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
+  if ( str_err  ) {
+    sub_str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE_ORIN );
+    if ( sub_str_err  ) {
+      priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE_ORIN;
+    } else {
+      priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
     }
+  }
 
     dev_info(dev, "[%s] : model=%s\n", __func__, str_model);
     dev_info(dev, "[%s] : hardware_model=%d\n", __func__, priv->g_ctx.hardware_model) ;
@@ -1323,7 +1344,7 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
 
     wst_priv[camera_channel_count].isp_ser_shutdown = false;
     wst_priv[camera_channel_count].des_shutdown = false;
-	wst_priv[camera_channel_count].running  = false;
+  wst_priv[camera_channel_count].running  = false;
 
     priv = devm_kzalloc(dev, sizeof(struct tier4_imx490), GFP_KERNEL);
 
@@ -1498,13 +1519,13 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
     struct  tier4_imx490 *priv = NULL;
     int     i;
 
-	tier4_isx021_sensor_mutex_lock();
+  tier4_isx021_sensor_mutex_lock();
 
     mutex_lock(&tier4_imx490_lock);
 
-	if ( !client ) {
-		goto error_exit;
-	}
+  if ( !client ) {
+    goto error_exit;
+  }
 
     for( i = 0 ; i < camera_channel_count ; i++ ) {
 
@@ -1518,7 +1539,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
                                                                                     // a camera is connected to each port of the Des.
                     if (   tier4_imx490_is_isp_ser_shutdown(i-1)) {                 //  ISP and Ser on another(GMSL A) port have been already shut down ?
 
-                        if ( tier4_imx490_is_des_shutdown(i-1) == false ) {       	// if Des on another(GMSL A)port is not shutdown yet
+                        if ( tier4_imx490_is_des_shutdown(i-1) == false ) {         // if Des on another(GMSL A)port is not shutdown yet
                             tier4_imx490_set_isp_ser_shutdown(i, true);             // ISP and Ser will be shut down
                             tier4_imx490_set_des_shutdown(i, true);                 // Des will be shut down
                         } else {                                                    //  if Des on the another port is already shut down. This is Error case.
@@ -1528,7 +1549,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
 
                     } else {                                                        // The camera ISP and Ser on another(GMSL A) port are not shut down yet.
 
-                        if ( tier4_imx490_is_des_shutdown(i-1) == false ) {       	// if Des is not shut down yet.
+                        if ( tier4_imx490_is_des_shutdown(i-1) == false ) {         // if Des is not shut down yet.
                             tier4_imx490_set_isp_ser_shutdown(i, true);             // ISP and Ser will be shut down
                             tier4_imx490_set_des_shutdown(i, false);                //  The Des won't be shut down.
                         } else {                                                    // Only Des on another port is already shut down. This is Error case.
@@ -1546,7 +1567,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
 
                     if (  tier4_imx490_is_isp_ser_shutdown(i+1) ) {                 // if the ISP and Ser on another port are already shut down
 
-                        if ( tier4_imx490_is_des_shutdown(i+1) == false ) {       	// if Des is not shut down yet.
+                        if ( tier4_imx490_is_des_shutdown(i+1) == false ) {         // if Des is not shut down yet.
                             tier4_imx490_set_isp_ser_shutdown(i, true);             // ISP and Ser will be shut down
                             tier4_imx490_set_des_shutdown(i, false);                 //  The Des will be shut down.
                         } else {                                                    // Des is already shut down. This is Error case.
@@ -1555,7 +1576,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
                         }
                     } else {                                                        // The ISP and Ser on another(GMSL B) port are not shut down yet.
 
-                        if (tier4_imx490_is_des_shutdown(i+1) == false ) {        	// if Des on another(GMSL B) port is not shut down yet.
+                        if (tier4_imx490_is_des_shutdown(i+1) == false ) {          // if Des on another(GMSL B) port is not shut down yet.
 
                             tier4_imx490_set_isp_ser_shutdown(i, true);             // ISP and Ser will be shut down
                             tier4_imx490_set_des_shutdown(i, false);                //  The Des will not be shut down.
@@ -1573,23 +1594,23 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
             } //  if ( i & 0x1 )
 //            break;
 
- 	   		if ( tier4_imx490_is_isp_ser_shutdown(i)) {
-        		// Reset camera sensor
-        		tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_ISX021, false);
-        		// S/W Reset max9295
-        		tier4_max9295_reset_control(priv->ser_dev);
-    		}
+        if ( tier4_imx490_is_isp_ser_shutdown(i)) {
+            // Reset camera sensor
+            tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_ISX021, false);
+            // S/W Reset max9295
+            tier4_max9295_reset_control(priv->ser_dev);
+        }
 
-    		if ( tier4_imx490_is_des_shutdown(i)) {
-        		// S/W Reset max9296
-    	    	tier4_max9296_reset_control(priv->dser_dev, &client->dev, true );
-	    	}
+        if ( tier4_imx490_is_des_shutdown(i)) {
+            // S/W Reset max9296
+            tier4_max9296_reset_control(priv->dser_dev, &client->dev, true );
+        }
 
-		    if ( priv == NULL || i >= camera_channel_count ) {
-        		mutex_unlock(&tier4_imx490_lock);
-				tier4_isx021_sensor_mutex_unlock();
-        		return;
-    		}
+        if ( priv == NULL || i >= camera_channel_count ) {
+            mutex_unlock(&tier4_imx490_lock);
+        tier4_isx021_sensor_mutex_unlock();
+            return;
+        }
 
         }
 
@@ -1600,44 +1621,44 @@ error_exit:
 
     mutex_unlock(&tier4_imx490_lock);
 
-	tier4_isx021_sensor_mutex_unlock();
+  tier4_isx021_sensor_mutex_unlock();
 
 }
 static const struct i2c_device_id tier4_imx490_id[] = {
-	{ "tier4_imx490", 0 },
-	{ }
+  { "tier4_imx490", 0 },
+  { }
 };
 
 MODULE_DEVICE_TABLE(i2c, tier4_imx490_id);
 
 static struct i2c_driver tier4_imx490_i2c_driver = {
-	.driver = {
-		.name 			= "tier4_imx490",
-		.owner 			= THIS_MODULE,
-		.of_match_table = of_match_ptr(tier4_imx490_of_match),
-	},
-	.probe 		= tier4_imx490_probe,
-	.remove 	= tier4_imx490_remove,
-	.shutdown 	= tier4_imx490_shutdown,
-	.id_table 	= tier4_imx490_id,
+  .driver = {
+    .name       = "tier4_imx490",
+    .owner      = THIS_MODULE,
+    .of_match_table = of_match_ptr(tier4_imx490_of_match),
+  },
+  .probe    = tier4_imx490_probe,
+  .remove   = tier4_imx490_remove,
+  .shutdown   = tier4_imx490_shutdown,
+  .id_table   = tier4_imx490_id,
 };
 
 static int __init tier4_imx490_init(void)
 {
-	mutex_init(&serdes_lock__);
-	mutex_init(&tier4_imx490_lock);
+  mutex_init(&serdes_lock__);
+  mutex_init(&tier4_imx490_lock);
 
-	printk(KERN_INFO "TIERIV Automotive HDR Camera driver.\n");
+  printk(KERN_INFO "TIERIV Automotive HDR Camera driver.\n");
 
-	return i2c_add_driver(&tier4_imx490_i2c_driver);
+  return i2c_add_driver(&tier4_imx490_i2c_driver);
 }
 
 static void __exit tier4_imx490_exit(void)
 {
-	mutex_destroy(&serdes_lock__);
-	mutex_destroy(&tier4_imx490_lock);
+  mutex_destroy(&serdes_lock__);
+  mutex_destroy(&tier4_imx490_lock);
 
-	i2c_del_driver(&tier4_imx490_i2c_driver);
+  i2c_del_driver(&tier4_imx490_i2c_driver);
 }
 
 module_init(tier4_imx490_init);
