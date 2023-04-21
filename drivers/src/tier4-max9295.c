@@ -456,13 +456,15 @@ int tier4_max9295_setup_control(struct device *dev)
 
 	if ( prim_priv__[g_ctx->reg_mux] == NULL ) {
 		dev_info(dev,"[%s]: reg_mux = %d prim_priv__[reg_mux] is null \n", __func__, g_ctx->reg_mux );
+		err = -EINVAL;
 		goto error;
 	}
 	if ( &prim_priv__[g_ctx->reg_mux]->i2c_client->dev == NULL ) {
 		dev_info(dev,"[%s]: reg_mux = %d prim_priv__[g_ctx->reg_mux]->i2c_client->dev is null\n" 
 					, __func__, g_ctx->reg_mux);
+		err = -EINVAL;
 		goto error;
-    }
+	}
 	/* update address reassingment */
 	tier4_max9295_write_reg(&prim_priv__[g_ctx->reg_mux]->i2c_client->dev,
 			MAX9295_DEV_ADDR, (g_ctx->ser_reg << 1));

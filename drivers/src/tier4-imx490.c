@@ -204,13 +204,14 @@ static int tier4_imx490_write_reg(struct camera_common_data *s_data, u16 addr, u
     return err;
 }
 
-static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv)
+static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv, int mode )
 {
     int             err     = 0;
     struct device   *dev    = priv->s_data->dev;
     int             des_num = 0;
 
-    if ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+    if (( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) ||
+ 		( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
 
         dev_info(dev, "[%s] : generate-fsync =%d\n", __func__, priv->g_ctx.fpga_generate_fsync );
 
@@ -249,7 +250,7 @@ static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv)
         return err;
     }
 
-    err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_SLAVE_MODE_10FPS);
+    err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, mode);
     if ( err ) {
         dev_err(dev, "[%s] : tier4_gw5300_setup_sensor_mode() failed\n", __func__);
         return err;
@@ -612,7 +613,7 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
         case GW5300_SLAVE_MODE_10FPS:
 
-            err = tier4_imx490_set_fsync_trigger_mode(priv);
+            err = tier4_imx490_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_10FPS );
             if (err) {
                 dev_err(dev, "[%s] : setting camera sensor to Slave mode 10fps failed\n", __func__);
                 goto exit;
@@ -627,6 +628,26 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
             err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS);
             if ( err ) {
                 dev_err(dev, "[%s] : setting camera sensor to Master mode 10fps failed\n", __func__);
+                return err;
+            }
+
+            break;
+
+        case GW5300_SLAVE_MODE_20FPS:
+
+            err = tier4_imx490_set_fsync_trigger_mode(priv,  GW5300_SLAVE_MODE_20FPS);
+            if ( err ) {
+                dev_err(dev, "[%s] : setting camera sensor to Slave mode 20fps failed\n", __func__);
+                return err;
+            }
+
+            break;
+
+        case GW5300_MASTER_MODE_20FPS:
+
+            err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_20FPS);
+            if ( err ) {
+                dev_err(dev, "[%s] : setting camera sensor to Master mode 20fps failed\n", __func__);
                 return err;
             }
 
@@ -1051,7 +1072,8 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 #if 0
     priv->g_ctx.fpga_generate_fsync = false;
 
-    if ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+    if (( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) ||
+ 		( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
 
         err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
 
@@ -1165,7 +1187,8 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
     priv->dser_dev = &dser_i2c->dev;
 
-    if ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+    if (( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) ||
+ 		( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
 
         // for FPGA node
 

@@ -111,7 +111,7 @@ struct gmsl_link_ctx
   	struct device *s_dev; 		/**< Sensor device handle. */
 	int   hardware_model;    	/**< ROScube, Xavier or Orin . */
 	bool  fpga_generate_fsync;  /**< Indicates whther FPGA generate fsync or not . */
-    int   debug_i2c_write;
+//  int   debug_i2c_write;      /**< Debug flag for i2c write */
 };
 
 /** @} */

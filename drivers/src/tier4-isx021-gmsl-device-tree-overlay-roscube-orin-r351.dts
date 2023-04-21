@@ -418,7 +418,7 @@
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@0/endpoint@0";
     __overlay__ {
       status = "okay";
-      port-index = <5>;
+      port-index = <6>;
       bus-width = <2>;
       remote-endpoint = <&isx021_out6>;
     };
@@ -457,7 +457,7 @@
     target-path = "/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@0/endpoint@0";
     __overlay__ {
       status = "okay";
-      port-index = <5>;
+      port-index = <6>;
       bus-width = <2>;
       remote-endpoint = <&isx021_out7>;
     };
@@ -537,8 +537,8 @@
   fragment@63{
     target-path = "/tegra-camera-platform/modules/module1";
     __overlay__ {
-      badge = "isx021_front";
-      position = "front";
+      badge = "isx021_module1";
+      position = "module1";
       orientation = "1";
       status = "okay";
     };
@@ -1439,7 +1439,6 @@
             default_exp_time = "33333";/* us */
             embedded_metadata_height = "0";
           };
-
           ports {
             #address-cells = <1>;
             #size-cells = <0>;
@@ -1455,14 +1454,14 @@
           };
 
           gmsl-link {
-            src-csi-port = "b";       /* Port at which sensor  is connected to its serializer device. */
-            dst-csi-port = "a";       /* Destination CSI port on the Jetson side, connected at deserializer. */
+            src-csi-port = "b";         /* Port at which sensor is connected to its serializer device. */
+            dst-csi-port = "a";         /* Destination CSI port on the Jetson side, connected at deserializer. */
             serdes-csi-link = "a";      /* GMSL link sensor/serializer connected */
-            csi-mode = "1x4";       /*  to sensor CSI mode. */
-            st-vc = <0>;          /* Sensor source default VC ID: 0 unless overridden by sensor. */
-            vc-id = <0>;          /* Destination VC ID, assigned to sensor stream by deserializer. */
-            num-lanes = <2>;        /* Number of CSI lanes used. */
-            streams = "ued-u1","yuv8";        /* Types of streams sensor is streaming. */
+            csi-mode = "1x4";           /*  to sensor CSI mode. */
+            st-vc = <0>;                /* Sensor source default VC ID: 0 unless overridden by sensor. */
+            vc-id = <0>;                /* Destination VC ID, assigned to sensor stream by deserializer. */
+            num-lanes=<2>;              /* Number of CSI lanes used. */
+            streams = "ued-u1", "yuv8"; /* Types of streams sensor is streaming. */
           };
         };
       };
@@ -1706,7 +1705,7 @@
               reg = <0>;
               isx021_out6: endpoint {
                 vc-id = <0>;
-                port-index = <5>;
+                port-index = <6>;
                 bus-width = <2>;
                 remote-endpoint = <&csi_in6>;
               };
