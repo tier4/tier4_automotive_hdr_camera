@@ -293,6 +293,12 @@ error:
 }
 EXPORT_SYMBOL(tier4_gw5300_setup_sensor_mode);
 
+int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16 min_integration_time)
+{
+
+}
+EXPORT_SYMBOL(tier4_gw5300_set_integration_time_on_aemode)
+
 static int tier4_gw5300_probe(struct i2c_client *client,
 				const struct i2c_device_id *id)
 {

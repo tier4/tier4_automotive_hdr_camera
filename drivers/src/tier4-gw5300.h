@@ -49,6 +49,21 @@ int tier4_gw5300_prim_slave_addr(struct gmsl_link_ctx *g_ctx);
 
 int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode);
 
+/**
+ * Sets Max/Min integration time for AE mode.
+ *
+ * @param  [in]  dev   The ISP device handle.
+ * @param  [in]  max integration time.
+ * @param  [in]  min integration time.
+ *
+ * @return  0 for success, or -1 otherwise.
+ */
+
+int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16 min_integration_time)
+{
+
+}
+
 
 //int tier4_gw5300_check_device(struct device *dev, u8 *wdata, int wdata_size
 //								, u8 *rdata, int rdata_size, u32 target_addr );
