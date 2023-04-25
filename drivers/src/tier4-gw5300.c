@@ -138,6 +138,52 @@ static int tier4_gw5300_send_and_recv_msg(struct device *dev, u8 *wdata, int wda
 	return err;
 }
 
+uint8_t calcCheckSum(const uint8_t *data, size_t size){
+    uint8_t result = 0;
+
+      for(uint8_t i=0; i<size; i++){
+            result += data[i];
+              }
+
+        return result;
+}
+
+int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16_min_integration_time){
+#define MS_TO_LINE_UNIT 80
+  u8 	buf[6];
+  
+  u8 cmd_integration_max[22] = {0x33, 0x47, 0x0f, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05, 0x00, 0x15, 0x00, 0x01, 0x00, 0x04, 0x00, 0x70, 0x03, 0x00, 0x00, 0x00}; // val = 0x70, 0x03, 0x00, 0x00
+  u8 cmd_integration_min[20] = {0x33, 0x47, 0x0d, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05, 0x00, 0x21, 0x00, 0x01, 0x00, 0x02, 0x00, 0x70, 0x03, 0x00}; //val = 0x70, 0x03 
+  
+  const size_t max_val_pos = 17;
+  const size_t min_val_pos = 17;
+  uint32_t min_line =  min_ms * MS_TO_LINE_UNIT;
+  uint32_t max_line =  max_ms * MS_TO_LINE_UNIT;
+  uint8_t b1 = max_line &0xFF;
+  uint8_t b2 = (max_line >> 8)&0xFF;
+  uint8_t b3 = 0;
+  uint8_t b4 = 0;
+  
+  cmd_integration_max[max_val_pos] = b1;
+  cmd_integration_max[max_val_pos+1] = b2;
+  cmd_integration_max[max_val_pos+2] = b3;
+  cmd_integration_max[max_val_pos+3] = b4;
+  cmd_integration_max[sizeof(cmd_integration_max)-1] = calcCheckSum(cmd_integration_max, sizeof(cmd_integration_max));
+
+
+  b1 = min_line &0xFF;
+  b2 = (min_line >> 8)&0xFF;
+
+  cmd_integration_min[min_val_pos] = b1;
+  cmd_integration_min[min_val_pos+1] = b2;
+
+  cmd_integration_min[sizeof(cmd_integration_min)-1] = calcCheckSum(cmd_integration_min, sizeof(cmd_integration_min));
+
+  tier4_gw5300_send_and_recv_msg( dev, cmd_integration_max, sizeof(cmd_integration_max));   
+  tier4_gw5300_send_and_recv_msg( dev, cmd_integration_min, sizeof(cmd_integration_min));   
+
+}
+
 //int tier4_gw5300_check_device(struct device *dev, u8 *wdata, int wdata_size, u8 *rdata, int rdata_size, u32 target_addr )
 int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size )
 {

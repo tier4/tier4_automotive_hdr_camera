@@ -59,10 +59,7 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode);
  * @return  0 for success, or -1 otherwise.
  */
 
-int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16 min_integration_time)
-{
-
-}
+int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16 min_integration_time);
 
 
 //int tier4_gw5300_check_device(struct device *dev, u8 *wdata, int wdata_size
