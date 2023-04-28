@@ -58,8 +58,8 @@
 #define GMSL_CSI_DT_EMBED 0x12
 #define GMSL_ST_ID_UNUSED 0xFF
 
-#define	SENSOR_ID_ISX021	 21
-#define	SENSOR_ID_IMX490	490
+#define SENSOR_ID_ISX021 21
+#define SENSOR_ID_IMX490 490
 
 /**
  * Maximum number of data streams (\ref gmsl_stream elements) in a GMSL link
@@ -104,14 +104,14 @@ struct gmsl_link_ctx
                   configuration settings during setup. */
   struct gmsl_stream streams[GMSL_DEV_MAX_NUM_DATA_STREAMS];
   /*< An array of information about the data streams in the link. */
-	__u32 sensor_id;       		/**< Sensor ID  21:isx021 or 490:imx490 */
-	__u32 sdev_isp_reg;     	/**< Sensor or ISP proxy slave address. */
-	__u32 sdev_isp_def;     	/**< Sensor or ISP default slave address. */
-	__u32 sdev_fpga_reg;   	 	/**< FPGA default slave address. */
-  	struct device *s_dev; 		/**< Sensor device handle. */
-	int   hardware_model;    	/**< ROScube, Xavier or Orin . */
-	bool  fpga_generate_fsync;  /**< Indicates whther FPGA generate fsync or not . */
-//  int   debug_i2c_write;      /**< Debug flag for i2c write */
+  __u32 sensor_id;          /**< Sensor ID  21:isx021 or 490:imx490 */
+  __u32 sdev_isp_reg;       /**< Sensor or ISP proxy slave address. */
+  __u32 sdev_isp_def;       /**< Sensor or ISP default slave address. */
+  __u32 sdev_fpga_reg;      /**< FPGA default slave address. */
+  struct device *s_dev;     /**< Sensor device handle. */
+  int hardware_model;       /**< ROScube, Xavier or Orin . */
+  bool fpga_generate_fsync; /**< Indicates whther FPGA generate fsync or not . */
+  //  int   debug_i2c_write;      /**< Debug flag for i2c write */
 };
 
 /** @} */

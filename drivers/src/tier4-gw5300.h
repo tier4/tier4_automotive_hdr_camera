@@ -21,12 +21,11 @@
 
 #define __TIER4_GW5300_H__
 
-#define GW5300_SLAVE_MODE_10FPS 	1
-#define GW5300_MASTER_MODE_10FPS 	2
-#define GW5300_MASTER_MODE_30FPS 	3
-#define GW5300_SLAVE_MODE_20FPS 	4
-#define GW5300_MASTER_MODE_20FPS 	5
-
+#define GW5300_SLAVE_MODE_10FPS 1
+#define GW5300_MASTER_MODE_10FPS 2
+#define GW5300_MASTER_MODE_30FPS 3
+#define GW5300_SLAVE_MODE_20FPS 4
+#define GW5300_MASTER_MODE_20FPS 5
 
 /**
  * get gw5300 prim slave address.
@@ -49,10 +48,9 @@ int tier4_gw5300_prim_slave_addr(struct gmsl_link_ctx *g_ctx);
 
 int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode);
 
-
-//int tier4_gw5300_check_device(struct device *dev, u8 *wdata, int wdata_size
+// int tier4_gw5300_check_device(struct device *dev, u8 *wdata, int wdata_size
 //								, u8 *rdata, int rdata_size, u32 target_addr );
 
-int tier4_gw5300_check_device(struct device *dev,u8 *rdata, int rdata_size);
+int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size);
 
-#endif  /* __TIER4_GW5300_H__ */
+#endif /* __TIER4_GW5300_H__ */
