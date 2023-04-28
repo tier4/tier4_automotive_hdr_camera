@@ -34,6 +34,23 @@ void C2::setSensorGain(float gain)
 
 }
 
+void C2::setSensorMode(uint8_t mode){
+
+  FILE *f;
+
+  f = fopen("/sys/","w");
+
+  if(f == NULL){
+    fprintf(stderr,"Error opening file: driver parameter\n");
+    return;
+  }
+
+  fprintf(f, "%u", mode);
+
+  fclose(f);
+
+}
+
 void C2::setDistortionCorrection(bool on)
 {
   DEBUG_PRINT("[%s]\n\n",__func__);

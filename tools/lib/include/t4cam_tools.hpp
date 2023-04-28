@@ -21,8 +21,6 @@ static const std::array<std::string, 8> portnum_table = { "i2c-30", "i2c-30", "i
 
 static bool debug_flag = true;
 
-
-
 static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &data_u, uint8_t &data_l, uint16_t mask)
 {
   uint16_t temp;
@@ -35,7 +33,7 @@ static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &d
   return;
 }
  
-enum class C2_SENSOR_MODE
+enum class C2_SENSOR_MODE : uint8_t
 {
   default_mode = 0,
   trigger_mode_10fps = 1,
