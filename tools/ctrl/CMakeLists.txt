@@ -24,5 +24,13 @@ target_include_directories(t4cam-ctrl  PUBLIC
   $<INSTALL_INTERFACE:.>
   PRIVATE ./)
 
+add_executable(t4cam-ctrl2 t4cam-ctrl2.cpp)
+target_link_libraries(t4cam-ctrl2 t4cam_tools ${YAML_CPP_LIBRARIES}.a)
+target_include_directories(t4cam-ctrl2  PUBLIC 
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../lib/include>
+  $<INSTALL_INTERFACE:.>
+  PRIVATE ./)
+
 install(TARGETS t4cam-ctrl RUNTIME  DESTINATION bin)
+install(TARGETS t4cam-ctrl2 RUNTIME  DESTINATION bin)
 install(TARGETS t4cam-ctrl-gui RUNTIME  DESTINATION bin)

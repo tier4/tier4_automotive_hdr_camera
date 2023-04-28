@@ -93,7 +93,7 @@ int8_t i2c::read8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uint
   ioctl_data.msgs = messages;
   ioctl_data.nmsgs = 2;
 
-  if (ioctl(fd, I2C_RDWR, &ioctl_data) != 2)
+  if (ioctl(fd, I2C_RDWR, &ioctl_data) < 0)
   {
     fprintf(stderr, "i2c_read: failed to ioctl: %s\n", strerror(errno));
     close(fd);
@@ -127,7 +127,7 @@ int8_t i2c::write8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uin
   ioctl_data.nmsgs = 1;
 
   _DEBUG_PRINT("[0x%02X-write]: = 0x%02X%02X\n", dev_addr, reg_addr, data);
-  if (ioctl(fd, I2C_RDWR, &ioctl_data) != 1)
+  if (ioctl(fd, I2C_RDWR, &ioctl_data) < 0)
   {
     fprintf(stderr, "i2c_write: failed to ioctl: %s\n", strerror(errno));
     close(fd);
@@ -158,7 +158,7 @@ int8_t i2c::read(std::string dev_name, uint8_t dev_addr, uint8_t* data, uint16_t
   ioctl_data.msgs = messages;
   ioctl_data.nmsgs = 1;
 
-  if (ioctl(fd, I2C_RDWR, &ioctl_data) != 2)
+  if (ioctl(fd, I2C_RDWR, &ioctl_data) < 0)
   {
     fprintf(stderr, "i2c_read: failed to ioctl: %s\n", strerror(errno));
     close(fd);
@@ -180,13 +180,64 @@ int8_t i2c::read(std::string dev_name, uint8_t dev_addr, uint8_t* data, uint16_t
 
 int8_t i2c::transfer(std::string dev_name, uint8_t dev_addr, const uint8_t*wdata, uint16_t wlength){
   uint8_t buf[10];
-  write(dev_name, dev_addr, wdata, wlength);
-  read(dev_name, dev_addr, buf, 6);
+  int32_t fd = open(dev_name.c_str(), O_RDWR);
+  if (fd == -1)
+  {
+    fprintf(stderr, "%s: failed to open %s: %s\n", __func__, dev_name.c_str(), strerror(errno));
+ //   return -1;
+  }
 
+  uint8_t* buffer = (uint8_t*)malloc(wlength + 1);
+  if (buffer == nullptr)
+  {
+    fprintf(stderr, "%s: failed to allocate memory: %s\n", __func__, strerror(errno));
+    close(fd);
+    return -1;
+  }
+  memcpy(&buffer[0], wdata, wlength);
+
+
+  //debug print
+  fprintf(stderr, "[%s]:", __func__);
+  for (int i = 0; i < wlength; i++)
+  {
+    fprintf(stderr, " 0x%02x", buffer[i]);
+  }
+  fprintf(stderr, "\n");
+
+  struct i2c_msg messages[2];
+  messages[0].addr = dev_addr;
+  fprintf(stderr,"[%s]:%x\n",__func__, dev_addr);
+  messages[0].flags = 0;         // write
+  messages[0].len =wlength + 1;  // length
+  messages[0].buf = buffer;
+ 
+  messages[1].addr = dev_addr;
+  messages[1].flags = 1;         // write
+  messages[1].len = 6;  // length
+  messages[1].buf = buf;
+
+  struct i2c_rdwr_ioctl_data ioctl_data;
+  ioctl_data.msgs = messages;
+  ioctl_data.nmsgs = 2;
+
+  /* i2c-writeを行う. */
+  if (ioctl(fd, I2C_RDWR, &ioctl_data) <0)
+  {
+    fprintf(stderr, "i2c_write: failed to ioctl: %s\n", strerror(errno));
+    free(buffer);
+    close(fd);
+    return -1;
+  }
+
+  free(buffer);
+  close(fd);
+
+#define DEBUG
 #ifdef DEBUG
     fprintf(stderr,"[%s]",__func__);
     for(int i =0; i<6;i++){
-      fprintf(stderr, "%02x,", buf[i])
+      fprintf(stderr, "%02x,", buf[i]);
     }
     fprintf(stderr,"\n");
 #endif
@@ -235,7 +286,7 @@ int8_t i2c::write(std::string dev_name, uint8_t dev_addr, const uint8_t* data, u
   ioctl_data.nmsgs = 1;
 
   /* i2c-writeを行う. */
-  if (ioctl(fd, I2C_RDWR, &ioctl_data) != 1)
+  if (ioctl(fd, I2C_RDWR, &ioctl_data) <0)
   {
     fprintf(stderr, "i2c_write: failed to ioctl: %s\n", strerror(errno));
     free(buffer);

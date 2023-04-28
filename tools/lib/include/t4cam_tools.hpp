@@ -87,7 +87,7 @@ public:
       exit(-1);
     }
     dev_name = "/dev/" + portnum_table[port_num];
-    i2c_dev_addr = (port_num % 2) == 0 ? 0x2b : 0x2c;
+    i2c_dev_addr = (port_num % 2) == 0 ? 0x6d : 0x6e;
 
     debug_flag = _debug_flag;
 #ifdef DEBUG

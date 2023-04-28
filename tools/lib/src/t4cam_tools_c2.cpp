@@ -113,12 +113,8 @@ void C2::setShutterTimeOnAE(uint16_t max_ms, uint16_t min_ms){
   cmd_integration_max[sizeof(cmd_integration_max)-1] = calcCheckSum(cmd_integration_max, sizeof(cmd_integration_max));
   cmd_integration_min[sizeof(cmd_integration_min)-1] = calcCheckSum(cmd_integration_min, sizeof(cmd_integration_min));
 
-
-  i2c::write(dev_name, i2c_dev_addr, cmd_integration_max, sizeof(cmd_integration_max));
-  i2c::read(dev_name, i2c_dev_addr, buf, 6);
-  
-  i2c::write(dev_name, i2c_dev_addr, cmd_integration_min, sizeof(cmd_integration_min));
-  i2c::read(dev_name, i2c_dev_addr, buf, 6);
+  i2c::transfer(dev_name, i2c_dev_addr, cmd_integration_max, sizeof(cmd_integration_max));
+  i2c::transfer(dev_name, i2c_dev_addr, cmd_integration_min, sizeof(cmd_integration_min));
 
   return;
 }
