@@ -4,6 +4,8 @@
 
 #include "i2c.hpp"
 
+
+
 int8_t i2c::read16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, uint8_t* data)
 {
   int8_t ret = 0;
@@ -26,7 +28,7 @@ int8_t i2c::read16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, ui
   {
     return -1;
   }
-  DEBUG_PRINT("[0x%02X-0x%04X-read]: = 0x%02X\n", dev_addr, reg_addr, *data);
+  _DEBUG_PRINT("[0x%02X-0x%04X-read]: = 0x%02X\n", dev_addr, reg_addr, *data);
 
   close(fd);
   return 0;
@@ -124,7 +126,7 @@ int8_t i2c::write8(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, uin
   ioctl_data.msgs = messages;
   ioctl_data.nmsgs = 1;
 
-  DEBUG_PRINT("[0x%02X-write]: = 0x%02X%02X\n", dev_addr, reg_addr, data);
+  _DEBUG_PRINT("[0x%02X-write]: = 0x%02X%02X\n", dev_addr, reg_addr, data);
   if (ioctl(fd, I2C_RDWR, &ioctl_data) != 1)
   {
     fprintf(stderr, "i2c_write: failed to ioctl: %s\n", strerror(errno));
@@ -175,6 +177,25 @@ int8_t i2c::read(std::string dev_name, uint8_t dev_addr, uint8_t* data, uint16_t
   close(fd);
   return 0;
 }
+
+int8_t i2c::transfer(std::string dev_name, uint8_t dev_addr, const uint8_t*wdata, uint16_t wlength){
+  uint8_t buf[10];
+  write(dev_name, dev_addr, wdata, wlength);
+  read(dev_name, dev_addr, buf, 6);
+
+#ifdef DEBUG
+    fprintf(stderr,"[%s]",__func__);
+    for(int i =0; i<6;i++){
+      fprintf(stderr, "%02x,", buf[i])
+    }
+    fprintf(stderr,"\n");
+#endif
+
+
+} 
+int8_t i2c::transfer(std::string dev_name, uint8_t dev_addr, const uint8_t*wdata, uint16_t wlength, uint8_t *rdata, uint16_t rlength){
+
+} 
 
 int8_t i2c::write(std::string dev_name, uint8_t dev_addr, const uint8_t* data, uint16_t length)
 {
@@ -263,7 +284,7 @@ int8_t i2c::write(std::string dev_name, uint8_t dev_addr, uint8_t reg_addr, cons
   ioctl_data.msgs = messages;
   ioctl_data.nmsgs = 1;
 
-  DEBUG_PRINT("[0x%02X-0x%04X-write]: = 0x%02X\n", dev_addr, reg_addr, *data);
+  _DEBUG_PRINT("[0x%02X-0x%04X-write]: = 0x%02X\n", dev_addr, reg_addr, *data);
   /* i2c-writeを行う. */
   if (ioctl(fd, I2C_RDWR, &ioctl_data) != 1)
   {
@@ -301,7 +322,7 @@ int8_t i2c::write16(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr, u
   ioctl_data.msgs = messages;
   ioctl_data.nmsgs = 1;
 
-  DEBUG_PRINT("[0x%02X-0x%04X-write]: = 0x%02X\n", dev_addr, reg_addr, data);
+  _DEBUG_PRINT("[0x%02X-0x%04X-write]: = 0x%02X\n", dev_addr, reg_addr, data);
   /* i2c-writeを行う. */
   if (ioctl(fd, I2C_RDWR, &ioctl_data) != 1)
   {

@@ -1,6 +1,7 @@
 #ifndef __GW5300_HPP_
 #define __GW5300_HPP_
 #include <vector>
+#include <stdint.h>
 
 uint8_t calcCheckSum(const std::vector<uint8_t> data){
   uint8_t result = 0;

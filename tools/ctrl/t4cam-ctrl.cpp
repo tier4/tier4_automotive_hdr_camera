@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
   p.add<float>("contrast", 'C', "set Contrast val", false);
   p.add<int>("hue", 'H', "set Hue val", false);
   p.add<float>("saturation", 'S', "set Saturation val", false);
+  p.add("vv", 'v', "get debug_message");
 #if 0
   p.add<float>("evrefoffset", 'e', "set EvrefOffset val", false);
   p.add<float>("digitalgain", 'D', "set DigitalGain val", false);
@@ -106,8 +107,13 @@ int main(int argc, char* argv[])
   }
   else
   {
-    C2 c2_a = C2(port_num);
+    if(p.exist("vv")){
+      std::cerr << "/************** Enabling debug message **********/" <<std::endl;
+      debug_flag=true;
+    }
+    C2 c2_a = C2(port_num, debug_flag);
     c2_a.setShutterTimeOnAE(330,330);
+    c2_a.setSensorGain(100.0);
   }
 
 #if 0

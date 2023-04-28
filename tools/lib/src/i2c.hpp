@@ -18,12 +18,10 @@
 
 #include <string>
 
-#define DEBUG
-
 #ifdef DEBUG
-#define DEBUG_PRINT printf
+#define _DEBUG_PRINT printf
 #else
-#define DEBUG_PRINT(...)                                                                                               \
+#define _DEBUG_PRINT(...)                                                                                               \
   do                                                                                                                   \
   {                                                                                                                    \
   } while (0)
@@ -50,5 +48,8 @@ public:
   static int8_t write(std::string dev_name, uint8_t dev_addr, const uint8_t* data, uint16_t length);
   static int8_t read(std::string dev_name, uint8_t dev_addr, uint8_t* data, uint16_t length);
   static int8_t check_device(std::string dev_name, uint8_t dev_addr, uint16_t reg_addr);
+  
+  static int8_t transfer(std::string dev_name, uint8_t dev_addr, const uint8_t*wdata, uint16_t wlength);
+  static int8_t transfer(std::string dev_name, uint8_t dev_addr, const uint8_t*wdata, uint16_t wlength, uint8_t *rdata, uint16_t rlength);
 };
 #endif

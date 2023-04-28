@@ -11,10 +11,40 @@
 #include <memory>
 #include <unordered_map>
 
+
+#define DEBUG_PRINT(...) if(debug_flag){ printf(__VA_ARGS__);}
 #define MAX_PORT 8
+
 
 static const std::array<std::string, 8> portnum_table = { "i2c-30", "i2c-30", "i2c-31", "i2c-31",
                                                           "i2c-32", "i2c-32", "i2c-33", "i2c-33" };
+
+static bool debug_flag = true;
+
+
+
+static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &data_u, uint8_t &data_l, uint16_t mask)
+{
+  uint16_t temp;
+
+  temp = ((uint16_t)(raw / unit) + offset);
+  data_l = temp & 0xFF;
+  data_u = temp >> 8;
+
+  //fprintf(stderr, "[%s]:%f-%d, %d, %d\n", __func__, raw, temp, data_l, data_u);
+  return;
+}
+ 
+enum class C2_SENSOR_MODE
+{
+  default_mode = 0,
+  trigger_mode_10fps = 1,
+  freerun_mode_10fps = 2,
+  freerun_mode_30fps = 3,
+  trigger_mode_20fps = 4,
+  freerun_mode_20fps = 5,
+  trigger_mode_30fps = 6,
+};
 
 class Param
 {
@@ -50,7 +80,7 @@ private:
   uint8_t i2c_dev_addr;
 
 public:
-  C2(int _port_num = 0) : port_num(_port_num)
+  C2(int _port_num = 0, bool _debug_flag = false) : port_num(_port_num)
   {
     if (port_num < 0 || port_num >= MAX_PORT)
     {
@@ -61,16 +91,26 @@ public:
     dev_name = "/dev/" + portnum_table[port_num];
     i2c_dev_addr = (port_num % 2) == 0 ? 0x2b : 0x2c;
 
+    debug_flag = _debug_flag;
 #ifdef DEBUG
-    fprintf(stdout, "model: C2\n");
-    fprintf(stdout, "port_num: %d\n", port_num);
-    fprintf(stdout, "dev_name: %s\n", dev_name.c_str());
-    fprintf(stdout, "dev_addr: 0x%x\n", i2c_dev_addr);
+    debug_flag = true;
 #endif
+
+    DEBUG_PRINT("model: C2\n");
+    DEBUG_PRINT("port_num: %d\n", port_num);
+    DEBUG_PRINT("dev_name: %s\n", dev_name.c_str());
+    DEBUG_PRINT("dev_addr: 0x%x\n", i2c_dev_addr);
   }
 
-void setShutterTimeOnAE(uint16_t max_ms, uint16_t min_ms);
-  void set_dwp_on();
+
+  // set parameter
+  void setShutterTimeOnAE(uint16_t max_ms, uint16_t min_ms);
+  
+  void setSensorMode(uint8_t mode);
+  void setDistortionCorrection(bool on);
+
+  void setSensorGain(float gain);
+
 };
 
 class C1
@@ -93,12 +133,10 @@ public:
     dev_name = "/dev/" + portnum_table[port_num];
     i2c_dev_addr = (port_num % 2) == 0 ? 0x1b : 0x1c;
 
-#ifdef DEBUG
-    fprintf(stdout, "model: C1\n");
-    fprintf(stdout, "port_num: %d\n", port_num);
-    fprintf(stdout, "dev_name: %s\n", dev_name.c_str());
-    fprintf(stdout, "dev_addr: 0x%x\n", i2c_dev_addr);
-#endif
+    DEBUG_PRINT("model: C1\n");
+    DEBUG_PRINT("port_num: %d\n", port_num);
+    DEBUG_PRINT("dev_name: %s\n", dev_name.c_str());
+    DEBUG_PRINT("dev_addr: 0x%x\n", i2c_dev_addr);
 
     initialized_default_value_from_default();
     // initialized_load_value_from_file(param_file);
@@ -193,13 +231,21 @@ public:
   uint8_t getAEMode(void);
   int8_t setAEMode(int mode);
 
+
+  //set parameter
+  // for easily tuning
   int8_t setDigitalGain(int db);
   int8_t setSharpness(float gain);
   int8_t setHue(int deg);
   int8_t setSaturation(float gain);
   int8_t setBrightness(float offset);
   int8_t setContrast(float gain);
+  
+  int8_t setAutoWhiteBalance(bool on);
+  int8_t setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float b_gain);
+  int8_t setExposureOffsetFlag(bool flag);
 
+  //get parameter
   int getDigitalGain();
   float getSharpness();
   int getHue();
@@ -207,16 +253,13 @@ public:
   float getBrightness();
   float getContrast();
 
-  int8_t setAutoWhiteBalance(bool on);
-  int8_t setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float b_gain);
-
-  int8_t setExposureOffsetFlag(bool flag);
   int getExposureOffsetFlag();
   int8_t setExposureOffset(float offset);
   float getExposureOffset();
 
   int8_t checkES3();
 
+  // 
   float getTempature(int type);
   float getTempatureS0();
   float getTempatureS1();
@@ -226,5 +269,7 @@ public:
 
   float getAEError();
 };
+
+
 
 #endif
