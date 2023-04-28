@@ -294,6 +294,8 @@ static int enable_distortion_correction = 0xCAFE;
 static int shutter_time_min = ISX021_MIN_EXPOSURE_TIME;
 static int shutter_time_mid = ISX021_MID_EXPOSURE_TIME;
 static int shutter_time_max = ISX021_MAX_EXPOSURE_TIME;
+static int fsync_mfp = 0;
+//static int debug_i2c_write = 0;
 
 module_param(trigger_mode, int, S_IRUGO);
 module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
@@ -301,6 +303,9 @@ module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
 module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
 module_param(shutter_time_mid, int, S_IRUGO | S_IWUSR);
 module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
+
+module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
+//module_param(debug_i2c_write, int, S_IRUGO | S_IWUSR);
 
 static struct mutex tier4_sensor_lock__;
 
@@ -342,7 +347,7 @@ static inline int tier4_isx021_read_reg(struct camera_common_data *s_data, u16 a
 	int err 	= 0;
 	u32 reg_val = 0;
 	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
-  u16 reg_addr = 0;
+  	u16 reg_addr = 0;
 
 #ifdef USE_FIRMWARE
   reg_addr = priv->firmware_buffer[addr];
@@ -357,6 +362,10 @@ static inline int tier4_isx021_read_reg(struct camera_common_data *s_data, u16 a
 
 	if (err) {
 		dev_err(s_data->dev, "[%s ] : ISX021 I2C Read failed at 0x%04X\n", __func__, reg_addr);
+//	} else {
+//		if ( debug_i2c_write ) {
+//			dev_info(s_data->dev, "[%s ] : ISX021 I2C Read at 0x%04X=[0x%02X]\n", __func__, reg_addr, reg_val);
+//		}
 	}
 
 	return err;
@@ -377,9 +386,10 @@ static int tier4_isx021_write_reg(struct camera_common_data *s_data, u16 addr, u
 
   err = regmap_write(s_data->regmap, reg_addr, val);
 
-
 	if (err) {
 		dev_err(s_data->dev,  "[%s] : I2C write failed at 0x%04X=[0x%02X]\n", __func__, reg_addr, val);
+//	} else if ( debug_i2c_write ) {
+//			dev_info(s_data->dev,  "[%s] : I2C write at 0x%04X=[0x%02X]\n", __func__, reg_addr, val);
 	}
 
 	return err;
@@ -500,7 +510,7 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 		}
 	}
 
-	err = tier4_max9296_setup_gpi(priv->dser_dev);
+	err = tier4_max9296_setup_gpi(priv->dser_dev, fsync_mfp);
 
 	if ( err ) {
 		dev_err(dev, "[%s] : Failed in tier4_max9296_setup_gpi.\n", __func__);
@@ -617,10 +627,12 @@ static int tier4_isx021_gmsl_serdes_setup(struct tier4_isx021 *priv)
 
 	/* For now no separate power on required for serializer device */
 
-	tier4_max9296_power_on(priv->dser_dev);
+	if (( priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE ) &&
+		( priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
 
+		tier4_max9296_power_on(priv->dser_dev);
+	}
 	/* setup serdes addressing and control pipeline */
-
 
 	err = tier4_max9296_setup_link(priv->dser_dev, &priv->i2c_client->dev);
 
@@ -659,8 +671,11 @@ static void tier4_isx021_gmsl_serdes_reset(struct tier4_isx021 *priv)
 
 	tier4_max9296_reset_control(priv->dser_dev, &priv->i2c_client->dev, false );
 
-	tier4_max9296_power_off(priv->dser_dev);
+	if (( priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE ) &&
+		( priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
 
+		tier4_max9296_power_off(priv->dser_dev);
+	}
 }
 
 /*--------------------------------------------------------------------------*/
@@ -1345,8 +1360,6 @@ exit:
 
 static bool tier4_isx021_is_camera_connected_to_port(int nport)
 {
-    printk("[%s] : nport = %d  p_client = %p \n", __func__, nport, wst_priv[nport].p_client );
-
 	if ( wst_priv[nport].p_client ) {
 		return true;
 	}
@@ -1596,6 +1609,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 	const char					*str_model;
 	char						upper_str_model[64];
 	char						*str_err;
+	char						*sub_str_err;
 
 	root_node = of_find_node_opts_by_path("/", &of_stdout_options);
 	err = of_property_read_string(root_node, "model", &str_model);
@@ -1620,11 +1634,18 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 
 	str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE);
 	if ( str_err  ) {
-		 priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
+		sub_str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE_ORIN );
+		if ( sub_str_err  ) {
+		 	priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE_ORIN;
+		} else {
+		 	priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
+		}
 	}
 
 	dev_info(dev, "[%s] : model=%s\n", __func__, str_model);
 	dev_dbg(dev, "[%s] : hardware_model=%d\n", __func__, priv->g_ctx.hardware_model);
+
+//	priv->g_ctx.debug_i2c_write = debug_i2c_write;
 
 	if ( priv->g_ctx.hardware_model == HW_MODEL_UNKNOWN ) {
 		dev_err(dev, "[%s] : Unknown Hardware Sysytem !\n", __func__);
@@ -1763,7 +1784,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 
 	priv->dser_dev = &dser_i2c->dev;
 
-	if ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
+	if ( ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) || ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
 
 	// for FPGA node
 
@@ -2030,6 +2051,8 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 		dev_err(&client->dev, "[%s] : GMSL Deserializer Register failed\n", __func__);
 		goto errret;
 	}
+
+//	priv->g_ctx.debug_i2c_write = debug_i2c_write;
 
 	/*
 	 * gmsl serdes setup
