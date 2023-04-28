@@ -26,6 +26,7 @@
 #define GW5300_MASTER_MODE_30FPS 3
 #define GW5300_SLAVE_MODE_20FPS 4
 #define GW5300_MASTER_MODE_20FPS 5
+#define GW5300_SLAVE_MODE_30FPS 6
 
 /**
  * get gw5300 prim slave address.

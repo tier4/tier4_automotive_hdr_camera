@@ -60,6 +60,9 @@ static u8 master_20fps[] = { 0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00, 0x8
 static u8 slave_20fps[] = { 0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00, 0x80,
                             0x03, 0x00, 0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x79 };
 
+static u8 slave_30fps[] = { 0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00, 0x80,
+                            0x03, 0x00, 0x00, 0x00, 0x55, 0x00, 0x00, 0x00, 0x6F };
+
 struct map_ctx
 {
   u8 dt;
@@ -264,6 +267,24 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
       {  // it means that 0 message has been sent.
         dev_err(dev, "[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n", __func__,
                 err);
+        err = -999;
+        goto error;
+      }
+      else
+      {
+        err = 0;
+      }
+      break;
+    case GW5300_SLAVE_MODE_30FPS:
+      err = tier4_gw5300_send_and_recv_msg(dev, slave_30fps, sizeof(slave_30fps), buf, sizeof(buf));
+      if (err < 0)
+      {
+        dev_err(dev, "[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n", __func__, err);
+        goto error;
+      }
+      else if (err == 0)
+      {  // it means that 0 message has been sent.
+        dev_err(dev, "[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n", __func__, err);
         err = -999;
         goto error;
       }
