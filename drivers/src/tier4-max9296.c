@@ -969,18 +969,18 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 		} else if ( g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN ) {
 
 			tier4_max9296_write_reg(dev,
-				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2500MHZ);
-//				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2000MHZ);
+//				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2500MHZ);
+				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2000MHZ);
 		} else if ( g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE )  {
 
-//			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
-			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
+			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
+//			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
 
 		} else {
 //#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
 //#if 1
 			tier4_max9296_write_reg(dev,
-				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
+				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
 //#else
 //			tier4_max9296_write_reg(dev,
 //				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK);
