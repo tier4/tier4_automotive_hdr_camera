@@ -113,7 +113,7 @@ static int tier4_gw5300_send_and_recv_msg(struct device *dev, u8 *wdata, int wda
 
   if (err < 0)
   {
-    dev_err(dev, "[%s] : i2c_transer send message failed. : slave addr = 0x%x\n", __func__, msg[0].addr);
+    dev_err(dev, "[%s] : i2c_transer send message failed. %d: slave addr = 0x%x\n", __func__, err, msg[0].addr);
   }
   else
   {
@@ -165,8 +165,10 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_inte
   cmd_integration_min[sizeof(cmd_integration_min)-1] = calcCheckSum(cmd_integration_min, sizeof(cmd_integration_min));
 
 
-  ret += tier4_gw5300_send_and_recv_msg( dev, cmd_integration_max, sizeof(cmd_integration_max), buf, sizeof(buf));   
-  ret += tier4_gw5300_send_and_recv_msg( dev, cmd_integration_min, sizeof(cmd_integration_min), buf, sizeof(buf));   
+    msleep(20);
+  ret += tier4_gw5300_send_and_recv_msg(dev, cmd_integration_max, sizeof(cmd_integration_max), buf, sizeof(buf));   
+    msleep(20);
+  ret += tier4_gw5300_send_and_recv_msg(dev, cmd_integration_min, sizeof(cmd_integration_min), buf, sizeof(buf));   
 
   return ret;
 
