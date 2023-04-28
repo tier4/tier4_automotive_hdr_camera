@@ -144,10 +144,15 @@ static int camera_channel_count = 0;
 
 static int trigger_mode;
 static int fsync_mfp = 0;
-static int shutter_time_min =  
-static int shutter_time_max = 
 
-module_param(trigger_mode, int 0644);
+
+#define IMX490_MIN_EXPOSURE_TIME 11000  // 11 milisecond
+#define IMX490_MAX_EXPOSURE_TIME 33000  // 33 milisecond
+
+static int shutter_time_min = IMX490_MIN_EXPOSURE_TIME;
+static int shutter_time_max = IMX490_MAX_EXPOSURE_TIME;
+
+module_param(trigger_mode, int, 0644);
 module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
 module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
 
@@ -485,7 +490,7 @@ static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
 
   struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
 
-  dev_dbg(&priv->i2c_client->dev, "[%s] : Setting Exposure time is not available.\n", __func__);
+  tier4_gw5300_set_integration_time_on_aemode(priv->isp_dev, val, val);
 
   return err;
 }
@@ -698,7 +703,6 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
   }
 
   tier4_gw5300_set_integration_time_on_aemode(priv->isp_dev, shutter_time_max, shutter_time_min);
-
 
   dev_info(dev, "[%s] :  Camera start stream succeeded\n", __func__);
 
