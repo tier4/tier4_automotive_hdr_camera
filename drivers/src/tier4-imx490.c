@@ -1,6 +1,7 @@
 /*
  * tier4_imsx490.c - imx490 sensor driver
  *
+ * Copyright (c) 2022-2023, TIER IV Inc. All rights reserved.
  * Copyright (c) 2018-2021, NVIDIA CORPORATION.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -577,17 +578,6 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
     goto exit;
   }
 
-//#if defined(TIER4_C1_CAMERA)
-#if 0
-    err = tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX490, true);
-
-    if (err) {
-        dev_err(dev, "[%s] : Powerup Camera ISP failed\n", __func__);
-        goto exit;
-    }
-
-#endif
-
   if (priv->auto_exposure == true)
   {
     err = tier4_imx490_set_auto_exposure(tc_dev);
@@ -713,24 +703,6 @@ exit:
   return err;
 }
 
-// static int tier4_imx490_stop_streaming(struct tegracam_device *tc_dev)
-//{
-//  struct device   *dev    = tc_dev->dev;
-//  struct tier4_imx490     *priv   = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
-//  int             err     = 0;
-//
-//  /* disable serdes streaming */
-//  err = tier4_max9296_stop_streaming(priv->dser_dev, dev);
-//
-//  if (err) {
-//      return err;
-//  }
-//
-//  return NO_ERROR;
-//}
-
-//-------------------------------------------------------------------
-
 static bool tier4_imx490_is_camera_connected_to_port(int nport)
 {
   //    printk("[%s] : nport = %d  p_client = %p \n", __func__, nport, wst_priv[nport].p_client );
@@ -773,11 +745,6 @@ static void tier4_imx490_set_running_flag(int nport, bool flag)
 {
   wst_priv[nport].running = flag;
 }
-
-// static void tier4_imx490_reset_running_flag(int nport)
-//{
-//    wst_priv[nport].running  = false;
-//}
 
 static int tier4_imx490_stop_streaming(struct tegracam_device *tc_dev)
 {

@@ -1,7 +1,7 @@
 /*
  * tier4_max9295.c - tier4_max9295 GMSL Serializer driver
  *
- * Copyright (c) 2022, TIERIV Inc.  All rights reserved.
+ * Copyright (c) 2022-2023, TIERIV Inc.  All rights reserved.
  * Copyright (c) 2020, Leopard Imaging Inc.  All rights reserved.
  * Copyright (c) 2018-2020, NVIDIA CORPORATION.  All rights reserved.
  *
@@ -404,7 +404,6 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, 
       err += tier4_max9295_write_reg(dev, MAX9295_GPIO_4_ADDR, 0x00);
       msleep(50);
     }
-    //		err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
   }
 
   if (err)
@@ -683,8 +682,8 @@ static int tier4_max9295_probe(struct i2c_client *client, const struct i2c_devic
 
     prim_priv__[channel_count_isx021] = priv;
 
-    //		dev_info(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
-    //				, __func__, channel_count_isx021, prim_priv__[channel_count_isx021]);
+    dev_dbg(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
+    				, __func__, channel_count_isx021, prim_priv__[channel_count_isx021]);
 
     channel_count_isx021++;
   }

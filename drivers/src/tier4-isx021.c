@@ -1,7 +1,7 @@
 /*
  * isx021.c - isx021 sensor driver
  *
- * Copyright (c) 2022, TIERIV INC.  All rights reserved.
+ * Copyright (c) 2022-2023, TIERIV INC.  All rights reserved.
  * Copyright (c) 2018-2021, NVIDIA CORPORATION.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it

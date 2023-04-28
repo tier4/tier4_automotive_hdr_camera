@@ -1,7 +1,7 @@
 /*
  * tier4_max9296.c - tier4_max9296 GMSL Deserializer driver
  *
- * Copyright (c) 2022, TIERIV Inc.  All rights reserved.
+ * Copyright (c) 2022, TIER IV Inc.  All rights reserved.
  * Copyright (c) 2018-2020, NVIDIA CORPORATION.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -172,11 +172,6 @@ struct tier4_max9296
   struct regulator *vdd_cam_1v2;
 };
 
-// static int max9296_debug_i2c_write;
-// static int max9296_fsync_mfp;
-
-//#if _USE_CHECK_LINK_LOCKED_
-
 static int tier4_max9296_read_reg(struct device *dev, u16 addr, u8 *val)
 {
   int err = 0;
@@ -205,7 +200,6 @@ static int tier4_max9296_read_reg(struct device *dev, u16 addr, u8 *val)
 
   return err;
 }
-//#endif
 
 static int tier4_max9296_write_reg(struct device *dev, u16 addr, u8 val)
 {
@@ -457,12 +451,11 @@ ret:
 }
 EXPORT_SYMBOL(tier4_max9296_setup_link);
 
-//#if _USE_CHECK_LINK_LOCKED_
 static int tier4_max9296_link_locked(struct device *dev)
 {
   u8 val;
 
-  dev_info(dev, "[%s] : Check max9296 link locke.\n", __func__);
+  dev_dbg(dev, "[%s] : Check max9296 link locked.\n", __func__);
 
   usleep_range(100, 110);
   tier4_max9296_read_reg(dev, MAX9296_LINK_ADDR, &val);
@@ -475,7 +468,6 @@ static int tier4_max9296_link_locked(struct device *dev)
   }
   return 0;
 }
-//#endif
 
 int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp)
 {
@@ -654,8 +646,8 @@ int tier4_max9296_sdev_register(struct device *dev, struct gmsl_link_ctx *g_ctx)
      * to be configured with different num-csi-lanes, then this
      * check should be performed per port.
      */
-    //		dev_info(dev,"[%s] : g_ctx->num_csi_lanes = 0x%0x priv->sources[%d].g_ctx->num_csi_lanes = 0x%0x \n"
-    //				, __func__, g_ctx->num_csi_lanes, i, priv->sources[i].g_ctx->num_csi_lanes);
+    dev_dbg(dev,"[%s] : g_ctx->num_csi_lanes = 0x%0x priv->sources[%d].g_ctx->num_csi_lanes = 0x%0x \n"
+    				, __func__, g_ctx->num_csi_lanes, i, priv->sources[i].g_ctx->num_csi_lanes);
 
     if (g_ctx->num_csi_lanes != priv->sources[i].g_ctx->num_csi_lanes)
     {
@@ -862,7 +854,7 @@ int tier4_max9296_start_streaming(struct device *dev, struct device *s_dev)
   int err = 0;
   int i = 0;
 
-  //	dev_info(dev, "[%s] : Start Streaming .\n", __func__);
+ 	dev_dbg(dev, "[%s] : Start Streaming .\n", __func__);
 
   err = tier4_max9296_get_sdev_idx(dev, s_dev, &i);
 
@@ -999,22 +991,14 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
     else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
     {
       tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2500MHZ);
-      //				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2000MHZ);
     }
     else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE)
     {
-      //			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
       tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
     }
     else
     {
-      //#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,65)
-      //#if 1
       tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
-      //#else
-      //			tier4_max9296_write_reg(dev,
-      //				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK);
-      //#endif
     }
 
     priv->lane_setup = true;

@@ -1,9 +1,7 @@
 /*
  * tier4_fpga.c - tier4_fpga driver
  *
- * Copyright (c) 2020, Leopard Imaging Inc.  All rights reserved.
- *
- * Copyright (c) 2018-2020, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2022-2023, TIER IV Inc.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -18,8 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include <media/camera_common.h>
-//#include <linux/clk.h>
 //#include <linux/debugfs.h>
 #include "tier4-fpga.h"
 
@@ -71,28 +67,12 @@ static int tier4_fpga_read_reg(struct device *dev, u16 addr, u8 *val)
   int err = 0;
   u32 reg_val = 0;
   struct tier4_fpga *priv = dev_get_drvdata(dev);
-  //	char str_bus_num[4], str_sl_addr[4];
-  //	int	len = 0;
-
-  //	memset(str_bus_num,0,4);
-  //	memset(str_sl_addr,0,4);
-
   err = regmap_read(priv->regmap, addr, &reg_val);
 
   *val = reg_val & 0xFF;
 
   dev_dbg(dev, "[%s ] : FPGA I2C Read  : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, *val);
 
-  //	if (( err == 0 ) && ( dev != NULL ) ) {
-  //
-  //	len = strlen(dev->kobj.name);
-
-  //		if (dev) {
-  //			strncpy(str_bus_num, &dev->kobj.name[0], 2);
-  //			strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
-  //		}
-  //		dev_dbg(dev, "tier4_fpaga_read_reg %s  0x%s 0x%x.\n", str_bus_num, str_sl_addr, addr );
-  //	}
   return err;
 }
 
@@ -154,7 +134,6 @@ EXPORT_SYMBOL(tier4_fpga_enable_generate_fsync_signal);
 
 int tier4_fpga_disable_generate_fsync_signal(struct device *dev)
 {
-  //	struct tier4_fpga *priv = dev_get_drvdata(dev);
   int err = 0;
 
   err = tier4_fpga_write_reg(dev, FPGA_REG_ENABLE_ADDR, FPGA_DISABLED);
@@ -194,7 +173,6 @@ EXPORT_SYMBOL(tier4_fpga_check_access);
 
 int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, int frequency)
 {
-  //	struct tier4_fpga *priv = dev_get_drvdata(dev);
   int err = 0;
   u8 val8, addr8;
 
@@ -299,7 +277,6 @@ static int tier4_fpga_parse_dt(struct tier4_fpga *priv, struct i2c_client *clien
 static int tier4_fpga_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
   struct tier4_fpga *priv;
-  //	struct device_node *node = client->dev.of_node;
   int err = 0;
 
   dev_info(&client->dev, "[%s] : probing FPGA\n", __func__);

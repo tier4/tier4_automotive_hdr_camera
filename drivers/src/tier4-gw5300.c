@@ -1,9 +1,7 @@
 /*
  * tier4_gw5300.c - tier4_gw5300 ISP driver
  *
- * Copyright (c) 2020, Leopard Imaging Inc.  All rights reserved.
- *
- * Copyright (c) 2018-2020, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2022-2023, TIER IV Inc.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -122,31 +120,16 @@ static int tier4_gw5300_send_and_recv_msg(struct device *dev, u8 *wdata, int wda
   return err;
 }
 
-// int tier4_gw5300_check_device(struct device *dev, u8 *wdata, int wdata_size, u8 *rdata, int rdata_size, u32
-// target_addr )
 int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size)
 {
   int err = 0;
   struct i2c_msg msg[2];
   struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 
-  //	msg[0].addr = priv->i2c_client->addr;
-  //	msg[0].addr = target_addr;
-  //	msg[0].flags = 0;					// I2C Write
-  //	msg[0].len = wdata_size;
-  //	msg[0].buf = wdata;
-
   msg[0].addr = priv->i2c_client->addr;
-  //	msg[0].addr = target_addr;
   msg[0].flags = I2C_M_RD;  // I2C Read
   msg[0].len = rdata_size;
   msg[0].buf = rdata;
-
-  //	msg[1].addr = priv->i2c_client->addr;
-  //	msg[1].addr = target_addr;
-  //	msg[1].flags = I2C_M_RD;			// I2C Read
-  //	msg[1].len = rdata_size;
-  //	msg[1].buf = rdata;
 
   err = i2c_transfer(priv->i2c_client->adapter, msg, 1);
 
