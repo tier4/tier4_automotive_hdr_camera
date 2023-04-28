@@ -17,7 +17,6 @@
  */
 
 //#include <linux/debugfs.h>
-#include "tier4-fpga.h"
 
 #include <linux/delay.h>
 #include <linux/fs.h>
@@ -30,6 +29,7 @@
 #include <linux/string.h>
 
 #include "tier4-gmsl-link.h"
+#include "tier4-fpga.h"
 
 #define FPGA_ENABLED 0xF0
 #define FPGA_DISABLED 0xFF

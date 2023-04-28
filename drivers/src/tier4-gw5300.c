@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tier4-gw5300.h"
 
 #include <linux/module.h>
 #include <linux/string.h>
 #include <media/camera_common.h>
 
 #include "tier4-gmsl-link.h"
+#include "tier4-gw5300.h"
 
 struct tier4_gw5300
 {
@@ -293,7 +293,6 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
         err = 0;
       }
       break;
-
     default:
       break;
   }

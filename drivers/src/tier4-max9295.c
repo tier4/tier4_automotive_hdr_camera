@@ -18,11 +18,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tier4-max9295.h"
 
 #include <linux/module.h>
 #include <media/camera_common.h>
 
+#include "tier4-max9295.h"
 #include "tier4-gmsl-link.h"
 
 /* register specifics */
