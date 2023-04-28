@@ -144,8 +144,13 @@ static int camera_channel_count = 0;
 
 static int trigger_mode;
 static int fsync_mfp = 0;
+static int shutter_time_min =  
+static int shutter_time_max = 
 
-module_param(trigger_mode, int, 0644);
+module_param(trigger_mode, int 0644);
+module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
+module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
+
 
 module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
 
@@ -691,6 +696,9 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
     dev_err(dev, "[%s] : tier4_max9296_start_stream() failed\n", __func__);
     return err;
   }
+
+  tier4_gw5300_set_integration_time_on_aemode(priv->isp_dev, shutter_time_max, shutter_time_min);
+
 
   dev_info(dev, "[%s] :  Camera start stream succeeded\n", __func__);
 
