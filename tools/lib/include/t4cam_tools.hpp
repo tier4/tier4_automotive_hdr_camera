@@ -11,10 +11,38 @@
 #include <memory>
 #include <unordered_map>
 
+
+#define DEBUG_PRINT(...) if(debug_flag){ printf(__VA_ARGS__);}
 #define MAX_PORT 8
+
 
 static const std::array<std::string, 8> portnum_table = { "i2c-30", "i2c-30", "i2c-31", "i2c-31",
                                                           "i2c-32", "i2c-32", "i2c-33", "i2c-33" };
+
+static bool debug_flag = true;
+
+static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &data_u, uint8_t &data_l, uint16_t mask)
+{
+  uint16_t temp;
+
+  temp = ((uint16_t)(raw / unit) + offset);
+  data_l = temp & 0xFF;
+  data_u = temp >> 8;
+
+  //fprintf(stderr, "[%s]:%f-%d, %d, %d\n", __func__, raw, temp, data_l, data_u);
+  return;
+}
+ 
+enum class C2_SENSOR_MODE : uint8_t
+{
+  default_mode = 0,
+  trigger_mode_10fps = 1,
+  freerun_mode_10fps = 2,
+  freerun_mode_30fps = 3,
+  trigger_mode_20fps = 4,
+  freerun_mode_20fps = 5,
+  trigger_mode_30fps = 6,
+};
 
 class Param
 {
@@ -42,6 +70,47 @@ public:
   }
 };
 
+class C2
+{
+private:
+  int port_num;
+  std::string dev_name;
+  uint8_t i2c_dev_addr;
+
+public:
+  C2(int _port_num = 0, bool _debug_flag = false) : port_num(_port_num)
+  {
+    if (port_num < 0 || port_num >= MAX_PORT)
+    {
+      std::cerr << "The port number has exceeded the maximum value. Please specify between 0-" << MAX_PORT - 1
+                << std::endl;
+      exit(-1);
+    }
+    dev_name = "/dev/" + portnum_table[port_num];
+    i2c_dev_addr = (port_num % 2) == 0 ? 0x6d : 0x6e;
+
+    debug_flag = _debug_flag;
+#ifdef DEBUG
+    debug_flag = true;
+#endif
+
+    DEBUG_PRINT("model: C2\n");
+    DEBUG_PRINT("port_num: %d\n", port_num);
+    DEBUG_PRINT("dev_name: %s\n", dev_name.c_str());
+    DEBUG_PRINT("dev_addr: 0x%x\n", i2c_dev_addr);
+  }
+
+
+  // set parameter
+  void setShutterTimeOnAE(uint16_t max_ms, uint16_t min_ms);
+  
+  void setSensorMode(uint8_t mode);
+  void setDistortionCorrection(bool on);
+
+  void setSensorGain(float gain);
+
+};
+
 class C1
 {
 private:
@@ -62,11 +131,10 @@ public:
     dev_name = "/dev/" + portnum_table[port_num];
     i2c_dev_addr = (port_num % 2) == 0 ? 0x1b : 0x1c;
 
-#ifdef DEBUG
-    fprintf(stdout, "port_num: %d\n", port_num);
-    fprintf(stdout, "dev_name: %s\n", dev_name.c_str());
-    fprintf(stdout, "dev_addr: 0x%x\n", i2c_dev_addr);
-#endif
+    DEBUG_PRINT("model: C1\n");
+    DEBUG_PRINT("port_num: %d\n", port_num);
+    DEBUG_PRINT("dev_name: %s\n", dev_name.c_str());
+    DEBUG_PRINT("dev_addr: 0x%x\n", i2c_dev_addr);
 
     initialized_default_value_from_default();
     // initialized_load_value_from_file(param_file);
@@ -77,16 +145,6 @@ public:
 
   void initialized_default_value_from_default()
   {
-    default_value_map["ae_mode"] = 0.0;
-    default_value_map["digital_gain"] = 30.0;
-    default_value_map["shutter_speed"] = 11.0;
-    default_value_map["ev_offset_flag"] = 0.0;
-    default_value_map["ev_offset"] = 0;
-    default_value_map["hue"] = 0;
-    default_value_map["saturation"] = 1.0;
-    default_value_map["contrast"] = 1.0;
-    default_value_map["brightness"] = 0;
-    default_value_map["sharpness"] = 1.0;
   }
 
   void saveCurrentValue(std::string output)
@@ -159,29 +217,11 @@ public:
 
   void setDefaultValue(void)
   {
-    setAEMode(default_value_map["ae_mode"]);
-    setDigitalGain(default_value_map["digital_gain"]);
-    setShutterSpeedforFME(default_value_map["shutter_speed"]);
-    setExposureOffsetFlag(default_value_map["ev_offset_flag"]);
-    setExposureOffset(default_value_map["ev_offset"]);
-    setHue(default_value_map["hue"]);
-    setSaturation(default_value_map["saturation"]);
-    setContrast(default_value_map["contrast"]);
-    setBrightness(default_value_map["brightness"]);
-    setSharpness(default_value_map["sharpness"]);
+    std::cerr << "not present this function." << std::endl;
   }
   void setLoadValue(void)
   {
-    setAEMode(load_value_map["ae_mode"]);
-    setDigitalGain(load_value_map["digital_gain"]);
-    setShutterSpeedforFME(load_value_map["shutter_speed"]);
-    setExposureOffsetFlag(load_value_map["ev_offset_flag"]);
-    setExposureOffset(load_value_map["ev_offset"]);
-    setHue(load_value_map["hue"]);
-    setSaturation(load_value_map["saturation"]);
-    setBrightness(load_value_map["brightness"]);
-    setContrast(load_value_map["contrast"]);
-    setSharpness(load_value_map["sharpness"]);
+    std::cerr << "not present this function." << std::endl;
   }
 
   bool isAvailableCamera(void);
@@ -189,13 +229,21 @@ public:
   uint8_t getAEMode(void);
   int8_t setAEMode(int mode);
 
+
+  //set parameter
+  // for easily tuning
   int8_t setDigitalGain(int db);
   int8_t setSharpness(float gain);
   int8_t setHue(int deg);
   int8_t setSaturation(float gain);
   int8_t setBrightness(float offset);
   int8_t setContrast(float gain);
+  
+  int8_t setAutoWhiteBalance(bool on);
+  int8_t setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float b_gain);
+  int8_t setExposureOffsetFlag(bool flag);
 
+  //get parameter
   int getDigitalGain();
   float getSharpness();
   int getHue();
@@ -203,16 +251,13 @@ public:
   float getBrightness();
   float getContrast();
 
-  int8_t setAutoWhiteBalance(bool on);
-  int8_t setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float b_gain);
-
-  int8_t setExposureOffsetFlag(bool flag);
   int getExposureOffsetFlag();
   int8_t setExposureOffset(float offset);
   float getExposureOffset();
 
   int8_t checkES3();
 
+  // 
   float getTempature(int type);
   float getTempatureS0();
   float getTempatureS1();
@@ -220,10 +265,9 @@ public:
   int8_t setShutterSpeedforFME(float val);
   float getShutterSpeedforFME();
 
-#define ERRSCL_L 0x617C
-#define ERRSCL_U 0x617D
-
   float getAEError();
 };
+
+
 
 #endif

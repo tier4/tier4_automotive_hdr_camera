@@ -5,17 +5,8 @@
 #include "i2c.hpp"
 #include "t4cam_tools.hpp"
 
-static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &data_u, uint8_t &data_l, uint16_t mask)
-{
-  uint16_t temp;
 
-  temp = ((uint16_t)(raw / unit) + offset);
-  data_l = temp & 0xFF;
-  data_u = temp >> 8;
 
-  fprintf(stderr, "[%s]:%f-%d, %d, %d\n", __func__, raw, temp, data_l, data_u);
-  return;
-}
 
 int8_t C1::checkES3()
 {
@@ -34,6 +25,8 @@ int8_t C1::checkES3()
 }
 float C1::getAEError()
 {
+#define ERRSCL_L 0x617C
+#define ERRSCL_U 0x617D
   float ret;
   uint8_t l, u;
   uint16_t d;
