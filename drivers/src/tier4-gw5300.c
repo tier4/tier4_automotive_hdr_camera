@@ -79,6 +79,10 @@ slave_20fps[] = {
 	0x00, 0x79
 };
 
+static u8
+expected_msg[] = {
+	0x33, 0x41, 0x02, 0x01, 0x01, 0x78,
+};
 
 struct map_ctx {
 	u8 dt;
@@ -285,6 +289,15 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
 
 		default:
 			break;
+	}
+
+	err = memcmp( buf, expected_msg, sizeof(buf));
+	if( err ) {
+		dev_err(dev, "[%s] : Received data is wrong. \n", __func__);
+		dev_err(dev, "[%s] : data[0]:0x%02X data[1]:0x%02X data[2]:0x%02X\n"
+				, __func__, buf[0], buf[1], buf[2]);
+		dev_err(dev, "[%s] : data[3]:0x%02X data[4]:0x%02X data[5]:0x%02X\n"
+				, __func__, buf[3], buf[4], buf[5]);
 	}
 
 error:

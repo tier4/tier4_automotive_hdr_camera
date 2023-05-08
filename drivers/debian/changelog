@@ -1,3 +1,9 @@
+tier4-camera-gmsl (1.2.5.1) focal; urgency=medium
+
+  * Support for Jetpack 5.1 on Orin DevKit
+
+ -- tier4 <tier4@tier4-desktop>  Wed, 26 Apr 2023 01:25:01 +0900
+
 tier4-camera-gmsl (1.2.5) focal; urgency=medium
 
   * Support for imx490 Master/Slave 20FPS
