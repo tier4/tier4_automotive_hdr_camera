@@ -3,6 +3,8 @@
  *
  */
 
+#include "tier4-gmsl-link.h"
+
 /**
  * @file
  * <b>FPGA API: For Tier4 FPGA.</b>
