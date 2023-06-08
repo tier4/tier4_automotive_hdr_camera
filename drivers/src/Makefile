@@ -151,6 +151,12 @@ else ifeq ($(L4T_RELEASE_MAIN), R35)
                 TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-orin-devkit-r3521
                 TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-orin-devkit-r3521
                 MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_orin-devkit.py  r35.2.1
+            else ifeq ($(L4T_RELEASE_MAJOR), 3)
+                KERNELRELEASE            := 5.10.104-tegra
+                TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-orin-devkit-r3521
+                TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-orin-devkit-r3521
+                TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-orin-devkit-r3521
+                MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_orin-devkit.py  r35.2.1
             else
                 KERNELRELEASE            := Unknown
                 TARGET_ISX021_DTS        := Unknown
