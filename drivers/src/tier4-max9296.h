@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, TIERIV INC.  All rights reserved.
+ * Copyright (c) 2022-2023, TIERIV INC.  All rights reserved.
  * Copyright (c) 2018-2020, NVIDIA Corporation.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -33,10 +33,13 @@
  *
  * Controls the MAX9296 deserializer module.
  *
+ * @param [in]  dev             The deserializer device handle.
+ * @param [in]  fsync_mfp       MFP pin number for fsync siganl input.
+ *
  * @ingroup serdes_group
  * @{
  */
-int tier4_max9296_setup_gpi(struct device *dev);
+int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp);
 
 /**
  * Puts a deserializer device in single exclusive link mode, so link-specific

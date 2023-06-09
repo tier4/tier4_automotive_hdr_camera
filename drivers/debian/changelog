@@ -1,3 +1,16 @@
+tier4-camera-gmsl (1.3.0) focal; urgency=medium
+
+  * Add make_overlay_dts_xxx.py to release/v1.2.2
+  * remove DTS files and add make_overlay_dts_xxx.py
+  * Support for Jetpack 5.1 on Orin DevKit
+  * Support for Jetpack 5.1.1 on Orin Devkit
+  * Support for imx490 Master/Slave 20FPS
+  * Support for Orin R35.2.1
+  * Support for Orin-ROScube R35.1
+  * Support for L4T R35.1 on ROScube
+
+ -- tier4 <tier4@tier4-desktop>  Mon, 13 Feb 2023 01:22:00 +0900
+
 tier4-camera-gmsl (1.2.1) focal; urgency=medium
 
   * Support to start streaming on two cameras connected to one Des separately.
