@@ -45,7 +45,6 @@ void tier4_isx021_sensor_mutex_lock(void);
  */
 void tier4_isx021_sensor_mutex_unlock(void);
 
-
 /** @} */
 
-#endif  /* __TIER4_ISX021_EXTERN_H__ */
+#endif /* __TIER4_ISX021_EXTERN_H__ */
