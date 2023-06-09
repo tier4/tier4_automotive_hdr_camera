@@ -3,6 +3,8 @@
  *
  */
 
+#include "tier4-gmsl-link.h"
+
 /**
  * @file
  * <b>FPGA API: For Tier4 FPGA.</b>
@@ -21,8 +23,8 @@
 
 #define __TIER4_FPGA_H__
 
-#define FPGA_SLAVE_MODE_10FPS 	10
-#define FPGA_SLAVE_MODE_30FPS 	30
+#define FPGA_SLAVE_MODE_10FPS 10
+#define FPGA_SLAVE_MODE_30FPS 30
 
 /**
  *  Enable fpga generate fsync signal for slave mode
@@ -32,7 +34,7 @@
  * @return  0 for success, or -1 otherwise.
  */
 
-int tier4_fpga_enable_generate_fsync_signal(struct device *dev );
+int tier4_fpga_enable_generate_fsync_signal(struct device *dev);
 
 /**
  *  Disable fpga generate fsync signal for slave mode
@@ -42,7 +44,7 @@ int tier4_fpga_enable_generate_fsync_signal(struct device *dev );
  * @return  0 for success, or -1 otherwise.
  */
 
-int tier4_fpga_disable_generate_fsync_signal(struct device *dev );
+int tier4_fpga_disable_generate_fsync_signal(struct device *dev);
 
 /**
  *  set frequency of the fsync signal pulse
@@ -54,7 +56,7 @@ int tier4_fpga_disable_generate_fsync_signal(struct device *dev );
  * @return  0 for success, or -1 otherwise.
  */
 
-int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, int freequency );
+int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, int freequency);
 
 /**
  *  check access to FPGA.
@@ -64,8 +66,7 @@ int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, in
  * @return  0 for success, or -1 otherwise.
  */
 
-int tier4_fpga_check_access(struct device *dev );
-
+int tier4_fpga_check_access(struct device *dev);
 
 /**
  *  get fpga slave address
@@ -78,4 +79,4 @@ int tier4_fpga_check_access(struct device *dev );
 
 int tier4_fpga_get_slave_addr(struct device *dev, struct gmsl_link_ctx *g_ctx);
 
-#endif  /* __TIER4_FPGA_H__ */
+#endif /* __TIER4_FPGA_H__ */

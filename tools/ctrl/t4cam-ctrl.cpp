@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
   p.add<int>("port-num", 'p', "set port number [0-7]", false, 0, cmdline::range(0, 7));
   p.add<std::string>("input", 'i', "Sets the name of the file to read parameter values", false, "./default.yaml");
   p.add<std::string>("output", 'o', "Sets the name of the file to save the current parameter values.", false);
+  p.add<std::string>("model", 'm', "set model", false, "c1");
 
   // get
   p.add("tempature", 't', "get Tempature val");
@@ -37,68 +38,84 @@ int main(int argc, char* argv[])
   p.add<float>("contrast", 'C', "set Contrast val", false);
   p.add<int>("hue", 'H', "set Hue val", false);
   p.add<float>("saturation", 'S', "set Saturation val", false);
+  p.add("vv", 'v', "get debug_message");
 #if 0
   p.add<float>("evrefoffset", 'e', "set EvrefOffset val", false);
   p.add<float>("digitalgain", 'D', "set DigitalGain val", false);
 #endif
+
+
   p.parse_check(argc, argv);
 
   std::string file_name = p.get<std::string>("input");
   int port_num = p.get<int>("port-num");
 
-  C1 c1_a = C1(port_num);
-
-  int ret = 0;
-
-  if (p.exist("input"))
+  if (p.get<std::string>("model") != "c2")
   {
-    if (c1_a.initialized_load_value_from_file(p.get<std::string>("input")) < 0)
+    C1 c1_a = C1(port_num);
+
+    int ret = 0;
+
+    if (p.exist("input"))
     {
-      return -1;
+      if (c1_a.initialized_load_value_from_file(p.get<std::string>("input")) < 0)
+      {
+        return -1;
+      }
+      c1_a.setLoadValue();
+      return 0;
     }
-    c1_a.setLoadValue();
-    return 0;
-  }
-  else if (p.exist("output"))
-  {
-    c1_a.saveCurrentValue(p.get<std::string>("output"));
+    else if (p.exist("output"))
+    {
+      c1_a.saveCurrentValue(p.get<std::string>("output"));
+    }
+    else
+    {
+      if (p.exist("hue"))
+      {
+        int val = p.get<int>("hue");
+        std::cout << "set hue val:" << val << std::endl;
+        ret = c1_a.setHue(val);
+      }
+      if (p.exist("saturation"))
+      {
+        float val = p.get<float>("saturation");
+        std::cout << "set Saturation val:" << val << std::endl;
+        ret = c1_a.setSaturation(val);
+      }
+      if (p.exist("contrast"))
+      {
+        float val = p.get<float>("contrast");
+        std::cout << "set Contrast val:" << val << std::endl;
+        ret = c1_a.setContrast(val);
+      }
+      if (p.exist("brightness"))
+      {
+        float val = p.get<float>("brightness");
+        std::cout << "set Brightness val:" << val << std::endl;
+        ret = c1_a.setBrightness(val);
+      }
+      if (p.exist("tempature"))
+      {
+        float val = c1_a.getTempature(0);
+        std::cout << "get tempature:" << val << std::endl;
+      }
+    }
+
+    if (ret < 0)
+    {
+      std::cerr << "Failed set parameter. please check parameter and hardware connection" << std::endl;
+    }
   }
   else
   {
-    if (p.exist("hue"))
-    {
-      int val = p.get<int>("hue");
-      std::cout << "set hue val:" << val << std::endl;
-      ret = c1_a.setHue(val);
+    if(p.exist("vv")){
+      std::cerr << "/************** Enabling debug message **********/" <<std::endl;
+      debug_flag=true;
     }
-    if (p.exist("saturation"))
-    {
-      float val = p.get<float>("saturation");
-      std::cout << "set Saturation val:" << val << std::endl;
-      ret = c1_a.setSaturation(val);
-    }
-    if (p.exist("contrast"))
-    {
-      float val = p.get<float>("contrast");
-      std::cout << "set Contrast val:" << val << std::endl;
-      ret = c1_a.setContrast(val);
-    }
-    if (p.exist("brightness"))
-    {
-      float val = p.get<float>("brightness");
-      std::cout << "set Brightness val:" << val << std::endl;
-      ret = c1_a.setBrightness(val);
-    }
-    if (p.exist("tempature"))
-    {
-      float val = c1_a.getTempature(0);
-      std::cout << "get tempature:" << val << std::endl;
-    }
-  }
-
-  if (ret < 0)
-  {
-    std::cerr << "Failed set parameter. please check parameter and hardware connection" << std::endl;
+    C2 c2_a = C2(port_num, debug_flag);
+    c2_a.setShutterTimeOnAE(330,330);
+    c2_a.setSensorGain(100.0);
   }
 
 #if 0

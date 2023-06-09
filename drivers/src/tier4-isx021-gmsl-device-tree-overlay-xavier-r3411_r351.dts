@@ -610,9 +610,8 @@ fragment@60{
 
           pix_clk_hz = "94500000";
 //        pix_clk_hz = "74250000";
-          serdes_pix_clk_hz =   "180000000";  // MIPI CSI clock 1500Mhz
-//        serdes_pix_clk_hz =   "175000000";  // MIPI CSI clock 1400Mhz
-//        serdes_pix_clk_hz =   "833333333";
+          serdes_pix_clk_hz =   "360000000";  // MIPI CSI clock 1440Mhz
+//        serdes_pix_clk_hz =   "350000000";  // MIPI CSI clock 1400Mhz
 
           gain_factor = "10";
           min_gain_val = "0";                 /* dB */
@@ -717,8 +716,8 @@ fragment@60{
 
           pix_clk_hz = "94500000";
 //        pix_clk_hz = "74250000";
-          serdes_pix_clk_hz =   "180000000";    // MIPI CSI clock 1500Mhz
-//        serdes_pix_clk_hz =   "175000000";    // MIPI CSI clock 1400Mhz
+          serdes_pix_clk_hz =   "360000000";  // MIPI CSI clock 1440Mhz
+//        serdes_pix_clk_hz =   "350000000";  // MIPI CSI clock 1400Mhz
 
           gain_factor = "10";
           min_gain_val = "0";                   /* dB */
@@ -865,8 +864,8 @@ fragment@61{
             inherent_gain = "1";
             pix_clk_hz = "94500000";
 //          pix_clk_hz = "74250000";
-            serdes_pix_clk_hz =   "180000000";  // MIPI CSI clock 1500Mhz
-//          serdes_pix_clk_hz =   "175000000";  // MIPI CSI clock 1400Mhz
+            serdes_pix_clk_hz =   "360000000";  // MIPI CSI clock 1440Mhz
+//          serdes_pix_clk_hz =   "350000000";  // MIPI CSI clock 1400Mhz
 
             gain_factor = "10";
             min_gain_val = "0";                 /* dB */
@@ -972,8 +971,8 @@ fragment@61{
             inherent_gain = "1";
             pix_clk_hz = "94500000";
 //          pix_clk_hz = "74250000";
-            serdes_pix_clk_hz =   "180000000";  // MIPI CSI clock 1500Mhz
-//          serdes_pix_clk_hz =   "175000000";  // MIPI CSI clock 1400Mhz
+            serdes_pix_clk_hz =   "360000000";  // MIPI CSI clock 1440Mhz
+//          serdes_pix_clk_hz =   "350000000";  // MIPI CSI clock 1400Mhz
 
             gain_factor = "10";
             min_gain_val = "0";                 /* dB */
@@ -1120,8 +1119,8 @@ fragment@62{
             inherent_gain = "1";
             pix_clk_hz = "94500000";
 //          pix_clk_hz = "74250000";
-            serdes_pix_clk_hz =   "180000000";  // MIPI CSI clock 1500Mhz
-//          serdes_pix_clk_hz =   "175000000";  // MIPI CSI clock 1400Mhz
+            serdes_pix_clk_hz =   "360000000";  // MIPI CSI clock 1440Mhz
+//          serdes_pix_clk_hz =   "350000000";  // MIPI CSI clock 1400Mhz
 
             gain_factor = "10";
             min_gain_val = "0";                 /* dB */
@@ -1227,8 +1226,8 @@ fragment@62{
             inherent_gain = "1";
             pix_clk_hz = "94500000";
 //          pix_clk_hz = "74250000";
-            serdes_pix_clk_hz =   "180000000";  // MIPI CSI clock 1500Mhz
-//          serdes_pix_clk_hz =   "175000000";  // MIPI CSI clock 1400Mhz
+            serdes_pix_clk_hz =   "360000000";  // MIPI CSI clock 1440Mhz
+//          serdes_pix_clk_hz =   "350000000";  // MIPI CSI clock 1400Mhz
 
             gain_factor = "10";
             min_gain_val = "0";                 /* dB */
