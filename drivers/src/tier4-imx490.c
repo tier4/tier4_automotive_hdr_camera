@@ -679,6 +679,17 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
       break;
 
+    case GW5300_SLAVE_MODE_30FPS:
+
+      err = tier4_imx490_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_30FPS);
+      if (err)
+      {
+        dev_err(dev, "[%s] : setting camera sensor to Slave mode 30fps failed\n", __func__);
+        return err;
+      }
+
+      break;
+
     case 0:
 
       dev_err(dev, "[%s] : setting camera sensor to Master mode 30fps.\n", __func__);
