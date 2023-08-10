@@ -828,6 +828,7 @@ str_fragment_nvcsi_ch0_r351 = """
     target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
+      port-index = <0x00>;  // Iwasaki
       bus-width = <4>;
       remote-endpoint = <&isx021_out0>;
     };
@@ -874,7 +875,7 @@ str_fragment_nvcsi_ch1_r351 = """
     target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@0/endpoint@2\";
     __overlay__ {
       status = \"okay\";
-      port-index = <0x00>;
+      port-index = <0x00>; // Iwasaki
       bus-width = <0x04>;
       remote-endpoint = <&isx021_out1>;
     };
@@ -2012,7 +2013,8 @@ str_i2c_isx021_n_p2 = """
         use_decibel_gain = \"true\";
 
         /* enable CID_SENSOR_MODE_ID for sensor modes selection */
-        use_sensor_mode_id = \"true\";
+        //use_sensor_mode_id = \"true\";
+        use_sensor_mode_id = \"false\";
 
         mode0 {
           /*mode ISX021_MODE_1920X1280_CROP_30FPS*/
@@ -2056,6 +2058,133 @@ str_i2c_isx021_n_p2 = """
           default_exp_time = \"33333\";           /* us */
           embedded_metadata_height = \"0\";
         };
+        mode1 {
+          /*mode ISX021_MODE_1920X1281_CROP_30FPS for Front Embedded data */
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+
+          active_w = \"1920\";
+          active_h = \"1281\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+
+          pix_clk_hz = \"94500000\";
+          serdes_pix_clk_hz = "350000000";    // MIPI CSI clock 1400Mhz
+
+          gain_factor = \"10\";
+          min_gain_val = \"0\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+        mode2 {
+          /*mode ISX021_MODE_1920X1294_CROP_30FPS for Rear Embedded data */
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+
+          active_w = \"1920\";
+          active_h = \"1294\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+
+          pix_clk_hz = \"94500000\";
+          serdes_pix_clk_hz = "350000000";    // MIPI CSI clock 1400Mhz
+
+          gain_factor = \"10\";
+          min_gain_val = \"0\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+        mode3 {
+          /*mode ISX021_MODE_1920X1295_CROP_30FPS for Both Front and Rear Embedded data */
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+
+          active_w = \"1920\";
+          active_h = \"1295\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+
+          pix_clk_hz = \"94500000\";
+          serdes_pix_clk_hz = "350000000";    // MIPI CSI clock 1400Mhz
+
+          gain_factor = \"10\";
+          min_gain_val = \"0\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+
 """
 
 str_i2c_isx021_0_p2 = str_i2c_isx021_n_p2
@@ -2388,7 +2517,8 @@ str_i2c_imx490_n_p2 = """
         use_decibel_gain = \"true\";
 
         /* enable CID_SENSOR_MODE_ID for sensor modes selection */
-        use_sensor_mode_id = \"true\";
+        //use_sensor_mode_id = \"true\";
+        use_sensor_mode_id = \"false\";
 
         mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
           mclk_khz = \"24000\";
@@ -2601,6 +2731,16 @@ dict_fragment_dser_in_base_dtb = {
     "351": str_fragment_dser_in_base_dtb_r351,
 }
 
+str_i2c_3180000 = """
+  fragment@99 {
+    //i2c@3180000
+    target-path = \"/i2c@3180000\";
+    __overlay__ {
+      clock-frequency = <400000>;
+    };
+  };
+"""
+
 # =================  GPIO  ======================
 
 str_gpio = """
@@ -2726,15 +2866,16 @@ def usage():
     print("**     This is the tool to generate overlay dts and udev file.        **")
     print("**                                                                    **")
     print("************************************************************************")
-    print("**                                                                    **")
     print("** Usage                                                              **")
     print("** ~~~~~                                                              **")
     print("** Case 1.                                                            **")
     print("**                                                                    **")
-    print("**  $> make_overaly_dts_xavier-devkit.py Rev camera1 camera2..camera8 **")
+    print("**  $> make_overaly_dts_xavier-devkit.py Rev Camera1 Camera2..Camera8 **")
     print("**                                                                    **")
-    print("**     Rev: L4T Revision [ R32.5.1 | R35.1 ]                          **")
-    print("**     cameraX : C1 or C2 ( The camera connected to portX )           **")
+    print("**     Rev: L4T Revision [ R32.5.1 | R32.5.2 | R32.6.1 ]              **")
+    print("**                       [ R35.1   | R35.2.1 | R35.3.1 ]              **")
+    print("**                                                                    **")
+    print("**     CameraX : C1 or C2 ( The camera connected to portX )           **")
     print("**     if no camera connected, specify C1                             **")
     print("**                                                                    **")
     print("**  E.g.                                                              **")
@@ -2760,7 +2901,8 @@ def usage():
     print("**                                                                    **")
     print("**     $> make_overaly_dts_xavier-devkit.py R32.5.1-4 C1 -2 C2 -2 C1  **")
     print("**                                                                    **")
-    print("** Not alloed case: Above 2 cases are Mixed.                          **")
+    print("**                                                                    **")
+    print("** The followings should not be specified.( Mixed above 2 cases )     **")
     print("**                                                                    **")
     print("**    [-2, -4, -6, -8] option before [C1/C2]                          **")
     print("**    and [C1/C2] without those options are mixed.                    **")
@@ -2965,7 +3107,7 @@ l4t_revision = args[1].upper()
 
 if l4t_revision == "R32.5.1" or l4t_revision == "R32.5.2" or l4t_revision == "R32.6.1":
     str_rev_num = "325x"
-elif l4t_revision == "R35.1":
+elif l4t_revision == "R35.1" or  l4t_revision == "R35.2.1" or  l4t_revision == "R35.3.1" :
     str_rev_num = "351"
 else:
     print(" Error!! : 1st argument should be R32.5.1 or R35.1.")
@@ -3546,6 +3688,7 @@ if str_rev_num == "325x" :
         + str_i2c1
         + str_i2c2
 #        + str_i2c3
+        + str_i2c_3180000
         + str_gpio
         + str_overlay_end
     )
@@ -3584,6 +3727,7 @@ else :
         + str_i2c1
         + str_i2c2
   #      + str_i2c3
+        + str_i2c_3180000
         + str_gpio
         + str_overlay_end
     )

@@ -75,22 +75,22 @@ struct map_ctx
 #if 0
 static int tier4_gw5300_receive_msg(struct device *dev, u8 *data, int data_size )
 {
-	int	err = 0;
-	struct i2c_msg msg;
-	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
+    int err = 0;
+    struct i2c_msg msg;
+    struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 
-	msg.addr = priv->i2c_client->addr;
-	msg.flags = I2C_M_RD;			// I2C Read
-	msg.len = data_size;
-	msg.buf = data;
+    msg.addr = priv->i2c_client->addr;
+    msg.flags = I2C_M_RD;           // I2C Read
+    msg.len = data_size;
+    msg.buf = data;
 
-	err = i2c_transfer(priv->i2c_client->adapter, &msg, 1);
+    err = i2c_transfer(priv->i2c_client->adapter, &msg, 1);
 
-	if (err < 0 ) {
-		dev_err(dev, "[%s] : i2c_transer receive message failed : slave addr = 0x%x\n", __func__, msg.addr );
-	}
+    if (err < 0 ) {
+        dev_err(dev, "[%s] : i2c_transer receive message failed : slave addr = 0x%x\n", __func__, msg.addr );
+    }
 
-	return err;
+    return err;
 }
 #endif
 
@@ -116,10 +116,6 @@ static int tier4_gw5300_send_and_recv_msg(struct device *dev, u8 *wdata, int wda
   {
     dev_err(dev, "[%s] : i2c_transer send message failed. %d: slave addr = 0x%x\n", __func__, err, msg[0].addr);
   }
-  else
-  {
-    dev_dbg(dev, "[%s] : i2c_transer send message. : slave addr = 0x%x\n", __func__, msg[0].addr);
-  }
 
   return err;
 }
@@ -128,14 +124,14 @@ uint8_t calcCheckSum(const uint8_t *data, size_t size){
     uint8_t result = 0;
     size_t i =0;
       for(i=0; i<size; i++){
-	      result += data[i];
+          result += data[i];
       }
       return result;
 }
 
 int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16 min_integration_time){
 #define MS_TO_LINE_UNIT 80
-  u8 	buf[6];
+  u8    buf[6];
   int ret = 0;
   
   u8 cmd_integration_max[22] = {0x33, 0x47, 0x0f, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05, 0x00, 0x15, 0x00, 0x01, 0x00, 0x04, 0x00, 0x70, 0x03, 0x00, 0x00, 0x00}; // val = 0x70, 0x03, 0x00, 0x00
@@ -195,7 +191,6 @@ int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size )
   }
   else
   {
-    dev_dbg(dev, "[%s] : i2c_transer send message. : slave addr = 0x%x\n", __func__, msg[0].addr);
     err = NO_ERROR;
   }
 
@@ -358,7 +353,7 @@ EXPORT_SYMBOL(tier4_gw5300_setup_sensor_mode);
 
 
 static int tier4_gw5300_probe(struct i2c_client *client,
-				const struct i2c_device_id *id)
+                const struct i2c_device_id *id)
 {
   struct tier4_gw5300 *priv;
   int err = 0;
@@ -385,8 +380,6 @@ static int tier4_gw5300_probe(struct i2c_client *client,
       dev_err(&client->dev, "[%s] : reg not found\n", __func__);
       return -EINVAL;
     }
-
-    dev_dbg(&client->dev, "[%s] :gw5300 priv->def_addr = 0x%0x.\n", __func__, priv->def_addr);
 
     prim_priv__[channel_count_imx490] = priv;
     channel_count_imx490++;
@@ -433,13 +426,13 @@ MODULE_DEVICE_TABLE(of, tier4_gw5300_of_match);
 MODULE_DEVICE_TABLE(i2c, tier4_gw5300_id);
 
 static struct i2c_driver tier4_gw5300_i2c_driver = {
-	.driver = {
-		.name = "tier4_gw5300",
-		.owner = THIS_MODULE,
-	},
-	.probe = tier4_gw5300_probe,
-	.remove = tier4_gw5300_remove,
-	.id_table = tier4_gw5300_id,
+    .driver = {
+        .name = "tier4_gw5300",
+        .owner = THIS_MODULE,
+    },
+    .probe = tier4_gw5300_probe,
+    .remove = tier4_gw5300_remove,
+    .id_table = tier4_gw5300_id,
 };
 
 static int __init tier4_gw5300_init(void)
