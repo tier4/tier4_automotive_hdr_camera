@@ -1,9 +1,47 @@
 #!/usr/bin/env python3
 
+import apt
 import sys
+import subprocess
 
 MAX_NUM_CAMERAS = 8
 EINVALID_CAMERAS = 1
+IO_BOARD_TYPE = "ADLINK_GMSL"
+
+# Check which IO board is used
+cache = apt.Cache()
+if cache['gpiod'].is_installed:
+  board_id = [0, 0, 0, 0]
+  
+  # ID0
+  p = subprocess.Popen("gpioget gpiochip0 4", shell=True, stdout=subprocess.PIPE)
+  (stdoutput,erroutput) = p.communicate()
+  board_id[0] = stdoutput[0]-ord('0')
+  
+  # ID1
+  p = subprocess.Popen("gpioget gpiochip0 7", shell=True, stdout=subprocess.PIPE)
+  (stdoutput,erroutput) = p.communicate()
+  board_id[1] = stdoutput[0]-ord('0')
+  
+  # ID2
+  p = subprocess.Popen("gpioget gpiochip0 5", shell=True, stdout=subprocess.PIPE)
+  (stdoutput,erroutput) = p.communicate()
+  board_id[2] = stdoutput[0]-ord('0')
+  
+  # ID3
+  p = subprocess.Popen("gpioget gpiochip0 6", shell=True, stdout=subprocess.PIPE)
+  (stdoutput,erroutput) = p.communicate()
+  board_id[3] = stdoutput[0]-ord('0')
+              
+  ADLINK_GMSL_ID = [0,1,0,1]
+  ADLINK_FPDL_ID = [0,1,1,1]
+  if board_id == ADLINK_GMSL_ID:
+      IO_BOARD_TYPE = "ADLINK_GMSL"
+  elif board_id == ADLINK_FPDL_ID:
+      IO_BOARD_TYPE = "ADLINK_FPDL"
+  else:
+      IO_BOARD_TYPE = "LEOPARD"
+
 
 str_overlay_header_r351 = """
 /dts-v1/;
@@ -85,12 +123,14 @@ str_fragment_vi_0_r351 = """
   };
 
   fragment@3{
+    // target = vi_in0;
     target-path = \"/tegra-capture-vi/ports/port@0/endpoint\";
     __overlay__ {
       status = \"okay\";
       port-index = <0>;
       vc-id = <0>;
-      bus-width = <2>;
+      bus-width = <4>;
+      retmote-endpoint = <&csi_out0>;
     };
   };
 """
@@ -106,12 +146,14 @@ str_fragment_vi_1_r351 = """
   };
 
   fragment@5{
+    // target = vi_in1;
     target-path = \"/tegra-capture-vi/ports/port@1/endpoint\";
     __overlay__ {
       status = \"okay\";
       vc-id = <1>;
       port-index = <0>;
-      bus-width = <2>;
+      bus-width = <4>;
+      retmote-endpoint = <&csi_out1>;
     };
   };
 """
@@ -127,12 +169,14 @@ str_fragment_vi_2_r351 = """
   };
 
   fragment@7{
+    // target = vi_in2;
     target-path = \"/tegra-capture-vi/ports/port@2/endpoint\";
     __overlay__ {
       status = \"okay\";
       vc-id = <0>;
       port-index = <2>;
-      bus-width = <2>;
+      bus-width = <4>;
+      retmote-endpoint = <&csi_out2>;
     };
   };
 """
@@ -148,12 +192,14 @@ str_fragment_vi_3_r351 = """
   };
 
   fragment@9 {
+    // target = vi_in3;
     target-path = \"/tegra-capture-vi/ports/port@3/endpoint\";
     __overlay__ {
       status = \"okay\";
       vc-id = <1>;
       port-index = <2>;
-      bus-width = <2>;
+      bus-width = <4>;
+      retmote-endpoint = <&csi_out3>;
     };
   };
 """
@@ -169,12 +215,14 @@ str_fragment_vi_4_r351 = """
   };
 
   fragment@11 {
+    // target = vi_in4;
     target-path = \"/tegra-capture-vi/ports/port@4/endpoint\";
     __overlay__ {
       status = \"okay\";
       vc-id = <0>;
       port-index = <4>;
-      bus-width = <2>;
+      bus-width = <4>;
+      retmote-endpoint = <&csi_out4>;
     };
   };
 """
@@ -190,12 +238,14 @@ str_fragment_vi_5_r351 = """
   };
 
   fragment@13 {
+    // target = vi_in5;
     target-path = \"/tegra-capture-vi/ports/port@5/endpoint\";
     __overlay__ {
       status = \"okay\";
       vc-id = <1>;
       port-index = <4>;
-      bus-width = <2>;
+      bus-width = <4>;
+      retmote-endpoint = <&csi_out5>;
     };
   };
 """
@@ -211,12 +261,14 @@ str_fragment_vi_6_r351 = """
   };
 
   fragment@15 {
+    // target = vi_in6;
     target-path = \"/tegra-capture-vi/ports/port@6/endpoint\";
     __overlay__ {
       status = \"okay\";
       vc-id = <0>;
       port-index = <5>;
-      bus-width = <2>;
+      bus-width = <4>;
+      retmote-endpoint = <&csi_out6>;
     };
   };
 """
@@ -230,15 +282,26 @@ str_fragment_vi_7_r351 = """
   };
 
   fragment@17 {
+    // target = vi_in7;
     target-path = \"/tegra-capture-vi/ports/port@7/endpoint\";
     __overlay__ {
       status = \"okay\";
       vc-id = <1>;
       port-index = <5>;
-      bus-width = <2>;
+      bus-width = <4>;
+      retmote-endpoint = <&csi_out7>;
     };
   };
 """
+if IO_BOARD_TYPE == "LEOPARD":
+  str_fragment_vi_0_r351 = str_fragment_vi_0_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_1_r351 = str_fragment_vi_1_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_2_r351 = str_fragment_vi_2_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_3_r351 = str_fragment_vi_3_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_4_r351 = str_fragment_vi_4_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_5_r351 = str_fragment_vi_5_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_6_r351 = str_fragment_vi_6_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_7_r351 = str_fragment_vi_7_r351.replace("bus-width = <4>", "bus-width = <2>")
 
 str_fragment_vi_others_r351 = ""
 #  fragment@18 {
@@ -325,7 +388,8 @@ str_fragment_nvcsi_ch0_r351 = """
     target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
-      bus-width = <0x02>;
+      port-index = <0>;
+      bus-width = <4>;
       remote-endpoint = <&isx021_out0>;
     };
   };
@@ -372,7 +436,7 @@ str_fragment_nvcsi_ch1_r351 = """
     __overlay__ {
       status = \"okay\";
       port-index = <0x00>;
-      bus-width = <0x02>;
+      bus-width = <4>;
       remote-endpoint = <&isx021_out1>;
     };
   };
@@ -407,12 +471,12 @@ str_fragment_nvcsi_ch2_r351 = """
   };
 
   fragment@31 {
-    // target = csi_in0
+    // target = csi_in2
     target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
       port-index = <2>;
-      bus-width = <2>;
+      bus-width = <4>;
       remote-endpoint = <&isx021_out2>;
     };
   };
@@ -425,7 +489,7 @@ str_fragment_nvcsi_ch2_r351 = """
   };
 
   fragment@33 {
-    // target = csi_out0
+    // target = csi_out2
     target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@1/endpoint@1\";
     __overlay__ {
       status = \"okay\";
@@ -454,12 +518,12 @@ str_fragment_nvcsi_ch3_r351 = """
   };
 
   fragment@36 {
-    // target = csi_in0
+    // target = csi_in3
     target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
       port-index = <2>;
-      bus-width = <2>;
+      bus-width = <4>;
       remote-endpoint = <&isx021_out3>;
     };
   };
@@ -472,7 +536,7 @@ str_fragment_nvcsi_ch3_r351 = """
   };
 
   fragment@38 {
-    // target = csi_out0
+    // target = csi_out3
     target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@1/endpoint@1\";
     __overlay__ {
       status = \"okay\";
@@ -506,7 +570,7 @@ str_fragment_nvcsi_ch4_r351 = """
     __overlay__ {
       status = \"okay\";
       port-index = <4>;
-      bus-width = <2>;
+      bus-width = <4>;
       remote-endpoint = <&isx021_out4>;
     };
   };
@@ -553,7 +617,7 @@ str_fragment_nvcsi_ch5_r351 = """
     __overlay__ {
       status = \"okay\";
       port-index = <4>;
-      bus-width = <2>;
+      bus-width = <4>;
       remote-endpoint = <&isx021_out5>;
     };
   };
@@ -586,7 +650,7 @@ str_fragment_nvcsi_ch6_r351 = """
     __overlay__ {
       status = \"okay\";
       port-index = <6>;
-      bus-width = <2>;
+      bus-width = <4>;
       remote-endpoint = <&isx021_out6>;
     };
   };
@@ -619,7 +683,7 @@ str_fragment_nvcsi_ch7_r351 = """
     __overlay__ {
       status = \"okay\";
       port-index = <6>;
-      bus-width = <2>;
+      bus-width = <4>;
       remote-endpoint = <&isx021_out7>;
     };
   };
@@ -640,6 +704,15 @@ str_fragment_nvcsi_ch7_r351 = """
     };
   };
 """
+if IO_BOARD_TYPE == "LEOPARD":
+  str_fragment_nvcsi_ch0_r351 = str_fragment_nvcsi_ch0_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch1_r351 = str_fragment_nvcsi_ch1_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch2_r351 = str_fragment_nvcsi_ch2_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch3_r351 = str_fragment_nvcsi_ch3_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch4_r351 = str_fragment_nvcsi_ch4_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch5_r351 = str_fragment_nvcsi_ch5_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch6_r351 = str_fragment_nvcsi_ch6_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch7_r351 = str_fragment_nvcsi_ch7_r351.replace("bus-width = <4>", "bus-width = <2>")
 
 # -----------------------------------------------
 
@@ -754,7 +827,7 @@ str_fragment_camera_module_r351 = """
     target-path = "/tegra-camera-platform\";
     __overlay__ {
       status = \"okay\";
-      num_csi_lanes = <0x02>;
+      num_csi_lanes = <16>;
       max_lane_speed = <4000000>;
     };
   };
@@ -779,7 +852,7 @@ str_fragment_isx021_camera_module0_r351 = """
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
       devname = \"isx021 30-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c240000/tca9546@70/i2c@0/isx021_a@1b\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_a@1b\";
     };
   };
 """
@@ -803,7 +876,7 @@ str_fragment_isx021_camera_module1_r351 = """
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
       devname = \"isx021 30-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c240000/tca9546@70/i2c@0/isx021_b@1c\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_b@1c\";
     };
   };
 """
@@ -827,7 +900,7 @@ str_fragment_isx021_camera_module2_r351 = """
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
       devname = \"isx021 31-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c240000/tca9546@70/i2c@1/isx021_c@1b\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_c@1b\";
     };
   };
 """
@@ -851,7 +924,7 @@ str_fragment_isx021_camera_module3_r351 = """
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
       devname = \"isx021 31-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c240000/tca9546@70/i2c@1/isx021_d@1c\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_d@1c\";
     };
   };
 """
@@ -875,7 +948,7 @@ str_fragment_isx021_camera_module4_r351 = """
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
       devname = \"isx021 32-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c240000/tca9546@70/i2c@2/isx021_e@1b\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_e@1b\";
     };
   };
 """
@@ -899,7 +972,7 @@ str_fragment_isx021_camera_module5_r351 = """
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
       devname = \"isx021 32-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c240000/tca9546@70/i2c@2/isx021_f@1c\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_f@1c\";
     };
   };
 """
@@ -923,7 +996,7 @@ str_fragment_isx021_camera_module6_r351 = """
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
       devname = \"isx021 33-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c240000/tca9546@70/i2c@2/isx021_g@1b\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_g@1b\";
     };
   };
 """
@@ -947,10 +1020,20 @@ str_fragment_isx021_camera_module7_r351 = """
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
       devname = \"isx021 33-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c240000/tca9546@70/i2c@2/isx021_h@1c\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_h@1c\";
     };
   };
 """
+
+if IO_BOARD_TYPE == "LEOPARD":
+  str_fragment_isx021_camera_module0_r351 = str_fragment_isx021_camera_module0_r351.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module1_r351 = str_fragment_isx021_camera_module1_r351.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module2_r351 = str_fragment_isx021_camera_module2_r351.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module3_r351 = str_fragment_isx021_camera_module3_r351.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module4_r351 = str_fragment_isx021_camera_module4_r351.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module5_r351 = str_fragment_isx021_camera_module5_r351.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module6_r351 = str_fragment_isx021_camera_module6_r351.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module7_r351 = str_fragment_isx021_camera_module7_r351.replace("@c250000", "@c240000")
 
 # below str_fragment_camera_module_r325
 dict_fragment_camera_module = {
@@ -992,24 +1075,38 @@ dict_fragment_isx021_camera_module7 = {
 
 # ===================  I2C ======================
 
-str_fragment_i2c = """
-// -----  I2C client  -----
+# // -----  I2C clients  -----
+str_i2c_switch = """
 
-  fragment@90{
-    //cami2c/i2c@0
-    target-path = \"/i2c@c240000/tca9546@70\";
+  fragment@90 {
+    // declare the i2c switch for the four i2c clients
+    target-path = \"/i2c@c250000\";
     __overlay__ {
       status = \"okay\";
+      tca9546@70 {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        compatible = \"nxp,pca9546\";
+        reg = <0x70>;
+        skip_mux_detect = \"yes\";
+        force_bus_start = <0x1e>;
+        i2c@0 {};
+        i2c@1 {};
+        i2c@2 {};
+        i2c@3 {};
+      };
     };
   };
 """
+if IO_BOARD_TYPE == "LEOPARD":
+  str_i2c_switch = str_i2c_switch.replace("@c250000", "@c240000")
 
 # -----------------------------------------------
 
 str_fragment_i2c_n = """
   fragment@91{
     //cami2c/i2c@0
-    target-path = \"/i2c@c240000/tca9546@70/i2c@0\";
+    target-path = \"/i2c@c250000/tca9546@70/i2c@0\";
     __overlay__ {
       i2c-mux,deselect-on-exit;
       #address-cells = <1>;
@@ -1018,6 +1115,8 @@ str_fragment_i2c_n = """
 
       reg = <0>;
 """
+if IO_BOARD_TYPE == "LEOPARD":
+  str_fragment_i2c_n = str_fragment_i2c_n.replace("@c250000", "@c240000")
 
 str_fragment_i2c_0 = str_fragment_i2c_n
 str_fragment_i2c_1 = (
@@ -1039,7 +1138,7 @@ str_fragment_i2c_3 = (
 # ==================   DSER   ====================
 
 str_i2c_dser_n = """
-      max9296@48 {
+      dser_0: max9296@48 {
         compatible = \"nvidia,tier4_max9296\";
         reg = <0x48>;
         status = \"okay\";
@@ -1050,9 +1149,9 @@ str_i2c_dser_n = """
       };
 """
 str_i2c_dser_0 = str_i2c_dser_n
-str_i2c_dser_1 = str_i2c_dser_n
-str_i2c_dser_2 = str_i2c_dser_n
-str_i2c_dser_3 = str_i2c_dser_n
+str_i2c_dser_1 = str_i2c_dser_n.replace("dser_0:", "dser_1:")
+str_i2c_dser_2 = str_i2c_dser_n.replace("dser_0:", "dser_2:")
+str_i2c_dser_3 = str_i2c_dser_n.replace("dser_0:", "dser_3:")
 
 # ==================   SER   ====================
 
@@ -1207,8 +1306,8 @@ str_i2c_isx021_n_p2 = """
           line_length = \"2250\";
           inherent_gain = \"1\";
 
-          pix_clk_hz = \"94500000\";
-          serdes_pix_clk_hz = \"200000000\";      /* MIPI CSI clock 1600Mhz */
+          pix_clk_hz = \"74250000\";
+          serdes_pix_clk_hz = "375000000";    // MIPI CSI clock 1500Mhz
 
           gain_factor = \"10\";
           min_gain_val = \"0\";                   /* dB */
@@ -1230,16 +1329,26 @@ str_i2c_isx021_n_p2 = """
           embedded_metadata_height = \"0\";
         };
 """
+if IO_BOARD_TYPE == "LEOPARD":
+  str_i2c_isx021_n_p2 = str_i2c_isx021_n_p2.replace(
+  "num_lanes = \"4\"", "num_lanes = \"2\"").replace(
+  "serdes_pix_clk_hz = \"375000000\"", "serdes_pix_clk_hz = \"187500000\""
+  )
 
 str_i2c_isx021_0_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_1_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_2_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_3_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_4_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_5_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_6_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_7_p2 = str_i2c_isx021_n_p2
-
+str_i2c_isx021_1_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"')
+str_i2c_isx021_2_p2 = str_i2c_isx021_n_p2.replace("serial_a", "serial_c")
+str_i2c_isx021_3_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_c"
+)
+str_i2c_isx021_4_p2 = str_i2c_isx021_n_p2.replace("serial_a", "serial_e")
+str_i2c_isx021_5_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_e"
+)
+str_i2c_isx021_6_p2 = str_i2c_isx021_n_p2.replace("serial_a", "serial_g")
+str_i2c_isx021_7_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_g"
+)
 
 # -----------------------------------------------
 
@@ -1252,12 +1361,14 @@ str_i2c_isx021_n_p3 = """
             isx021_out0: endpoint {
               vc-id = <0>;
               port-index = <0>;
-              bus-width = <2>;
+              bus-width = <4>;
               remote-endpoint = <&csi_in0>;
             };
           };
         };
 """
+if IO_BOARD_TYPE == "LEOPARD":
+  str_i2c_isx021_n_p3 = str_i2c_isx021_n_p3.replace("bus-width = <4>", "bus-width = <2>")
 
 str_i2c_isx021_0_p3 = str_i2c_isx021_n_p3
 str_i2c_isx021_1_p3 = (
@@ -1307,11 +1418,12 @@ str_i2c_isx021_n_p4 = """
           csi-mode = \"1x4\";             /*  to sensor CSI mode. */
           st-vc = <0>;                  /* Sensor source default VC ID: 0 unless overridden by sensor. */
           vc-id = <0>;                  /* Destination VC ID, assigned to sensor stream by deserializer. */
-          num-lanes = <2>;              /* Number of CSI lanes used. */
+          num-lanes = <4>;              /* Number of CSI lanes used. */
           streams = \"ued-u1\", \"yuv8\";   /* Types of streams sensor is streaming. */
         };
       };"""
-
+if IO_BOARD_TYPE == "LEOPARD":
+  str_i2c_isx021_n_p4 = str_i2c_isx021_n_p4.replace("num-lanes = <4>", "num-lanes = <2>")
 
 str_i2c_isx021_0_p4 = str_i2c_isx021_n_p4
 str_i2c_isx021_1_p4 = str_i2c_isx021_n_p4.replace(
@@ -1459,7 +1571,7 @@ str_i2c_imx490_n_p2 = """
 
         mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
           mclk_khz = \"24000\";
-          num_lanes = \"2\";
+          num_lanes = \"4\";
           tegra_sinterface = \"serial_a\";
           vc_id = \"0\";
           discontinuous_clk = \"no\";
@@ -1476,8 +1588,8 @@ str_i2c_imx490_n_p2 = """
           line_length = \"2250\";
           inherent_gain = \"1\";
           pix_clk_hz = \"160704000\";
-          serdes_pix_clk_hz  = \"250000000\";           // MIPI CSI clock 2000Mhz
-        
+          serdes_pix_clk_hz = \"375000000\";    // MIPI CSI clock 1500Mhz
+
           gain_factor = \"5\";
           min_gain_val = \"0\";                         /* dB */
           max_gain_val = \"300\";                       /* dB */
@@ -1498,15 +1610,26 @@ str_i2c_imx490_n_p2 = """
           embedded_metadata_height = \"0\";
         };
 """
+if IO_BOARD_TYPE == "LEOPARD":
+  str_i2c_imx490_n_p2 = str_i2c_imx490_n_p2.replace(
+  "num_lanes = \"4\"", "num_lanes = \"2\"").replace(
+  "serdes_pix_clk_hz = \"375000000\"", "serdes_pix_clk_hz = \"187500000\""
+  )
 
 str_i2c_imx490_0_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_1_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_2_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_3_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_4_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_5_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_6_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_7_p2 = str_i2c_imx490_n_p2
+str_i2c_imx490_1_p2 = str_i2c_imx490_n_p2.replace('vc_id = "0"', 'vc_id = "1"')
+str_i2c_imx490_2_p2 = str_i2c_imx490_n_p2.replace("serial_a", "serial_c")
+str_i2c_imx490_3_p2 = str_i2c_imx490_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_c"
+)
+str_i2c_imx490_4_p2 = str_i2c_imx490_n_p2.replace("serial_a", "serial_e")
+str_i2c_imx490_5_p2 = str_i2c_imx490_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_e"
+)
+str_i2c_imx490_6_p2 = str_i2c_imx490_n_p2.replace("serial_a", "serial_g")
+str_i2c_imx490_7_p2 = str_i2c_imx490_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_g"
+)
 
 # -----------------------------------------------
 
@@ -1519,11 +1642,13 @@ str_i2c_imx490_n_p3 = """
             imx490_out0: endpoint {
               vc-id = <0>;
               port-index = <0>;
-              bus-width = <2>;
+              bus-width = <4>;
               remote-endpoint = <&csi_in0>;
             };
           };
         };"""
+if IO_BOARD_TYPE == "LEOPARD":
+  str_i2c_imx490_n_p3 = str_i2c_imx490_n_p3.replace("bus-width = <4>", "bus-width = <2>")
 
 str_i2c_imx490_0_p3 = str_i2c_imx490_n_p3
 str_i2c_imx490_1_p3 = (
@@ -1575,10 +1700,12 @@ str_i2c_imx490_n_p4 = """
           csi-mode = \"1x4\";       /*  to sensor CSI mode. */
           st-vc = <0>;            /* Sensor source default VC ID: 0 unless overridden by sensor. */
           vc-id = <0>;            /* Destination VC ID, assigned to sensor stream by deserializer. */
-          num-lanes = <2>;        /* Number of CSI lanes used. */
+          num-lanes = <4>;        /* Number of CSI lanes used. */
           streams = \"ued-u1\",\"yuv8\"; /* Types of streams sensor is streaming. */
         };
       };"""
+if IO_BOARD_TYPE == "LEOPARD":
+  str_i2c_imx490_n_p4.replace("num-lanes = <4>", "num-lanes = <2>")
 
 str_i2c_imx490_0_p4 = str_i2c_imx490_n_p4
 str_i2c_imx490_1_p4 = str_i2c_imx490_n_p4.replace(
@@ -1958,14 +2085,18 @@ def deploy_n_options(str_n_optiosn):
 # -----------------------------------------------
 
 dict_isx021_serdes_pix_clk = {
-    "325x": 'serdes_pix_clk_hz = "200000000"',
-    "351": 'serdes_pix_clk_hz = "200000000"',
+    "325x": 'serdes_pix_clk_hz = "375000000"',
+    "351": 'serdes_pix_clk_hz = "375000000"',
 }
 dict_imx490_serdes_pix_clk = {
-    "325x": 'serdes_pix_clk_hz = "250000000"',
-    "351": 'serdes_pix_clk_hz = "250000000"',
+    "325x": 'serdes_pix_clk_hz = "375000000"',
+    "351": 'serdes_pix_clk_hz = "375000000"',
 }
-
+if IO_BOARD_TYPE == "LEOPARD":
+  dict_isx021_serdes_pix_clk["325x"] = dict_isx021_serdes_pix_clk["325x"].replace("375000000", "187500000")
+  dict_isx021_serdes_pix_clk["351"] = dict_isx021_serdes_pix_clk["351"].replace("375000000", "187500000")
+  dict_imx490_serdes_pix_clk["325x"] = dict_imx490_serdes_pix_clk["325x"].replace("375000000", "187500000")
+  dict_imx490_serdes_pix_clk["351"] = dict_imx490_serdes_pix_clk["351"].replace("375000000", "187500000")
 
 def get_serdes_pix_clk(str_revision, str_camera_type):
     if str_camera_type == "C1":
@@ -2462,9 +2593,6 @@ str_i2c3 = (
     + str_block_end
 )
 
-str_whole_i2c = str_i2c0 + str_i2c1 + str_i2c2 + str_i2c3
-
-
 str_w_camera_type = ""
 exist_c1_camera = 0
 exist_c2_camera = 0
@@ -2521,6 +2649,7 @@ str_whole_dts = (
     + str_camera_module5
     + str_camera_module6
     + str_camera_module7
+    + str_i2c_switch
     + str_i2c0
     + str_i2c1
     + str_i2c2

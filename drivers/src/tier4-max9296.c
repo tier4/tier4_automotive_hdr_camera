@@ -990,9 +990,7 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
     }
     else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
     {
-      tier4_max9296_write_reg(dev,
-                              //				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2500MHZ);
-                              MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1600MHZ);
+      tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
     }
     else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE)
     {

@@ -127,6 +127,7 @@ else ifeq ($(L4T_RELEASE_MAIN), R34)
     endif
 else ifeq ($(L4T_RELEASE_MAIN), R35)
         ifeq ($(MODEL),$(ROScube_word))
+            # RQX-58G
             KERNELRELEASE            := 5.10.104-rqx58g
             TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-roscube-r351
             TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-roscube-r351
@@ -164,6 +165,7 @@ else ifeq ($(L4T_RELEASE_MAIN), R35)
                 TARGET_IMX490_DTS        := Unknown
             endif
         else ifeq ($(MODEL),$(ROScube_Orin_Model_word))
+            # RQX-59G
             KERNELRELEASE            := 5.10.104-rqx59x
             TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-roscube-orin-r351
             TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-roscube-orin-r351
@@ -227,10 +229,11 @@ binary_module:
 	install -d $(DEST_FIRMWARE_DIR)
 	cp -f $(SRC_FIRMWARE_BINARY) $(DEST_FIRMWARE_BINARY)
 
-$(TARGET_ISX021_DTS).dts $(TARGET_IMX490_DTS).dts  $(TARGET_ISX021_IMX490_DTS).dts:
-
+$(TARGET_ISX021_DTS).dts:
 	python3 ./$(MAKE_OVERLAY_DTS_CMD) -8 C1
+$(TARGET_IMX490_DTS).dts:
 	python3 ./$(MAKE_OVERLAY_DTS_CMD) -8 C2
+$(TARGET_ISX021_IMX490_DTS).dts:
 	python3 ./$(MAKE_OVERLAY_DTS_CMD) -2 C1 -2 C2 -2 C1 -2 C2
 
 ifeq ($(L4T_RELEASE_MAIN), R34)
@@ -243,15 +246,21 @@ else ifeq ($(L4T_RELEASE_MAIN), R35)
 	sed -i -e '/^ *jetson-header-name/s/AGX Xavier CSI/AGX CSI/' $(TARGET_IMX490_DTS).dts
 endif
 
-dtbo: $(TARGET_ISX021_DTS).dts $(TARGET_IMX490_DTS).dts  $(TARGET_ISX021_IMX490_DTS).dts
-
-
+# Here we disable parallel build in order to rebuild the dts files step by step
+.NOTPARALLEL:
+dtbo: clean_dts $(TARGET_ISX021_DTS).dts $(TARGET_IMX490_DTS).dts  $(TARGET_ISX021_IMX490_DTS).dts
 	dtc -O dtb -o $(TARGET_ISX021_DTS).dtbo -@ $(TARGET_ISX021_DTS).dts
 	dtc -O dtb -o $(TARGET_IMX490_DTS).dtbo -@ $(TARGET_IMX490_DTS).dts
 	dtc -O dtb -o $(TARGET_ISX021_IMX490_DTS).dtbo -@ $(TARGET_ISX021_IMX490_DTS).dts
 	cp -rf $(TARGET_ISX021_DTS).dtbo /boot
 	cp -rf $(TARGET_IMX490_DTS).dtbo /boot
 	cp -rf $(TARGET_ISX021_IMX490_DTS).dtbo /boot
+
+clean_dts:
+	# clean dts to make sure the dts file will be re-built everytime
+	rm -f $(TARGET_ISX021_DTS).dts
+	rm -f $(TARGET_IMX490_DTS).dts
+	rm -f $(TARGET_ISX021_IMX490_DTS).dts
 
 clean:
 	$(MAKE) -C $(KERNEL_SRC_DIR) ARCH=$(ARCH) M=$(BUILD_DIR) src=$(PWD) clean

@@ -1,0 +1,16 @@
+#!/bin/bash -e
+
+IS_RQX=$(cat /proc/device-tree/model | grep 'ROScube-X 590' | wc -l)
+if [[ $IS_RQX = 1 ]]
+then
+	 # Check gpiod is installed for RQX-590 to check which GMSL board is used
+	 if [[ $(dpkg -l | grep gpiod) != *"gpiod"* ]]; then
+		echo ""
+		echo "-------------------------------------------------------------"
+		echo "  Error! This driver depends on gpiod."
+		echo "  Please run \"sudo apt install gpiod\" to fix it."
+		echo "-------------------------------------------------------------"
+		echo ""
+		exit 1
+	fi
+fi
