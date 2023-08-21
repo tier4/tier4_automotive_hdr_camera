@@ -2484,7 +2484,6 @@ str_fpga = """
        t4_fpga: tier4_fpga@66 {
        compatible = \"nvidia,tier4_fpga\";
        reg = <0x66>;
-       generate-fsync = \"false\";
        status = \"okay\";
      };
    };

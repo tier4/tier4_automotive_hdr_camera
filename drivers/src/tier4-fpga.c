@@ -31,13 +31,6 @@
 #include "tier4-gmsl-link.h"
 #include "tier4-fpga.h"
 
-#define FPGA_ENABLED 0xF0
-#define FPGA_DISABLED 0xFF
-#define NO_ERROR 0
-
-#define FPGA_REG_ENABLE_ADDR 0x4
-#define FPGA_REG_FREQ_BASE_ADDR 0x8
-
 struct tier4_fpga
 {
   struct i2c_client *i2c_client;
@@ -46,12 +39,19 @@ struct tier4_fpga
   struct mutex lock;
   /* FPGA slave address */
   __u32 reg_addr;
-  bool generate_fsync;
 };
 
-static int generate_fsync;
+static int fsync_mode; // 0: disabled, 1: enable auto mode, 2: enable manual mode
+static int fps_cam1_cam2;
+static int fps_cam3_cam4;
+static int fps_cam5_cam6;
+static int fps_cam7_cam8;
 
-module_param(generate_fsync, int, S_IRUGO | S_IWUSR);
+module_param(fsync_mode, int, S_IRUGO | S_IWUSR);
+module_param(fps_cam1_cam2, int, S_IRUGO | S_IWUSR);
+module_param(fps_cam3_cam4, int, S_IRUGO | S_IWUSR);
+module_param(fps_cam5_cam6, int, S_IRUGO | S_IWUSR);
+module_param(fps_cam7_cam8, int, S_IRUGO | S_IWUSR);
 
 static struct regmap_config tier4_fpga_regmap_config = {
   .reg_bits = 8,
@@ -113,83 +113,167 @@ static int tier4_fpga_write_reg(struct device *dev, u16 addr, u8 val)
   return err;
 }
 
-int tier4_fpga_enable_generate_fsync_signal(struct device *dev)
+int tier4_fpga_get_fsync_mode(void)
 {
-  //	struct tier4_fpga *priv = dev_get_drvdata(dev);
-  int err = 0;
-
-  err = tier4_fpga_write_reg(dev, FPGA_REG_ENABLE_ADDR, FPGA_ENABLED);
-
-  if (err)
-  {
-    dev_err(dev, "[%s] Enabling generation of fsync signal failed.\n", __func__);
-  }
-  else
-  {
-    dev_info(dev, "[%s] Enabling generation of fsync signal.\n", __func__);
-  }
-  return err;
+  return fsync_mode; // 0: disabled, 1: enable auto mode, 2: enable manual mode
 }
-EXPORT_SYMBOL(tier4_fpga_enable_generate_fsync_signal);
+EXPORT_SYMBOL(tier4_fpga_get_fsync_mode);
 
-int tier4_fpga_disable_generate_fsync_signal(struct device *dev)
+int tier4_fpga_enable_fsync_mode(struct device *dev)
 {
   int err = 0;
+  u8 val = 0;
 
-  err = tier4_fpga_write_reg(dev, FPGA_REG_ENABLE_ADDR, FPGA_DISABLED);
+  err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &val);
+  if ((val & 0xFF) == FPGA_MODE_FSYNC) {
+    // skip writing the same value to reg in order to save the flash write cycles
+    dev_info(dev, "[%s] : Keep FSYNC mode enabled.\n", __func__);
+    return err;
+  }
 
+  err = tier4_fpga_write_reg(dev, FPGA_REG_MODE_ADDR, FPGA_MODE_FSYNC); 
   if (err)
   {
-    dev_err(dev, "[%s] Disabling generation of fsync signal failed.\n", __func__);
+    dev_err(dev, "[%s] : Failed to enable FSYNC mode.\n", __func__);
   }
-  else
-  {
-    dev_info(dev, "[%s] Disabling generation of fsync signal.\n", __func__);
-  }
+  
   return err;
 }
-EXPORT_SYMBOL(tier4_fpga_disable_generate_fsync_signal);
+EXPORT_SYMBOL(tier4_fpga_enable_fsync_mode);
+
+int tier4_fpga_disable_fsync_mode(struct device *dev)
+{
+  int err = 0;
+  u8 val = 0;
+
+  err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &val);
+  if ((val & 0xFF) == FPGA_MODE_FREE_RUN) {
+    // skip writing the same value to reg in order to save the flash write cycles
+    dev_info(dev, "[%s] : Keep FSYNC mode disabled.\n", __func__);
+    return err;
+  }
+
+  err = tier4_fpga_write_reg(dev, FPGA_REG_MODE_ADDR, FPGA_MODE_FREE_RUN);
+  if (err)
+  {
+    dev_err(dev, "[%s] : Failed to disable FSYNC mode.\n", __func__);
+  }
+  
+  return err;
+}
+EXPORT_SYMBOL(tier4_fpga_disable_fsync_mode);
+
+int tier4_fpga_set_fsync_auto_trigger(struct device *dev)
+{
+  int err = 0;
+  u8 val = 0;
+
+  err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
+  if ((val & 0xFF) == FPGA_FSYNC_AUTO) {
+    // skip writing the same value to reg in order to save the flash write cycles
+    dev_info(dev, "[%s] : Keep FSYNC Auto Trigger mode.\n", __func__);
+    return err;
+  }
+
+  err = tier4_fpga_write_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, FPGA_FSYNC_AUTO);
+  if (err)
+  {
+    dev_err(dev, "[%s] : Failed to enable FSYNC Auto Trigger mode.\n", __func__);
+  }
+  
+  return err;
+}
+EXPORT_SYMBOL(tier4_fpga_set_fsync_auto_trigger);
+
+int tier4_fpga_set_fsync_manual_trigger(struct device *dev)
+{
+  int err = 0;
+  u8 val = 0;
+
+  err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
+  if ((val & 0xFF) == FPGA_FSYNC_MANUAL) {
+    // skip writing the same value to reg in order to save the flash write cycles
+    dev_info(dev, "[%s] : Keep FSYNC Auto Trigger mode.\n", __func__);
+    return err;
+  }
+
+  err = tier4_fpga_write_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, FPGA_FSYNC_MANUAL);
+  if (err)
+  {
+    dev_err(dev, "[%s] : Failed to enable FSYNC Manual Trigger mode.\n", __func__);
+  }
+  
+  return err;
+}
+EXPORT_SYMBOL(tier4_fpga_set_fsync_manual_trigger);
 
 int tier4_fpga_check_access(struct device *dev)
 {
   int err;
   u8 dummy8 = 0;
 
-  err = tier4_fpga_read_reg(dev, FPGA_REG_ENABLE_ADDR, &dummy8);
+  err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &dummy8);
 
   if (err)
   {
-    dev_err(dev, "[%s] :  Accessing FPGA failed.\n", __func__);
+    dev_err(dev, "[%s] : Accessing FPGA failed.\n", __func__);
     return err;
   }
   else
   {
-    dev_dbg(dev, "[%s] :  Accessing FPGA succeeded.\n", __func__);
+    dev_dbg(dev, "[%s] : Accessing FPGA succeeded.\n", __func__);
   }
 
   return NO_ERROR;
 }
 EXPORT_SYMBOL(tier4_fpga_check_access);
 
-int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, int frequency)
+int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number)
 {
   int err = 0;
   u8 val8, addr8;
+  int freq = 0;
+  u8 read_val = 0;
+  u8 freq_bitmask = 0x3F; // bit[0:5]
 
-  addr8 = (u8)(FPGA_REG_FREQ_BASE_ADDR + 12 * (des_number - 1));
+  switch (des_number) {
+    case 0:
+      freq = fps_cam1_cam2;
+      break;
+    case 1:
+      freq = fps_cam3_cam4;
+      break;
+    case 2:
+      freq = fps_cam5_cam6;
+      break;
+    case 3:
+      freq = fps_cam7_cam8;
+      break;
+    default:
+      dev_err(dev, "[%s] : Invalid des_number(%d)\n", __func__, des_number);
+      break;
+  }
 
-  val8 = (u8)(frequency & 0xFF);
+  addr8 = (u8)(FPGA_REG_FREQ_BASE_ADDR + 12 * (des_number));
+  val8 = (u8)(freq & freq_bitmask);
+
+  err = tier4_fpga_read_reg(dev, addr8, &read_val);
+  if ((read_val & freq_bitmask) == val8) {
+    // skip writing the same value to reg in order to save the flash write cycles
+    dev_info(dev, "[%s] : Keep the frequency of fsync trigger to %d\n", __func__, val8);
+    return err;
+  }
 
   err = tier4_fpga_write_reg(dev, addr8, val8);
 
   if (err)
   {
-    dev_err(dev, "[%s] :  Setting the frequency of fsync pulse failed.\n", __func__);
+    dev_err(dev, "[%s] : Failed to set the frequency of fsync trigger\n", __func__);
     return err;
   }
   else
   {
-    dev_dbg(dev, "[%s] :  Set the frequency of fsync pulse.\n", __func__);
+    dev_info(dev, "[%s] : Set the frequency of fsync trigger to %d.\n", __func__, val8);
   }
 
   return NO_ERROR;
@@ -232,31 +316,6 @@ static int tier4_fpga_parse_dt(struct tier4_fpga *priv, struct i2c_client *clien
 
   if (!node)
     return -EINVAL;
-
-#if 0
-	match = of_match_device(tier4_fpga_of_match, &client->dev);
-	if (!match) {
-		dev_err(&client->dev, "[%s] : Failed to match fpga device with dt id\n", __func__);
-		return -EFAULT;
-	}
-
-	priv->g_ctx.fpga_generate_fsync = false;
-
-	err = of_property_read_string(node, "generate-fsync", &str_value);
-	if (err < 0) {
-		dev_info(&client->dev, "[%s] : generate-fsync property not found and disabled gneneration of fsync.\n", __func__);
-	} else {
-		if (!strcmp(str_value, "true")) {
-			priv->g_ctx.fpga_generate_fsync = true;
-		}
-	}
-
-	dev_info(&client->dev, "[%s] : generate-fsync = %d.\n", __func__, priv->g_ctx.fpga_generate_fsync );
-#endif
-
-  priv->g_ctx.fpga_generate_fsync = generate_fsync;
-
-  dev_info(&client->dev, "[%s] : generate-fsync = %d\n", __func__, priv->g_ctx.fpga_generate_fsync);
 
   err = of_property_read_u32(node, "reg", &priv->reg_addr);
   if (err < 0)
@@ -304,7 +363,7 @@ static int tier4_fpga_probe(struct i2c_client *client, const struct i2c_device_i
 
   // default mode is disabling gnereation of fsync
 
-  err = tier4_fpga_disable_generate_fsync_signal(&client->dev);
+  err = tier4_fpga_disable_fsync_mode(&client->dev);
 
   if (err < 0)
   {
@@ -314,7 +373,7 @@ static int tier4_fpga_probe(struct i2c_client *client, const struct i2c_device_i
 
   channel_count_fpga++;
 
-  dev_info(&client->dev, "[%s] :  Probing FPGA succeeded.\n", __func__);
+  dev_info(&client->dev, "[%s] : Probing FPGA succeeded.\n", __func__);
 
   return err;
 }

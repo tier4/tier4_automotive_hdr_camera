@@ -293,7 +293,7 @@ static int shutter_time_max = ISX021_MAX_EXPOSURE_TIME;
 static int fsync_mfp = 0;
 // static int debug_i2c_write = 0;
 
-module_param(trigger_mode, int, S_IRUGO);
+module_param(trigger_mode, int, S_IRUGO | S_IWUSR);
 module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
 module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
 module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
@@ -488,13 +488,14 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
   struct device *dev = s_data->dev;
   int des_num = 0;
 
-  if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE)
+  if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE) ||
+      (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN))
   {
-    dev_info(dev, "[%s] : generate-fsync =%d\n", __func__, priv->g_ctx.fpga_generate_fsync);
-
-    if (priv->g_ctx.fpga_generate_fsync == false)
+    if (tier4_fpga_get_fsync_mode() == FPGA_FSYNC_MODE_DISABLE)
     {
-      err = tier4_fpga_disable_generate_fsync_signal(priv->fpga_dev);
+      dev_info(dev, "[%s] : Disabling FPGA fsync.\n", __func__);
+
+      err = tier4_fpga_disable_fsync_mode(priv->fpga_dev);
       if (err)
       {
         dev_err(dev, "[%s] : Disabling FPGA generate fsync failed.\n", __func__);
@@ -502,21 +503,45 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
       }
     }
     else
-    {
-      err = tier4_fpga_enable_generate_fsync_signal(priv->fpga_dev);
+    {      
+      err = tier4_fpga_enable_fsync_mode(priv->fpga_dev);
       if (err)
       {
         dev_err(dev, "[%s] : Enabling FPGA generate fsync failed.\n", __func__);
         return err;
       }
 
-      des_num = priv->g_ctx.reg_mux;
-
-      err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num, FSYNC_FREQ_HZ);
-      if (err)
+      if (tier4_fpga_get_fsync_mode() == FPGA_FSYNC_MODE_AUTO) 
       {
-        dev_err(dev, "[%s] : Setting the frequency of fsync genrated by FPGA failed.\n", __func__);
-        return err;
+        // Auto Trigger Mode
+        dev_info(dev, "[%s] : Enabling FPGA Fsync Auto Trigger mode.\n", __func__);
+
+        err = tier4_fpga_set_fsync_auto_trigger(priv->fpga_dev);
+        if (err)
+        {
+          dev_err(dev, "[%s] : Enabling FPGA Fsync Auto Trigger mode failed.\n", __func__);
+          return err;
+        }
+  
+        des_num = priv->g_ctx.reg_mux;
+        err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num);
+        if (err)
+        {
+          dev_err(dev, "[%s] : Setting the frequency of fsync genrated by FPGA failed.\n", __func__);
+          return err;
+        }
+      }
+      else if (tier4_fpga_get_fsync_mode() == FPGA_FSYNC_MODE_MANUAL)
+      {
+        // Manual Trigger Mode 
+        dev_info(dev, "[%s] : Enabling FPGA Fsync Manual Trigger mode.\n", __func__);
+        
+        err = tier4_fpga_set_fsync_manual_trigger(priv->fpga_dev);
+        if (err)
+        {
+          dev_err(dev, "[%s] : Enabling FPGA Fsync Maunal Trigger mode failed.\n", __func__);
+          return err;
+        }
       }
     }
   }
@@ -1844,28 +1869,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 
   priv->auto_exposure = enable_auto_exposure != 0 ? true : false;
 
-#if 0
-	priv->g_ctx.fpga_generate_fsync = false;
-
-	if ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
-		err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
-		if ( err < 0) {
-			if ( err == -EINVAL ) {
-				dev_info(dev, "[%s] : fpga-generate-fsync does not exist.\n", __func__);
-			} else {
-				dev_err(dev, "[%s]  : fpga-generate-fsync  is invalid .\n", __func__);
-				goto error;
-			}
-		} else {
-			if (!strcmp(str_value, "true")) {
-				priv->g_ctx.fpga_generate_fsync = true;
-			}
-		}
-	}
-#endif
-
   // for Ser node
-
   ser_node = of_parse_phandle(node, "nvidia,gmsl-ser-device", 0);
   if (ser_node == NULL)
   {
