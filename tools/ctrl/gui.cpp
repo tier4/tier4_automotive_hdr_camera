@@ -9,23 +9,34 @@ int main(int argc, char *argv[])
 
   cmdline::parser p;
   p.add("debug-print", 'v', "print debug message");
+  p.add("c2", '2', "c2");
   p.parse_check(argc, argv);
 
+  bool c1 = !p.exist("c2");
   bool debug_print = p.exist("debug-print");
-  SampleWindow window(app, 640, 480, debug_print);
-  return app->run(window);
-}
+  
+  std::shared_ptr<Gtk::Window> window;
 
-void scaleConfig(Slider &slider, float min = 0.0f, float max = 256.0f, float init = 128.0f)
+  if(c1)
+  window = std::shared_ptr<SampleWindow>(new SampleWindow(app, 640, 480, debug_print));
+  else
+  window = std::shared_ptr<SampleWindowC2>(new SampleWindowC2(app, 640, 480, debug_print));
+  
+  return app->run(*window);
+}  
+
+void scaleConfig(Slider &slider, float min, float max, float init , int digit)
 {
   slider.set_range(min, max);
   slider.set_value(init);
-  slider.set_digits(4);
+  slider.set_digits(digit);
   slider.set_increments(0.1, 1);
   slider.set_label_chars(8);
   // slider.set_draw_value(true);
   // slider.set_value_pos(Gtk::POS_RIGHT);
 }
+
+
 
 // Frame
 //
@@ -36,11 +47,12 @@ void SampleWindow::createSelectPortFrame(void)
   for (int i = 0; i < 8; i++)
   {
     buttons[i].set_label(std::to_string(i));
-    buttons[i].set_active(i == 0);
     h_check_box.pack_start(buttons[i]);
     buttons[i].signal_toggled().connect([this, i] { this->callback_check(i); });
+    
+    buttons[i].set_active(i == 0);
 
-    if (!(available_mask & (1 << i)))
+    if (!(master_available_mask & (1 << i)))
     {
       buttons[i].set_sensitive(false);
     }
@@ -231,19 +243,9 @@ void SampleWindow::load_all_value()
   }
 }
 
-SampleWindow::SampleWindow(Glib::RefPtr<Gtk::Application> _app, int width, int height, bool _debug_print)
-  : debug_print(_debug_print)
-  , title_label("select_port")
-  , hue_scale_label("Hue")
-  , saturation_scale_label("Saturation")
-  , contrast_scale_label("Contrast")
-  , brightness_scale_label("Brightness")
-  , sharpness_scale_label("Sharpness")
-  , digital_gain_label("Digital gain")
-{
-  app = _app;
-
-  std::string title_name("t4cam_ctrl");
+void SampleWindow::CreateWindow(int width, int height, bool _debug_print){
+  
+  std::string title_name("t4cam_ctrl: for C1 ");
   std::string version_name("Preview release");
   std::string title = title_name + " : " + version_name;
   ///
@@ -252,7 +254,7 @@ SampleWindow::SampleWindow(Glib::RefPtr<Gtk::Application> _app, int width, int h
     camera_ptr_array[i] = std::make_shared<C1>(i);
   }
 
-  available_mask = getAvailableCamera();
+  master_available_mask = getAvailableCamera();
 
   set_title(title);
   set_default_size(width, height);
@@ -305,6 +307,22 @@ SampleWindow::SampleWindow(Glib::RefPtr<Gtk::Application> _app, int width, int h
   v_box_content.pack_end(h_control_box, Gtk::PACK_EXPAND_WIDGET, 5);
   v_box.pack_start(v_box_content);
   load_all_value();
+}
+
+
+SampleWindow::SampleWindow(Glib::RefPtr<Gtk::Application> _app, int width, int height, bool _debug_print)
+  : debug_print(_debug_print)
+  , title_label("select_port")
+  , hue_scale_label("Hue")
+  , saturation_scale_label("Saturation")
+  , contrast_scale_label("Contrast")
+  , brightness_scale_label("Brightness")
+  , sharpness_scale_label("Sharpness")
+  , digital_gain_label("Digital gain")
+{
+  app = _app;
+
+  CreateWindow(width, height, _debug_print);
 
   debug_printf("show display\n");
 
@@ -318,11 +336,13 @@ uint16_t SampleWindow::getAvailableCamera()
 
   for (int i = 0; i < 7; i++)
   {
-    bool is_available = camera_ptr_array[i]->isAvailableCamera();
-    if (is_available)
-    {
+    if(camera_ptr_array[i] && camera_ptr_array[i]->isAvailableCamera()){
       ret |= 1 << i;
     }
+  }
+  if(ret == 0){
+    Gtk::MessageDialog diag("C1 camera connection not found.\nPlease reconnect the C1 camera and then restart the system.", false, Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK);
+    diag.run();
   }
 
   return ret;

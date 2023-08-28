@@ -11,10 +11,12 @@
 #include <memory>
 #include <unordered_map>
 
-
-#define DEBUG_PRINT(...) if(debug_flag){ printf(__VA_ARGS__);}
+#define DEBUG_PRINT(...)                                                                                               \
+  if (debug_flag)                                                                                                      \
+  {                                                                                                                    \
+    printf(__VA_ARGS__);                                                                                               \
+  }
 #define MAX_PORT 8
-
 
 static const std::array<std::string, 8> portnum_table = { "i2c-30", "i2c-30", "i2c-31", "i2c-31",
                                                           "i2c-32", "i2c-32", "i2c-33", "i2c-33" };
@@ -29,10 +31,10 @@ static inline void calcHexVal(float raw, float unit, uint16_t offset, uint8_t &d
   data_l = temp & 0xFF;
   data_u = temp >> 8;
 
-  //fprintf(stderr, "[%s]:%f-%d, %d, %d\n", __func__, raw, temp, data_l, data_u);
+  // fprintf(stderr, "[%s]:%f-%d, %d, %d\n", __func__, raw, temp, data_l, data_u);
   return;
 }
- 
+
 enum class C2_SENSOR_MODE : uint8_t
 {
   default_mode = 0,
@@ -70,16 +72,46 @@ public:
   }
 };
 
-class C2
+class t4cam
 {
-private:
+protected:
   int port_num;
   std::string dev_name;
   uint8_t i2c_dev_addr;
 
+  std::unordered_map<std::string, Param> default_value_map;
+  std::unordered_map<std::string, Param> load_value_map;
+
 public:
-  C2(int _port_num = 0, bool _debug_flag = false) : port_num(_port_num)
+  virtual bool isAvailableCamera(void) = 0;
+  virtual void saveCurrentValue(std::string output) = 0;
+
+  virtual int initialized_load_value_from_file(const std::string &file_name)
   {
+    return 0;
+  }
+  virtual void initialized_default_value_from_default()
+  {
+    std::cerr << "not present this function." << std::endl;
+  }
+  virtual void setDefaultValue(void)
+  {
+    std::cerr << "not present this function." << std::endl;
+  }
+
+  virtual void setLoadValue(void)
+  {
+    std::cerr << "not present this function." << std::endl;
+  }
+};
+
+class C2 : public t4cam
+{
+public:
+  C2(int _port_num = 0, bool _debug_flag = false)
+  {
+    port_num = _port_num;
+
     if (port_num < 0 || port_num >= MAX_PORT)
     {
       std::cerr << "The port number has exceeded the maximum value. Please specify between 0-" << MAX_PORT - 1
@@ -93,34 +125,101 @@ public:
 #ifdef DEBUG
     debug_flag = true;
 #endif
-
-    DEBUG_PRINT("model: C2\n");
-    DEBUG_PRINT("port_num: %d\n", port_num);
-    DEBUG_PRINT("dev_name: %s\n", dev_name.c_str());
-    DEBUG_PRINT("dev_addr: 0x%x\n", i2c_dev_addr);
   }
 
+  struct default_val
+  {
+    uint8_t sensor_mode;
+    bool auto_exposure;
+    float sensor_gain;
+    float isp_sensor_gain;
+    bool distortion_correction;
+    bool awb;
+    int awb_gain_r;
+    int awb_gain_g;
+    int awb_gain_b;
 
+    bool hue_mode;
+    int hue_val;
+    bool contrast_mode;
+    int contrast_val;
+    bool brightness_mode;
+    int brightness_val;
+    bool saturation_mode;
+    int saturation_val;
+    bool sharpness_mode;
+    int sharpness_val_ld;
+    int sharpness_val_ldu;
+    int sharpness_val_lu;
+    uint16_t shutter_time;
+    uint16_t shutter_time_on_ae_min;
+    uint16_t shutter_time_on_ae_mas;
+    default_val()
+      : sensor_mode(0)
+      , auto_exposure(true)
+      , sensor_gain()
+      , isp_sensor_gain(0)
+      , distortion_correction(0)
+      , awb(0)
+      , awb_gain_r(0)
+      , awb_gain_g(0)
+      , awb_gain_b(0)
+      , hue_mode(0)
+      , hue_val(0)
+      , contrast_mode(0)
+      , contrast_val(0)
+      , brightness_mode(0)
+      , brightness_val(0)
+      , saturation_mode(0)
+      , saturation_val(0)
+      , sharpness_mode(0)
+      , sharpness_val_ld(0)
+      , sharpness_val_ldu(0)
+      , sharpness_val_lu(0)
+      , shutter_time(0)
+      , shutter_time_on_ae_min(0)
+      , shutter_time_on_ae_mas(0)
+    {
+    }
+  } dval;
+
+  bool isAvailableCamera(void) override;
+  void saveCurrentValue(std::string output) override;
   // set parameter
-  void setShutterTimeOnAE(uint16_t max_ms, uint16_t min_ms);
-  
-  void setSensorMode(uint8_t mode);
-  void setDistortionCorrection(bool on);
 
-  void setSensorGain(float gain);
-
+  int setDWP(bool on);
+  int setSensorMode(uint8_t mode);
+  int setAutoExposure(bool on);
+  int setSensorGain(float gain);
+  int setISPSensorGain(float gain);
+  int setDistortionCorrection(bool on);
+  int setAutoWhiteBalance(bool on);
+  int setAutoWhiteBalanceGainR(int val);
+  int setAutoWhiteBalanceGainG(int val);
+  int setAutoWhiteBalanceGainB(int val);
+  int setHue(bool on);
+  int setHueVal(int val);
+  int setContrast(bool on);
+  int setContrastVal(int val);
+  int setBrightness(bool on);
+  int setBrightnessVal(int val);
+  int setSaturation(bool on);
+  int setSaturationVal(int val);
+  int setSharpness(bool on);
+  int setSharpnessVal_Ld(int val);
+  int setSharpnessVal_Ldu(int val);
+  int setSharpnessVal_Lu(int val);
+  int setShutterTimeXXX(uint16_t time_ms);
+  int setShutterTimeOnAE(uint16_t ms);
 };
 
-class C1
+class C1 : public t4cam
 {
-private:
-  int port_num;
-  std::string dev_name;
-  uint8_t i2c_dev_addr;
-
 public:
-  C1(int _port_num = 0, std::string param_file = "./default.yaml") : port_num(_port_num)
+  C1(int _port_num = 0, std::string param_file = "./default.yaml")
   {
+    port_num = _port_num;
+
     if (port_num < 0 || port_num >= MAX_PORT)
     {
       std::cerr << "The port number has exceeded the maximum value. Please specify between 0-" << MAX_PORT - 1
@@ -136,114 +235,34 @@ public:
     DEBUG_PRINT("dev_name: %s\n", dev_name.c_str());
     DEBUG_PRINT("dev_addr: 0x%x\n", i2c_dev_addr);
 
-    initialized_default_value_from_default();
-    // initialized_load_value_from_file(param_file);
+//    initialized_default_value_from_default();
   }
 
-  std::unordered_map<std::string, Param> default_value_map;
-  std::unordered_map<std::string, Param> load_value_map;
-
-  void initialized_default_value_from_default()
-  {
-  }
-
-  void saveCurrentValue(std::string output)
-  {
-    fprintf(stdout, "output file: %s\n", output.c_str());
-
-    YAML::Node item[10];
-
-    item[0]["param_name"] = "ae_mode";
-    item[0]["value"] = std::to_string(getAEMode());
-    item[1]["param_name"] = "digital_gain";
-    item[1]["value"] = std::to_string(getDigitalGain());
-    item[2]["param_name"] = "shutter_speed";
-    item[2]["value"] = std::to_string(getShutterSpeedforFME());
-    item[3]["param_name"] = "ev_offset_flag";
-    item[3]["value"] = std::to_string(getExposureOffsetFlag());
-    item[4]["param_name"] = "ev_offset";
-    item[4]["value"] = std::to_string(getExposureOffset());
-    item[5]["param_name"] = "hue";
-    item[5]["value"] = std::to_string(getHue());
-    item[6]["param_name"] = "saturation";
-    item[6]["value"] = std::to_string(getSaturation());
-    item[7]["param_name"] = "contrast";
-    item[7]["value"] = std::to_string(getContrast());
-    item[8]["param_name"] = "brightness";
-    item[8]["value"] = std::to_string(getBrightness());
-    item[9]["param_name"] = "sharpness";
-    item[9]["value"] = std::to_string(getSharpness());
-
-    YAML::Node root;
-
-    for (size_t i = 0; i < 10; i++)
-    {
-      root["config"].push_back(item[i]);
-    }
-
-    YAML::Emitter out;
-    out << root;
-
-    std::ofstream file(output);
-    file << out.c_str();
-    file.close();
-  }
-
-  int initialized_load_value_from_file(const std::string &file_name)
-  {
-    YAML::Node node;
-    try
-    {
-      node = YAML::LoadFile(file_name);
-      for (size_t i = 0; i < node["config"].size(); i++)
-      {
-        std::string param_name = node["config"][i]["param_name"].as<std::string>();
-        float val = node["config"][i]["value"].as<float>();
-#if 0
-        std::cout << "param_name:" << param_name << std::endl;
-        std::cout << "value:" << val << std::endl;
-#endif
-        load_value_map[param_name] = val;
-      }
-    }
-    catch (const std::exception &e)
-    {
-      std::cerr << "Can not open yaml file:" << e.what() << std::endl;
-      return -1;
-    }
-
-    return 0;
-  }
-
-  void setDefaultValue(void)
-  {
-    std::cerr << "not present this function." << std::endl;
-  }
-  void setLoadValue(void)
-  {
-    std::cerr << "not present this function." << std::endl;
-  }
-
-  bool isAvailableCamera(void);
+  bool isAvailableCamera(void) override;
+  void saveCurrentValue(std::string output) override;
+  int initialized_load_value_from_file(const std::string &file_name) override;
 
   uint8_t getAEMode(void);
   int8_t setAEMode(int mode);
-
-
-  //set parameter
-  // for easily tuning
   int8_t setDigitalGain(int db);
+  // set parameter
+
+  // for easily tuning
   int8_t setSharpness(float gain);
   int8_t setHue(int deg);
   int8_t setSaturation(float gain);
   int8_t setBrightness(float offset);
   int8_t setContrast(float gain);
-  
+
   int8_t setAutoWhiteBalance(bool on);
   int8_t setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float b_gain);
   int8_t setExposureOffsetFlag(bool flag);
 
-  //get parameter
+  int setATRContrastGain(int gain);
+  int setATRBrightnessGain(int gain);
+
+
+  // get parameter
   int getDigitalGain();
   float getSharpness();
   int getHue();
@@ -256,8 +275,9 @@ public:
   float getExposureOffset();
 
   int8_t checkES3();
+  int test();
 
-  // 
+  //
   float getTempature(int type);
   float getTempatureS0();
   float getTempatureS1();
@@ -267,7 +287,5 @@ public:
 
   float getAEError();
 };
-
-
 
 #endif

@@ -1,7 +1,6 @@
-
 #include "Slider.h"
-
 #include <gtkmm.h>
+#include <iomanip>
 
 Slider::Slider()
 {
@@ -11,7 +10,7 @@ Slider::Slider()
 void Slider::initialize()
 {
   slider.signal_value_changed().connect(sigc::mem_fun(*this, &Slider::callback_slidervaluechange));
-
+  //slider.signal_adjust_bounds().connect(sigc::mem_fun(*this, &Slider::callback_slidervaluechanged));
   slider.set_draw_value(false);
   slider.show();
   label.override_color(Gdk::RGBA("gray58"), Gtk::STATE_FLAG_NORMAL);
@@ -24,20 +23,21 @@ void Slider::initialize()
   show();
 }
 
+void Slider::callback_slidervaluechanged(double v){
+  fprintf(stderr,"hogehoge\n");
+  
+}
+
 void Slider::callback_slidervaluechange()
 {
   auto v = slider.get_value();
 
-  auto dn = digitsNum < 0 ? 1 : digitsNum;
+  // Convert the number to a formatted string with the specified decimal places
+  std::ostringstream oss;
+  oss << std::fixed << std::setprecision(digitsNum) << v;
+  std::string formattedNumber = oss.str();
 
-  auto printformat = Glib::ustring::sprintf("%%.0%df", dn);
-
-  if (digitsNum == 0)
-  {
-    // MEMO: digitsNumが0以下の時は整数値のみ表示
-    printformat = Glib::ustring::format("%.0f");
-  }
-  label.set_text(Glib::ustring::sprintf(printformat, v));
+  label.set_text(formattedNumber);
 
   if (usercallback_slidervaluechanged != nullptr)
   {
