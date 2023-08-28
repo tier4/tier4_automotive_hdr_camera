@@ -29,8 +29,6 @@
 #include "tier4-gmsl-link.h"
 #include "tier4-hw-model.h"
 
-#define dev_dbg2 dev_info
-
 struct tier4_max9296_source_ctx
 {
   struct gmsl_link_ctx *g_ctx;
@@ -89,7 +87,7 @@ struct tier4_max9296_source_ctx
 #define MAX9296_ALLPHYS_NOSTDBY 0xF0
 #define MAX9296_ST_ID_SEL_INVALID 0xF
 
-//#define MAX9296_PHY1_CLK 					0x32
+//#define MAX9296_PHY1_CLK                  0x32
 #define MAX9296_PHY1_CLK_3100MHZ 0x3F
 #define MAX9296_PHY1_CLK_3000MHZ 0x3E
 #define MAX9296_PHY1_CLK_2900MHZ 0x3D
@@ -326,9 +324,8 @@ int tier4_max9296_power_on(struct device *dev)
         break;
       }
     }
-
     if (priv->reset_gpio)
-      //			gpio_set_value(priv->reset_gpio, 0);
+      //            gpio_set_value(priv->reset_gpio, 0);
       gpio_direction_output(priv->reset_gpio, 0);
 
     usleep_range(50, 80);
@@ -339,28 +336,32 @@ int tier4_max9296_power_on(struct device *dev)
       if (unlikely(err))
         goto ret;
     }
-
     usleep_range(50, 80);
 
     /*exit reset mode: XCLR */
     if (priv->reset_gpio)
     {
-      //			gpio_set_value(priv->reset_gpio, 0);
+
+      //            gpio_set_value(priv->reset_gpio, 0);
       gpio_direction_output(priv->reset_gpio, 0);
+
       usleep_range(50, 80);
-      msleep(1000);
-      //			gpio_set_value(priv->reset_gpio, 1);
+      usleep_range(1000000,1100000);
+      //            gpio_set_value(priv->reset_gpio, 1);
+
       gpio_direction_output(priv->reset_gpio, 1);
+
       usleep_range(50, 80);
     }
 
     /* delay to settle reset */
-    //		msleep(1000);
+    //      msleep(1000);
   }
 
   priv->pw_ref++;
 
 ret:
+
   mutex_unlock(&priv->lock);
 
   return err;
@@ -379,7 +380,7 @@ void tier4_max9296_power_off(struct device *dev)
     /* enter reset mode: XCLR */
     usleep_range(1, 2);
     if (priv->reset_gpio)
-      //			gpio_set_value(priv->reset_gpio, 0);
+      //            gpio_set_value(priv->reset_gpio, 0);
       gpio_direction_output(priv->reset_gpio, 0);
 
     if (priv->vdd_cam_1v2)
@@ -429,7 +430,7 @@ int tier4_max9296_setup_link(struct device *dev, struct device *s_dev)
     return err;
   }
 
-  //	max9296_debug_i2c_write = priv->sources[i].g_ctx->debug_i2c_write;
+  //    max9296_debug_i2c_write = priv->sources[i].g_ctx->debug_i2c_write;
 
   mutex_lock(&priv->lock);
 
@@ -455,12 +456,8 @@ static int tier4_max9296_link_locked(struct device *dev)
 {
   u8 val;
 
-  dev_dbg(dev, "[%s] : Check max9296 link locked.\n", __func__);
-
   usleep_range(100, 110);
   tier4_max9296_read_reg(dev, MAX9296_LINK_ADDR, &val);
-
-  dev_dbg(dev, "[%s] : ISX021 I2C Read Address = 0x%04X data = 0x%02X \n", __func__, MAX9296_LINK_ADDR, val);
 
   if (0 == (val & 0x08))
   {
@@ -635,7 +632,7 @@ int tier4_max9296_sdev_register(struct device *dev, struct gmsl_link_ctx *g_ctx)
   {
     if (g_ctx->serdes_csi_link == priv->sources[i].g_ctx->serdes_csi_link)
     {
-      dev_err(dev, "[%s] : Serdes CSIi link is in use\n", __func__);
+      dev_err(dev, "[%s] : Serdes CSI link is in use\n", __func__);
       err = -EINVAL;
       goto error;
     }
@@ -646,13 +643,11 @@ int tier4_max9296_sdev_register(struct device *dev, struct gmsl_link_ctx *g_ctx)
      * to be configured with different num-csi-lanes, then this
      * check should be performed per port.
      */
-    dev_dbg(dev,"[%s] : g_ctx->num_csi_lanes = 0x%0x priv->sources[%d].g_ctx->num_csi_lanes = 0x%0x \n"
-    				, __func__, g_ctx->num_csi_lanes, i, priv->sources[i].g_ctx->num_csi_lanes);
 
     if (g_ctx->num_csi_lanes != priv->sources[i].g_ctx->num_csi_lanes)
     {
-      dev_err(dev, "[%s] : CSI num lanes mismatch. %d, %d\n", __func__, g_ctx->num_csi_lanes,
-              priv->sources[i].g_ctx->num_csi_lanes);
+      dev_err(dev, "[%s] : CSI num lanes mismatch. %d, %d i=%d\n", __func__, g_ctx->num_csi_lanes,
+              priv->sources[i].g_ctx->num_csi_lanes, i);
       err = -EINVAL;
       goto error;
     }
@@ -743,9 +738,6 @@ static int tier4_max9296_get_available_pipe(struct device *dev, u32 st_data_type
     return -ENOMEM;
   }
 
-  dev_dbg(dev, "[%s] : dst_csi_port = %u, priv->pipe[%d].dst_csi_port = %u\n", __func__, dst_csi_port, i,
-          priv->pipe[i].dst_csi_ctrl);
-
   return i;
 }
 
@@ -804,7 +796,6 @@ static int tier4_max9296_setup_pipeline(struct device *dev, struct gmsl_link_ctx
     }
     else if (g_stream->st_data_type == GMSL_CSI_DT_UED_U1)
     {
-      dev_info(dev, "[%s] : No mapping for GMSL_CSI_DT_UED_U1\n", __func__);
       continue;
     }
     else
@@ -853,8 +844,6 @@ int tier4_max9296_start_streaming(struct device *dev, struct device *s_dev)
   struct gmsl_stream *g_stream;
   int err = 0;
   int i = 0;
-
- 	dev_dbg(dev, "[%s] : Start Streaming .\n", __func__);
 
   err = tier4_max9296_get_sdev_idx(dev, s_dev, &i);
 
@@ -974,9 +963,6 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
    * checked during sdev registration against the des properties.
    */
 
-  dev_dbg(dev, "[%s] : lane_ctrl_addr = %d g_ctx->num_csi_lanes = %d\n", __func__, lane_ctrl_addr,
-          g_ctx->num_csi_lanes);
-
   tier4_max9296_write_reg(dev, lane_ctrl_addr, MAX9296_LANE_CTRL_MAP(g_ctx->num_csi_lanes - 1));
 
   if (!priv->lane_setup)
@@ -991,13 +977,13 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
     else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
     {
       tier4_max9296_write_reg(dev,
-                              //				MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2500MHZ);
+                              //                MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2500MHZ);
                               MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1600MHZ);
     }
     else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE)
     {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 65)
-      //			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
+      //            tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
       tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
 #else
       tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1800MHZ);
@@ -1012,7 +998,7 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
   }
 
 #if 0
-	tier4_max9296_write_reg(dev, MAX9296_REG5_ADDR, 0xC0);			// informed from Maxim
+    tier4_max9296_write_reg(dev, MAX9296_REG5_ADDR, 0xC0);          // informed from Maxim
 #endif
   priv->sources[i].st_enabled = true;
 
@@ -1080,7 +1066,6 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv, struct i2c_client 
     return err;
   }
 
-  dev_dbg(&client->dev, "[%s] maxsrc:%d\n", __func__, value);
   priv->max_src = value;
 
   priv->reset_gpio = of_get_named_gpio(node, "reset-gpios", 0);
@@ -1089,8 +1074,6 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv, struct i2c_client 
     dev_err(&client->dev, "[%s] : reset-gpios not found %d\n", __func__, err);
     return err;
   }
-
-  dev_dbg(&client->dev, "[%s] priv->reset_gpio = %d\n", __func__, priv->reset_gpio);
 
   /* digital 1.2v */
   if (of_get_property(node, "vdd_cam_1v2-supply", NULL))
@@ -1182,14 +1165,14 @@ static const struct i2c_device_id tier4_max9296_id[] = {
 MODULE_DEVICE_TABLE(i2c, tier4_max9296_id);
 
 static struct i2c_driver tier4_max9296_i2c_driver = {
-	.driver = {
-		.name = "tier4_max9296",
-		.owner = THIS_MODULE,
-		.of_match_table = of_match_ptr(tier4_max9296_of_match),
-	},
-	.probe = tier4_max9296_probe,
-	.remove = tier4_max9296_remove,
-	.id_table = tier4_max9296_id,
+    .driver = {
+        .name = "tier4_max9296",
+        .owner = THIS_MODULE,
+        .of_match_table = of_match_ptr(tier4_max9296_of_match),
+    },
+    .probe = tier4_max9296_probe,
+    .remove = tier4_max9296_remove,
+    .id_table = tier4_max9296_id,
 };
 
 static int __init tier4_max9296_init(void)
