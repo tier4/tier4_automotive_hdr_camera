@@ -18,9 +18,16 @@ echo ""
 
 echo -n "total gain:" 
 echo $DATA | cut -d' ' -f16-31
+echo -n "sensor gain:" 
+echo $DATA | cut -d' ' -f32-47
+echo -n "isp_sensor gain:" 
+echo $DATA | cut -d' ' -f48-63
 
 echo -n "integration:" 
 echo $DATA | cut -d' ' -f100-107
+
+echo -n "awb:" 
+echo $DATA | cut -d' ' -f136-143
 
 
 echo -n "vts:"

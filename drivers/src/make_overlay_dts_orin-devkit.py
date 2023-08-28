@@ -2305,9 +2305,9 @@ str_i2c_imx490_n_p1 = """
         clock-names = \"extperiph1\", \"pllp_grtba\";
         mclk = \"extperiph1\";
         nvidia,isp-device = <&isp_a>;           // for C2 camera
-        nvidia,gmsl-ser-device = <&ser>;
+        nvidia,gmsl-ser-device = <&max9295_ser_a>;
         nvidia,gmsl-dser-device = <&dser>;
-        nvidia,fpga-device  = <&t4_fpga>;
+        //nvidia,fpga-device  = <&t4_fpga>;
 
         reg = <0x2b>;
 
@@ -2320,20 +2320,20 @@ str_i2c_imx490_n_p1 = """
 str_i2c_imx490_0_p1 = str_i2c_imx490_n_p1
 str_i2c_imx490_1_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_b@2c")
-    .replace("&ser_a", "&max9295_ser_b")
+    .replace("&max9295_ser_a", "&max9295_ser_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("isp_a", "isp_b")
 )
 str_i2c_imx490_2_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_c@2b")
-    .replace("&ser_a", "&max9295_ser_b_0")
+    .replace("&max9295_ser_a", "&max9295_ser_b_0")
     .replace("isp_a", "isp_c")
     .replace("&dser", "&max9296_dser_b")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_imx490_3_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_d@2c")
-    .replace("&ser_a", "&max9295_ser_b_1")
+    .replace("&max9295_ser_a", "&max9295_ser_b_1")
     .replace("isp_a", "isp_d")
     .replace("&dser", "&max9296_dser_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2341,14 +2341,14 @@ str_i2c_imx490_3_p1 = (
 )
 str_i2c_imx490_4_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
-    .replace("&ser_a", "&max9295_ser_c_0")
-    .replace("isp_a", "isp_r")
-    .replace("dser_a", "&max9296_dser_c")
+    .replace("&max9295_ser_a", "&max9295_ser_c_0")
+    .replace("isp_a", "isp_e")
+    .replace("dmax9295_ser_a", "&max9296_dser_c")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_f@2c")
-    .replace("&ser_a", "&max9295_ser_c_1")
+    .replace("&max9295_ser_a", "&max9295_ser_c_1")
     .replace("isp_a", "isp_f")
     .replace("&dser", "&max9296_dser_c")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2364,7 +2364,7 @@ str_i2c_imx490_6_p1 = """
         nvidia,isp-device = <&isp_g>;           // for C2 camera
         nvidia,gmsl-ser-device = <&max9295_ser_d_0>;
         nvidia,gmsl-dser-device = <&max9296_dser_d>;
-        nvidia,fpga-device  = <&t4_fpga>;
+        //nvidia,fpga-device  = <&t4_fpga>;
 
         reg = <0x2b>;
 
@@ -2384,7 +2384,7 @@ str_i2c_imx490_7_p1 = """
         nvidia,isp-device = <&isp_g>;           // for C2 camera
         nvidia,gmsl-ser-device = <&max9295_ser_d_0>;
         nvidia,gmsl-dser-device = <&max9296_dser_d>;
-        nvidia,fpga-device  = <&t4_fpga>;
+        //nvidia,fpga-device  = <&t4_fpga>;
 
         reg = <0x2b>;
 
@@ -2627,13 +2627,40 @@ dict_fragment_dser_in_base_dtb = {
     "3521": str_fragment_dser_in_base_dtb_r3521,
 }
 
+# =================  FPGA  ======================
+
+str_fpga = """
+
+// -----  FPGA -----
+//
+//  fragment@100{
+//    target-path = \"/i2c@3180000\";
+//    __overlay__ {
+//     t4_fpga: tier4_fpga@66 {
+//        compatible = \"nvidia,tier4_fpga\";
+//        reg = <0x66>;
+//        generate-fsync = \"false\";
+//        status = \"okay\";
+//      };
+//    };
+//  };
+"""
+
+str_block_end = """
+    };
+  };"""
+
+str_overlay_end = """
+};
+"""
+
 # =================  GPIO  ======================
 
 str_gpio = """
 
 // -----  GPIO -----
 
-  fragment@100 {
+  fragment@101 {
     target-path = "/gpio@2200000";
     _overlay_ {
       camera-control-input {
@@ -3439,6 +3466,7 @@ if str_rev_num == "3521":
         + str_i2c1
         + str_i2c2
         + str_i2c3
+        //+ str_fpga
         + str_gpio
         + str_overlay_end
     )
@@ -3470,6 +3498,7 @@ else:
         + str_i2c0
         + str_i2c1
         + str_i2c2
+        //+ str_fpga
         + str_gpio
         + str_overlay_end
     )

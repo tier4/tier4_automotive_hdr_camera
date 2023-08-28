@@ -188,11 +188,11 @@ void SampleWindow::callback_check(int i)
 {
   if (buttons[i].get_active() == 0)
   {
-    available_mask &= ~(1 << i);
+    available_mask &= (~(1 << i)) & master_available_mask;
   }
   else
   {
-    available_mask |= 1 << i;
+    available_mask |= (1 << i) & master_available_mask;
   }
 }
 

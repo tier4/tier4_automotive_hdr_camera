@@ -2,10 +2,84 @@
 // Proprietary
 
 #include "c1_reg.hpp"
-#include "i2c.hpp"
 #include "t4cam_tools.hpp"
+#include "i2c.hpp"
+
+int C1::test(){
+    uint8_t data[11];
+    i2c::read(dev_name, i2c_dev_addr, 10, data);
+    return 0;
+}
 
 
+
+int C1::initialized_load_value_from_file(const std::string &file_name)
+{
+    YAML::Node node;
+    try
+    {
+      node = YAML::LoadFile(file_name);
+      for (size_t i = 0; i < node["config"].size(); i++)
+      {
+        std::string param_name = node["config"][i]["param_name"].as<std::string>();
+        float val = node["config"][i]["value"].as<float>();
+#if 0
+        std::cout << "param_name:" << param_name << std::endl;
+        std::cout << "value:" << val << std::endl;
+#endif
+        load_value_map[param_name] = val;
+      }
+    }
+    catch (const std::exception &e)
+    {
+      std::cerr << "Can not open yaml file:" << e.what() << std::endl;
+      return -1;
+    }
+
+    return 0;
+  }
+
+  void C1::saveCurrentValue(std::string output)
+  {
+    fprintf(stdout, "output file: %s\n", output.c_str());
+
+    YAML::Node item[10];
+
+    item[0]["param_name"] = "ae_mode";
+    item[0]["value"] = std::to_string(getAEMode());
+    item[1]["param_name"] = "digital_gain";
+    item[1]["value"] = std::to_string(getDigitalGain());
+    item[2]["param_name"] = "shutter_speed";
+    item[2]["value"] = std::to_string(getShutterSpeedforFME());
+    item[3]["param_name"] = "ev_offset_flag";
+    item[3]["value"] = std::to_string(getExposureOffsetFlag());
+    item[4]["param_name"] = "ev_offset";
+    item[4]["value"] = std::to_string(getExposureOffset());
+    item[5]["param_name"] = "hue";
+    item[5]["value"] = std::to_string(getHue());
+    item[6]["param_name"] = "saturation";
+    item[6]["value"] = std::to_string(getSaturation());
+    item[7]["param_name"] = "contrast";
+    item[7]["value"] = std::to_string(getContrast());
+    item[8]["param_name"] = "brightness";
+    item[8]["value"] = std::to_string(getBrightness());
+    item[9]["param_name"] = "sharpness";
+    item[9]["value"] = std::to_string(getSharpness());
+
+    YAML::Node root;
+
+    for (size_t i = 0; i < 10; i++)
+    {
+      root["config"].push_back(item[i]);
+    }
+
+    YAML::Emitter out;
+    out << root;
+
+    std::ofstream file(output);
+    file << out.c_str();
+    file.close();
+  }
 
 
 int8_t C1::checkES3()
@@ -231,6 +305,18 @@ int C1::getHue(void)
   return (int)(int8_t)data * HUE_UNIT;
 }
 
+int C1::setATRContrastGain(int gain)
+{
+  uint8_t data = gain;
+  return i2c::write16(dev_name, i2c_dev_addr,STRENGTH_MODE_GAIN_RATIO, data);
+}
+int C1::setATRBrightnessGain(int gain)
+{
+  uint8_t data = gain;
+  return i2c::write16(dev_name, i2c_dev_addr,STRENGTH_MODE_OBLEND_RATIO, data);
+}
+
+
 int8_t C1::setSaturation(float gain)
 {
   if (gain < SATURATION_MIN || SATURATION_MAX < gain)
@@ -365,11 +451,11 @@ int8_t C1::setWhiteBalanceGain(float r_gain, float gr_gain, float gb_gain, float
   calcHexVal(gb_gain, FULLMWBGAIN_UNIT, 0, gb_gain_u, gb_gain_l, 0xFFF);
   calcHexVal(b_gain, FULLMWBGAIN_UNIT, 0, b_gain_u, b_gain_l, 0xFFF);
 
-  fprintf(stderr, "[%s]:0x%x, 0x%x, %f\n", __func__, r_gain_u, r_gain_l, r_gain);
-  fprintf(stderr, "[%s]:0x%x, 0x%x, %f\n", __func__, gr_gain_u, gr_gain_l, gr_gain);
-  fprintf(stderr, "[%s]:0x%x, 0x%x, %f\n", __func__, gb_gain_u, gb_gain_l, gb_gain);
-  fprintf(stderr, "[%s]:0x%x, 0x%x, %f\n", __func__, b_gain_u, b_gain_l, b_gain);
-
+//  fprintf(stderr, "[%s]:0x%x, 0x%x, %f\n", __func__, r_gain_u, r_gain_l, r_gain);
+//  fprintf(stderr, "[%s]:0x%x, 0x%x, %f\n", __func__, gr_gain_u, gr_gain_l, gr_gain);
+//  fprintf(stderr, "[%s]:0x%x, 0x%x, %f\n", __func__, gb_gain_u, gb_gain_l, gb_gain);
+//  fprintf(stderr, "[%s]:0x%x, 0x%x, %f\n", __func__, b_gain_u, b_gain_l, b_gain);
+//
   i2c::write16(dev_name, i2c_dev_addr, FULLMWBGAIN_R_L, r_gain_l);
   i2c::write16(dev_name, i2c_dev_addr, FULLMWBGAIN_R_U, r_gain_u);
   i2c::write16(dev_name, i2c_dev_addr, FULLMWBGAIN_GR_L, r_gain_l);

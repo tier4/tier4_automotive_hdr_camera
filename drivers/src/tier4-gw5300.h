@@ -61,6 +61,8 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode);
 
 int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16 min_integration_time);
 
+int tier4_gw5300_set_distortion_correction(struct device *dev, bool val);
+
 
 int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size);
 
