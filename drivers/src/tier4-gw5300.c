@@ -198,6 +198,22 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_inte
 }
 EXPORT_SYMBOL(tier4_gw5300_set_integration_time_on_aemode);
 
+int tier4_gw5300_set_distortion_correction(struct device *dev, bool val)
+{
+int ret = 0;
+  u8 	buf[6];
+	u8 cmd_dwp_on[]={0x33, 0x47, 0x06, 0x00, 0x00, 0x00, 0x4d, 0x00, 0x80, 0x04, 0x00, 0x01, 0x52};
+	u8 cmd_dwp_off[]={0x33, 0x47, 0x03, 0x00, 0x00, 0x00, 0x45, 0x00, 0x80, 0x42};
+    
+	if(val){
+		ret += tier4_gw5300_send_and_recv_msg(dev, cmd_dwp_on, sizeof(cmd_dwp_on), buf, sizeof(buf));   
+	}else{	
+		ret += tier4_gw5300_send_and_recv_msg(dev, cmd_dwp_off, sizeof(cmd_dwp_off), buf, sizeof(buf));   
+	}
+  return ret;
+}
+EXPORT_SYMBOL(tier4_gw5300_set_distortion_correction);
+
 int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size )
 {
   int err = 0;
