@@ -487,7 +487,9 @@ static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
 static int tier4_imx490_set_distortion_correction(struct tegracam_device *tc_dev, bool val)
 {
   int err = 0;
-  //struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
+  struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
+  dev_info(&priv->i2c_client->dev, "[%s] : Setting distortion correction mode :%s.\n", __func__,val?"True":"False");
+  tier4_gw5300_set_distortion_correction(priv->isp_dev, val);
 
   return err;
 }
