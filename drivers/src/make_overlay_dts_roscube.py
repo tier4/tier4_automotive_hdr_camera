@@ -2252,7 +2252,7 @@ str_i2c_imx490_n_p1 = """
         clock-names = \"extperiph1\", \"pllp_grtba\";
         mclk = \"extperiph1\";
         nvidia,isp-device = <&isp_a>;           // for C2 camera
-        nvidia,gmsl-ser-device = <&ser>;
+        nvidia,gmsl-ser-device = <&max9295_ser_a>;
         nvidia,gmsl-dser-device = <&dser>;
         nvidia,fpga-device  = <&t4_fpga>;
 
@@ -2270,20 +2270,20 @@ str_i2c_imx490_0_p1_r325 = str_i2c_imx490_n_p1
 
 str_i2c_imx490_1_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_b@2c")
-    .replace("&ser_a", "&max9295_ser_b")
+    .replace("&max9295_ser_a", "&max9295_ser_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("isp_a", "isp_b")
 )
 str_i2c_imx490_2_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_c@2b")
-    .replace("&ser_a", "&max9295_ser_b_0")
+    .replace("&max9295_ser_a", "&max9295_ser_b_0")
     .replace("isp_a", "isp_c")
     .replace("&dser", "&dsera")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_imx490_3_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_d@2c")
-    .replace("&ser_a", "&max9295_ser_b_1")
+    .replace("&max9295_ser_a", "&max9295_ser_b_1")
     .replace("isp_a", "isp_d")
     .replace("&dser", "&dsera")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2291,14 +2291,14 @@ str_i2c_imx490_3_p1_r325 = (
 )
 str_i2c_imx490_4_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
-    .replace("&ser_a", "&max9295_ser_c_0")
-    .replace("isp_a", "isp_r")
+    .replace("&max9295_ser_a", "&max9295_ser_c_0")
+    .replace("isp_a", "isp_e")
     .replace("dser_a", "&dserb")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_f@2c")
-    .replace("&ser_a", "&max9295_ser_c_1")
+    .replace("&max9295_ser_a", "&max9295_ser_c_1")
     .replace("isp_a", "isp_f")
     .replace("&dser", "&dserb")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2306,14 +2306,14 @@ str_i2c_imx490_5_p1_r325 = (
 )
 str_i2c_imx490_6_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_g@2b")
-    .replace("&ser_a", "&max9295_ser_d_0")
+    .replace("&max9295_ser_a", "&max9295_ser_d_0")
     .replace("isp_a", "isp_g")
     .replace("&dser", "&dserc")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 str_i2c_imx490_7_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_h@2c")
-    .replace("&ser_a", "&max9295_ser_d_1")
+    .replace("&max9295_ser_a", "&max9295_ser_d_1")
     .replace("isp_a", "isp_h")
     .replace("&dser", "&dserc")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2326,21 +2326,21 @@ str_i2c_imx490_0_p1_r351 = str_i2c_imx490_n_p1.replace("&dser", "&dser_0")
 
 str_i2c_imx490_1_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_b@2c")
-    .replace("&ser_a", "&max9295_ser_b")
+    .replace("&max9295_ser_a", "&max9295_ser_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("&dser", "&dser_0")
     .replace("isp_a", "isp_b")
 )
 str_i2c_imx490_2_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_c@2b")
-    .replace("&ser_a", "&max9295_ser_b_0")
+    .replace("&max9295_ser_a", "&max9295_ser_b_0")
     .replace("isp_a", "isp_c")
     .replace("&dser", "&dser_1")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_imx490_3_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_d@2c")
-    .replace("&ser_a", "&max9295_ser_b_1")
+    .replace("&max9295_ser_a", "&max9295_ser_b_1")
     .replace("isp_a", "isp_d")
     .replace("&dser", "&dser_1")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2348,14 +2348,14 @@ str_i2c_imx490_3_p1_r351 = (
 )
 str_i2c_imx490_4_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
-    .replace("&ser_a", "&max9295_ser_c_0")
+    .replace("&max9295_ser_a", "&max9295_ser_c_0")
     .replace("isp_a", "isp_r")
     .replace("dser_a", "&dser_2")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_f@2c")
-    .replace("&ser_a", "&max9295_ser_c_1")
+    .replace("&max9295_ser_a", "&max9295_ser_c_1")
     .replace("isp_a", "isp_f")
     .replace("&dser", "&dser_2")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2363,14 +2363,14 @@ str_i2c_imx490_5_p1_r351 = (
 )
 str_i2c_imx490_6_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_g@2b")
-    .replace("&ser_a", "&max9295_ser_d_0")
+    .replace("&max9295_ser_a", "&max9295_ser_d_0")
     .replace("isp_a", "isp_g")
     .replace("&dser", "&dser_3")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 str_i2c_imx490_7_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_h@2c")
-    .replace("&ser_a", "&max9295_ser_d_1")
+    .replace("&max9295_ser_a", "&max9295_ser_d_1")
     .replace("isp_a", "isp_h")
     .replace("&dser", "&dser_3")
     .replace("reg = <0x2b>", "reg = <0x2c>")

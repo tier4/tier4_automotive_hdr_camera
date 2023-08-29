@@ -21,12 +21,14 @@
 
 #define __TIER4_GW5300_H__
 
-#define GW5300_SLAVE_MODE_10FPS 1
-#define GW5300_MASTER_MODE_10FPS 2
-#define GW5300_MASTER_MODE_30FPS 3
-#define GW5300_SLAVE_MODE_20FPS 4
-#define GW5300_MASTER_MODE_20FPS 5
-#define GW5300_SLAVE_MODE_30FPS 6
+#define GW5300_MASTER_MODE_10FPS 0
+#define GW5300_SLAVE_MODE_10FPS  1
+#define GW5300_MASTER_MODE_20FPS 2
+#define GW5300_SLAVE_MODE_20FPS  4
+#define GW5300_MASTER_MODE_30FPS 5
+#define GW5300_SLAVE_MODE_30FPS  6
+#define GW5300_SLAVE_MODE_10FPS_SLOW  7
+#define GW5300_MASTER_MODE_10FPS_SLOW 8
 
 /**
  * get gw5300 prim slave address.
@@ -60,8 +62,6 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode);
  */
 
 int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16 min_integration_time);
-
-int tier4_gw5300_set_distortion_correction(struct device *dev, bool val);
 
 
 int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size);
