@@ -996,7 +996,7 @@ str_fragment_isx021_camera_module6_r351 = """
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
       devname = \"isx021 33-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_g@1b\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_g@1b\";
     };
   };
 """
@@ -1020,7 +1020,7 @@ str_fragment_isx021_camera_module7_r351 = """
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
       devname = \"isx021 33-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_h@1c\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_h@1c\";
     };
   };
 """

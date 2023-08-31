@@ -652,7 +652,7 @@
       status = "okay";
       pcl_id = "v4l2_sensor";
       devname = "imx490 33-002b";
-      proc-device-tree = "/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/imx490_g@2b";
+      proc-device-tree = "/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/imx490_g@2b";
     };
   };
 
@@ -672,7 +672,7 @@
       status = "okay";
       pcl_id = "v4l2_sensor";
       devname = "imx490 33-002c";
-      proc-device-tree = "/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/imx490_h@2c";
+      proc-device-tree = "/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/imx490_h@2c";
     };
   };
 
