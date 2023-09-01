@@ -1,4 +1,10 @@
-tier4-camera-gmsl (1.4.0) focal; urgency=medium
+tier4-camera-gmsl (1.4.1) focal; urgency=medium 
+
+  *  Support for C2 slow clock mode
+  
+ -- tier4 <tier4@tier4-desktop>  Mon, 21 Aug 2023 01:41:00 +0900
+
+tier4-camera-gmsl (1.4.0) focal; urgency=medium 
 
   *  Support Embedded data
 

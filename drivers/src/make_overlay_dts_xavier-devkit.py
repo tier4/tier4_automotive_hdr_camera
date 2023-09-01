@@ -2366,10 +2366,15 @@ str_i2c_isp_n = """
       };
 """
 
-str_i2c_isp_0 = str_i2c_isp_n
-str_i2c_isp_1 = str_i2c_isp_n.replace("isp_a", "isp_c").replace("isp_b", "isp_d")
-str_i2c_isp_2 = str_i2c_isp_n.replace("isp_a", "isp_e").replace("isp_b", "isp_f")
-str_i2c_isp_3 = str_i2c_isp_n.replace("isp_a", "isp_g").replace("isp_b", "isp_h")
+#str_i2c_isp_0 = str_i2c_isp_n
+#str_i2c_isp_1 = str_i2c_isp_n.replace("isp_a", "isp_c").replace("isp_b", "isp_d")
+#str_i2c_isp_2 = str_i2c_isp_n.replace("isp_a", "isp_e").replace("isp_b", "isp_f")
+#str_i2c_isp_3 = str_i2c_isp_n.replace("isp_a", "isp_g").replace("isp_b", "isp_h")
+
+str_i2c_0_isp = str_i2c_isp_n
+str_i2c_1_isp = str_i2c_isp_n.replace("isp_a", "isp_c").replace("isp_b", "isp_d")
+str_i2c_2_isp = str_i2c_isp_n.replace("isp_a", "isp_e").replace("isp_b", "isp_f")
+str_i2c_3_isp = str_i2c_isp_n.replace("isp_a", "isp_g").replace("isp_b", "isp_h")
 
 # ==================  IMX490  ===================
 
@@ -2381,9 +2386,9 @@ str_i2c_imx490_n_p1 = """
         clock-names = \"extperiph1\", \"pllp_grtba\";
         mclk = \"extperiph1\";
         nvidia,isp-device = <&isp_a>;           // for C2 camera
-        nvidia,gmsl-ser-device = <&ser>;
+        nvidia,gmsl-ser-device = <&max9295_ser_0>;
         nvidia,gmsl-dser-device = <&dser>;
-        nvidia,fpga-device  = <&t4_fpga>;
+        //nvidia,fpga-device  = <&t4_fpga>;
 
         reg = <0x2b>;
 
@@ -2397,43 +2402,43 @@ str_i2c_imx490_0_p1 = str_i2c_imx490_n_p1
 
 str_i2c_imx490_1_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_b@2c")
-    .replace("&ser", "&max9295_ser_b")
+    .replace("&max9295_ser_0", "&ser_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("isp_a", "isp_b")
 )
 
 str_i2c_imx490_2_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_c@2b")
-    .replace("&dser", "&max9296_dser_b")
-    .replace("&ser", "&max9295_ser_b_0")
+    .replace("&max9295_ser_0", "&max9295_ser_a_0")
+    .replace("&dser", "&max9296_dser_a")
     .replace("isp_a", "isp_c")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 
 str_i2c_imx490_3_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_d@2c")
-    .replace("&ser_a", "&max9295_ser_b_1")
+    .replace("&max9295_ser_0", "&max9295_ser_a_1")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("isp_a", "isp_d")
-    .replace("&dser", "&max9296_dser_b")
+    .replace("&dser", "&max9296_dser_a")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 
 str_i2c_imx490_4_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
-    .replace("&ser_a", "&max9295_ser_c_0")
-    .replace("isp_a", "isp_r")
-    .replace("&dser", "&max9296_dser_c")
+    .replace("&max9295_ser_0", "&max9295_ser_b_0")
+    .replace("isp_a", "isp_e")
+    .replace("&dser", "&max9296_dser_b")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 
 str_i2c_imx490_5_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_f@2c")
-    .replace("&ser_a", "&max9295_ser_c_1")
+    .replace("&max9295_ser_0", "&max9295_ser_b_1")
     .replace("reg = <0x2b>", " reg = <0x2c>")
     .replace("isp_a", "isp_f")
-    .replace("&dser", "&max9296_dser_c")
+    .replace("&dser", "&max9296_dser_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
@@ -2446,9 +2451,9 @@ str_i2c_imx490_6_p1 = """
         clock-names = \"extperiph1\", \"pllp_grtba\";
         mclk = \"extperiph1\";
         nvidia,isp-device = <&isp_g>;           // for C2 camera
-        nvidia,gmsl-ser-device = <&max9295_ser_d_0>;
-        nvidia,gmsl-dser-device = <&max9296_dser_d>;
-        nvidia,fpga-device  = <&t4_fpga>;
+        nvidia,gmsl-ser-device = <&max9295_ser_c_0>;
+        nvidia,gmsl-dser-device = <&max9296_dser_c>;
+        //nvidia,fpga-device  = <&t4_fpga>;
 
         reg = <0x2b>;
 
@@ -2473,10 +2478,10 @@ str_i2c_imx490_7_p1 = """
         // clocks = <&bpmp_clks 36>, <&bpmp_clks 36>;
         clock-names = \"extperiph1\", \"pllp_grtba\";
         mclk = \"extperiph1\";
-        nvidia,isp-device = <&isp_g>;           // for C2 camera
-        nvidia,gmsl-ser-device = <&max9295_ser_d_0>;
-        nvidia,gmsl-dser-device = <&max9296_dser_d>;
-        nvidia,fpga-device  = <&t4_fpga>;
+        nvidia,isp-device = <&isp_h>;           // for C2 camera
+        nvidia,gmsl-ser-device = <&max9295_ser_c_1>;
+        nvidia,gmsl-dser-device = <&max9296_dser_c>;
+        //nvidia,fpga-device  = <&t4_fpga>;
 
         reg = <0x2b>;
 
@@ -3185,7 +3190,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_0_p3
                 + str_i2c_isx021_0_p4
             )
-            str_i2c_0_isp = ""
+            #str_i2c_0_isp = ""
             str_fragment_nvcsi0 = str_w_fragment_nvcsi0
             str_camera_module0 = str_w_camera_module0
 
@@ -3202,7 +3207,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_0_p4
             )
 
-            str_i2c_0_isp = str_i2c_isp_0
+            #str_i2c_0_isp = str_i2c_isp_0
 
             str_fragment_nvcsi0 = str_w_fragment_nvcsi0.replace(
                 "isx021_out0", "imx490_out0"
@@ -3237,7 +3242,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_1_p4
             )
 
-            str_i2c_1_isp = ""
+            #str_i2c_1_isp = ""
 
             str_fragment_nvcsi1 = str_w_fragment_nvcsi1
 
@@ -3256,7 +3261,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_1_p4
             )
 
-            str_i2c_1_isp = str_i2c_isp_1
+            #str_i2c_1_isp = str_i2c_isp_0
 
             str_fragment_nvcsi1 = str_w_fragment_nvcsi1.replace(
                 "isx021_out1", "imx490_out1"
@@ -3292,7 +3297,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_2_p4
             )
 
-            str_i2c_2_isp = ""
+            #str_i2c_2_isp = ""
 
             str_fragment_nvcsi2 = str_w_fragment_nvcsi2
 
@@ -3311,7 +3316,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_2_p4
             )
 
-            str_i2c_2_isp = str_i2c_isp_2
+            #str_i2c_2_isp = str_i2c_isp_1
 
             str_fragment_nvcsi2 = str_w_fragment_nvcsi2.replace(
                 "isx021_out2", "imx490_out2"
@@ -3347,7 +3352,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_3_p4
             )
 
-            str_i2c_3_isp = ""
+            #str_i2c_3_isp = ""
 
             str_fragment_nvcsi3 = str_w_fragment_nvcsi3
 
@@ -3366,7 +3371,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_3_p4
             )
 
-            str_i2c_3_isp = str_i2c_isp_3
+            #str_i2c_3_isp = str_i2c_isp_1
 
             str_fragment_nvcsi3 = str_w_fragment_nvcsi3.replace(
                 "isx021_out3", "imx490_out3"
@@ -3400,7 +3405,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_4_p3
                 + str_i2c_isx021_4_p4
             )
-            str_i2c_4_isp = ""
+            #str_i2c_4_isp = ""
             str_fragment_nvcsi4 = str_w_fragment_nvcsi4
             str_camera_module4 = str_w_camera_module4
         elif camera[i] == "C2":
@@ -3414,7 +3419,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_4_p3
                 + str_i2c_imx490_4_p4
             )
-            str_i2c_4_isp = str_i2c_isp_2
+            #str_i2c_4_isp = str_i2c_isp_2
             str_fragment_nvcsi4 = str_w_fragment_nvcsi4.replace(
                 "isx021_out4", "imx490_out4"
             )
@@ -3445,7 +3450,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_5_p3
                 + str_i2c_isx021_5_p4
             )
-            str_i2c_5_isp = ""
+            #str_i2c_5_isp = ""
             str_fragment_nvcsi5 = str_w_fragment_nvcsi5
             str_camera_module5 = str_w_camera_module5
         elif camera[i] == "C2":
@@ -3459,7 +3464,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_5_p3
                 + str_i2c_imx490_5_p4
             )
-            str_i2c_5_isp = str_i2c_isp_2
+            #str_i2c_5_isp = str_i2c_isp_2
             str_fragment_nvcsi5 = str_w_fragment_nvcsi5.replace(
                 "isx021_out5", "imx490_out5"
             )
@@ -3490,7 +3495,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_6_p3
                 + str_i2c_isx021_6_p4
             )
-            str_i2c_6_isp = ""
+            #str_i2c_6_isp = ""
             str_fragment_nvcsi6 = str_w_fragment_nvcsi6
             str_camera_module6 = str_w_camera_module6
         elif camera[i] == "C2":
@@ -3504,7 +3509,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_6_p3
                 + str_i2c_imx490_6_p4
             )
-            str_i2c_6_isp = str_i2c_isp_3
+            #str_i2c_6_isp = str_i2c_isp_3
             str_fragment_nvcsi6 = str_w_fragment_nvcsi6.replace(
                 "isx021_out6", "imx490_out6"
             )
@@ -3537,7 +3542,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_7_p4
             )
 
-            str_i2c_7_isp = ""
+            #str_i2c_7_isp = ""
 
             str_fragment_nvcsi7 = str_w_fragment_nvcsi7
 
@@ -3556,7 +3561,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_7_p4
             )
 
-            str_i2c_7_isp = str_i2c_isp_3
+            #str_i2c_7_isp = str_i2c_isp_3
 
             str_fragment_nvcsi7 = str_w_fragment_nvcsi7.replace(
                 "isx021_out7", "imx490_out7"

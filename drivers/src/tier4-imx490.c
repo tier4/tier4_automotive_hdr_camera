@@ -600,12 +600,13 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
   switch (priv->fsync_mode)
   {
-    case GW5300_MASTER_MODE_30FPS:
 
-      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_30FPS);
+    case GW5300_MASTER_MODE_10FPS:
+
+      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS);
       if (err)
       {
-        dev_err(dev, "[%s] : setting camera sensor to Master mode 30fps failed\n", __func__);
+        dev_err(dev, "[%s] : setting camera sensor to Master mode 10fps failed\n", __func__);
         return err;
       }
 
@@ -624,12 +625,12 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
       break;
 
-    case GW5300_MASTER_MODE_10FPS:
+    case GW5300_MASTER_MODE_20FPS:
 
-      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS);
+      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_20FPS);
       if (err)
       {
-        dev_err(dev, "[%s] : setting camera sensor to Master mode 10fps failed\n", __func__);
+        dev_err(dev, "[%s] : setting camera sensor to Master mode 20fps failed\n", __func__);
         return err;
       }
 
@@ -646,20 +647,49 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
       break;
 
-    case GW5300_MASTER_MODE_20FPS:
+    case GW5300_MASTER_MODE_30FPS:
 
-      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_20FPS);
+      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_30FPS);
       if (err)
       {
-        dev_err(dev, "[%s] : setting camera sensor to Master mode 20fps failed\n", __func__);
+        dev_err(dev, "[%s] : setting camera sensor to Master mode 30fps failed\n", __func__);
         return err;
       }
 
       break;
 
-    case 0:
+    case GW5300_SLAVE_MODE_30FPS:
 
-      dev_err(dev, "[%s] : setting camera sensor to Master mode 30fps.\n", __func__);
+      err = tier4_imx490_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_30FPS);
+      if (err)
+      {
+        dev_err(dev, "[%s] : setting camera sensor to Slave mode 30fps failed\n", __func__);
+        return err;
+      }
+
+      break;
+
+    case GW5300_SLAVE_MODE_10FPS_SLOW:
+
+      err = tier4_imx490_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_10FPS_SLOW);
+      if (err)
+      {
+        dev_err(dev, "[%s] : setting camera sensor to Slow clock Slave mode 10fps failed\n", __func__);
+        goto exit;
+      }
+
+      msleep(20);
+
+      break;
+
+    case GW5300_MASTER_MODE_10FPS_SLOW:
+
+      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS_SLOW);
+      if (err)
+      {
+        dev_err(dev, "[%s] : setting camera sensor to Slow clock Master mode 10fps failed\n", __func__);
+        return err;
+      }
 
       break;
 
@@ -673,7 +703,7 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
   usleep_range(50000, 51000);
 
   err = tier4_max9296_start_streaming(priv->dser_dev, dev);
-  
+
   if (enable_distortion_correction == 0xCAFE)
   {
 	  // if not set kernel param, read device tree param

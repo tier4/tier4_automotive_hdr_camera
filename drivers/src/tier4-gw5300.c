@@ -43,26 +43,52 @@ static __u32 channel_count_imx490;
 static struct tier4_gw5300 *prim_priv__[MAX_CHANNEL_NUM];
 
 static u8 master_30fps[] = {
-  0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17,
+                             0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
+                           , 0x80, 0x03, 0x00, 0x00, 0x00, 0x50, 0x00, 0x00
+                           , 0x00, 0x6A
 };
 
 static u8 master_10fps[] = {
-  0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00, 0x80, 0x03, 0x00, 0x00, 0x00, 0x1E, 0x00, 0x00, 0x00, 0x38,
+                            0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
+                          , 0x80, 0x03, 0x00, 0x00, 0x00, 0x1E, 0x00, 0x00
+                          , 0x00, 0x38
 };
 
 static u8 slave_10fps[] = {
-  0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00, 0x80, 0x03, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x42,
+                            0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
+                          , 0x80, 0x03, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00
+                          , 0x00, 0x42
 };
 
-static u8 master_20fps[] = { 0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00, 0x80,
-                             0x03, 0x00, 0x00, 0x00, 0x5A, 0x00, 0x00, 0x00, 0x74 };
+static u8 master_20fps[] = { 
+                             0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
+                           , 0x80, 0x03, 0x00, 0x00, 0x00, 0x5A, 0x00, 0x00
+                           , 0x00, 0x74
+};
 
-static u8 slave_20fps[] = { 0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00, 0x80,
-                            0x03, 0x00, 0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x79 };
+static u8 slave_20fps[] = { 
+                            0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
+                          , 0x80, 0x03, 0x00, 0x00, 0x00, 0x5F, 0x00, 0x00
+                          , 0x00, 0x79
+};
 
-static u8 slave_30fps[] = { 0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00, 0x80,
-                            0x03, 0x00, 0x00, 0x00, 0x55, 0x00, 0x00, 0x00, 0x6F };
+static u8 slave_30fps[] = { 
+                            0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
+                          , 0x80, 0x03, 0x00, 0x00, 0x00, 0x55, 0x00, 0x00
+                          , 0x00, 0x6F
+};
 
+static u8 master_10fps_slow[] = {
+                            0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
+                          , 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                          , 0x00, 0x17
+};
+
+static u8 slave_10fps_slow[] = {
+                            0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
+                          , 0x80, 0x03, 0x00, 0x00, 0x00, 0x4B, 0x00, 0x00
+                          , 0x00, 0x65
+};
 
 struct map_ctx
 {
@@ -237,29 +263,7 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
 
   switch (sensor_mode)
   {
-    case GW5300_MASTER_MODE_30FPS:
-      err = tier4_gw5300_send_and_recv_msg(dev, master_30fps, sizeof(master_30fps), buf, sizeof(buf));
-      if (err < 0)
-      {
-        dev_err(dev, "[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n", __func__,
-                err);
-        goto error;
-      }
-      else if (err == 0)
-      {  // it means that 0 message has been sent.
-        dev_err(dev, "[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n", __func__,
-                err);
-        err = -999;
-        goto error;
-      }
-      else
-      {
-        err = 0;
-      }
-      break;
-
     case GW5300_MASTER_MODE_10FPS:
-
       err = tier4_gw5300_send_and_recv_msg(dev, master_10fps, sizeof(master_10fps), buf, sizeof(buf));
       if (err < 0)
       {
@@ -281,7 +285,6 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
       break;
 
     case GW5300_SLAVE_MODE_10FPS:
-
       err = tier4_gw5300_send_and_recv_msg(dev, slave_10fps, sizeof(slave_10fps), buf, sizeof(buf));
       if (err < 0)
       {
@@ -299,26 +302,6 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
         err = 0;
       }
       break;
-
-    case GW5300_SLAVE_MODE_20FPS:
-      err = tier4_gw5300_send_and_recv_msg(dev, slave_20fps, sizeof(slave_20fps), buf, sizeof(buf));
-      if (err < 0)
-      {
-        dev_err(dev, "[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n", __func__, err);
-        goto error;
-      }
-      else if (err == 0)
-      {  // it means that 0 message has been sent.
-        dev_err(dev, "[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n", __func__, err);
-        err = -999;
-        goto error;
-      }
-      else
-      {
-        err = 0;
-      }
-      break;
-
     case GW5300_MASTER_MODE_20FPS:
       err = tier4_gw5300_send_and_recv_msg(dev, master_20fps, sizeof(master_20fps), buf, sizeof(buf));
       if (err < 0)
@@ -339,6 +322,45 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
         err = 0;
       }
       break;
+    case GW5300_SLAVE_MODE_20FPS:
+      err = tier4_gw5300_send_and_recv_msg(dev, slave_20fps, sizeof(slave_20fps), buf, sizeof(buf));
+      if (err < 0)
+      {
+        dev_err(dev, "[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n", __func__, err);
+        goto error;
+      }
+      else if (err == 0)
+      {  // it means that 0 message has been sent.
+        dev_err(dev, "[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n", __func__, err);
+        err = -999;
+        goto error;
+      }
+      else
+      {
+        err = 0;
+      }
+      break;
+    case GW5300_MASTER_MODE_30FPS:
+      err = tier4_gw5300_send_and_recv_msg(dev, master_30fps, sizeof(master_30fps), buf, sizeof(buf));
+      if (err < 0)
+      {
+        dev_err(dev, "[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n", __func__,
+                err);
+        goto error;
+      }
+      else if (err == 0)
+      {  // it means that 0 message has been sent.
+        dev_err(dev, "[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n", __func__,
+                err);
+        err = -999;
+        goto error;
+      }
+      else
+      {
+        err = 0;
+      }
+      break;
+
     case GW5300_SLAVE_MODE_30FPS:
       err = tier4_gw5300_send_and_recv_msg(dev, slave_30fps, sizeof(slave_30fps), buf, sizeof(buf));
       if (err < 0)
@@ -349,6 +371,44 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
       else if (err == 0)
       {  // it means that 0 message has been sent.
         dev_err(dev, "[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n", __func__, err);
+        err = -999;
+        goto error;
+      }
+      else
+      {
+        err = 0;
+      }
+      break;
+    case GW5300_MASTER_MODE_10FPS_SLOW:
+      err = tier4_gw5300_send_and_recv_msg(dev, master_10fps_slow, sizeof(master_10fps_slow), buf, sizeof(buf));
+      if (err < 0)
+      {
+        dev_err(dev, "[%s] : Setting up Slow clock Master mode 10fps failed. %d message has been sent to gw5300.\n", __func__,
+                err);
+        goto error;
+      }
+      else if (err == 0)
+      {  // it means that 0 message has been sent.
+        dev_err(dev, "[%s] : Setting up Slow clock Master mode 10fps failed. %d message has been sent to gw5300.\n", __func__,
+                err);
+        err = -999;
+        goto error;
+      }
+      else
+      {
+        err = 0;
+      }
+      break;
+    case GW5300_SLAVE_MODE_10FPS_SLOW:
+      err = tier4_gw5300_send_and_recv_msg(dev, slave_10fps_slow, sizeof(slave_10fps_slow), buf, sizeof(buf));
+      if (err < 0)
+      {
+        dev_err(dev, "[%s] : Setting up Slow clock Slave mode 10fps failed. %d message has been sent to gw5300.\n", __func__, err);
+        goto error;
+      }
+      else if (err == 0)
+      {  // it means that 0 message has been sent.
+        dev_err(dev, "[%s] : Setting up Slow clock Slave mode 10fps failed. %d message has been sent to gw5300.\n", __func__, err);
         err = -999;
         goto error;
       }
