@@ -159,12 +159,10 @@ void SampleWindowC2::createAWBFrame(void)
       });
   awb_grid.attach(awb_r_label, 0, 1, 1, 1);
   awb_grid.attach(awb_r_scale, 1, 1, 2, 1);
-  awb_grid.attach(awb_g_label, 0, 2, 1, 1);
-  awb_grid.attach(awb_g_scale, 1, 2, 2, 1);
-#if 0
+//  awb_grid.attach(awb_g_label, 0, 2, 1, 1);
+//  awb_grid.attach(awb_g_scale, 1, 2, 2, 1);
   awb_grid.attach(awb_b_label, 0, 2, 1, 1);
   awb_grid.attach(awb_b_scale, 1, 2, 2, 1);
-#endif
 
   AWB_frame.set_label("AWB mode setting");
   AWB_frame.add(awb_grid);
