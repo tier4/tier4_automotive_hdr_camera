@@ -20,7 +20,10 @@
 #define DEBUG
 #include <t4cam_tools.hpp>
 
-int main(int argc, char* argv[])
+extern int c1_process(cmdline::parser &p);
+extern int c2_process(cmdline::parser &p);
+
+int main(int argc, char *argv[])
 {
   cmdline::parser p;
 
@@ -38,99 +41,38 @@ int main(int argc, char* argv[])
   p.add<float>("contrast", 'C', "set Contrast val", false);
   p.add<int>("hue", 'H', "set Hue val", false);
   p.add<float>("saturation", 'S', "set Saturation val", false);
+  p.add<std::string>("sharpness", 's', "set sharpness val", false);
+
+  p.add<int>("atr_contrast_gain", 0, "set atr contrast gain", false, 0, cmdline::range(0, 0x100));
+  p.add<int>("atr_brightness_gain", 0, "set atr brightness gain", false, 0, cmdline::range(0, 0x100));
+  p.add<int>("sensormode", 0, "set sensor_mode val", false);
+
+  p.add<float>("isp_sensor_gain", 0, "set isp_sensor_gain val", false);
+  p.add<float>("sensor_gain", 0, "set sensor_gain val", false);
+  p.add<bool>("awb", 'a', "set awb enable", false);
+  p.add<float>("awb_gain_g", 0, "set awb gain g", false);
+  p.add<float>("awb_gain_r", 0, "set awb gain r", false);
+  p.add<float>("awb_gain_b", 0, "set awb gain b", false);
+
+ 
+  p.add<bool>("auto_exposure", 'A', "set auto exposure", false);
+  p.add<int>("shutter_on_ae", 0,"set shutter time on Ae", false);
+
   p.add("vv", 'v', "get debug_message");
-#if 0
+
   p.add<float>("evrefoffset", 'e', "set EvrefOffset val", false);
   p.add<float>("digitalgain", 'D', "set DigitalGain val", false);
-#endif
-
 
   p.parse_check(argc, argv);
 
-  std::string file_name = p.get<std::string>("input");
-  int port_num = p.get<int>("port-num");
-
+  int ret;
   if (p.get<std::string>("model") != "c2")
   {
-    C1 c1_a = C1(port_num);
-
-    int ret = 0;
-
-    if (p.exist("input"))
-    {
-      if (c1_a.initialized_load_value_from_file(p.get<std::string>("input")) < 0)
-      {
-        return -1;
-      }
-      c1_a.setLoadValue();
-      return 0;
-    }
-    else if (p.exist("output"))
-    {
-      c1_a.saveCurrentValue(p.get<std::string>("output"));
-    }
-    else
-    {
-      if (p.exist("hue"))
-      {
-        int val = p.get<int>("hue");
-        std::cout << "set hue val:" << val << std::endl;
-        ret = c1_a.setHue(val);
-      }
-      if (p.exist("saturation"))
-      {
-        float val = p.get<float>("saturation");
-        std::cout << "set Saturation val:" << val << std::endl;
-        ret = c1_a.setSaturation(val);
-      }
-      if (p.exist("contrast"))
-      {
-        float val = p.get<float>("contrast");
-        std::cout << "set Contrast val:" << val << std::endl;
-        ret = c1_a.setContrast(val);
-      }
-      if (p.exist("brightness"))
-      {
-        float val = p.get<float>("brightness");
-        std::cout << "set Brightness val:" << val << std::endl;
-        ret = c1_a.setBrightness(val);
-      }
-      if (p.exist("tempature"))
-      {
-        float val = c1_a.getTempature(0);
-        std::cout << "get tempature:" << val << std::endl;
-      }
-    }
-
-    if (ret < 0)
-    {
-      std::cerr << "Failed set parameter. please check parameter and hardware connection" << std::endl;
-    }
+    ret = c1_process(p);
   }
   else
   {
-    if(p.exist("vv")){
-      std::cerr << "/************** Enabling debug message **********/" <<std::endl;
-      debug_flag=true;
-    }
-    C2 c2_a = C2(port_num, debug_flag);
-    c2_a.setShutterTimeOnAE(330,330);
-    c2_a.setSensorGain(100.0);
+    ret = c2_process(p);
   }
-
-#if 0
-  if (p.exist("evrefoffset"))
-  {
-    float val = p.get<float>("evrefoffset");
-    std::cout << "set evrefoffset val:" << val << std::endl;
-    c1_a.setExposureOffset(val);
-  }
-  if (p.exist("digitalgain"))
-  {
-    float val = p.get<float>("digitalgain");
-    std::cout << "set DigitalGain val:" << val << std::endl;
-    c1_a.setDigitalGain(val);
-  }
-#endif
-  return 0;
+  return ret;
 }

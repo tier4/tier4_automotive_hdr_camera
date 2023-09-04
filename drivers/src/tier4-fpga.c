@@ -71,8 +71,6 @@ static int tier4_fpga_read_reg(struct device *dev, u16 addr, u8 *val)
 
   *val = reg_val & 0xFF;
 
-  dev_dbg(dev, "[%s ] : FPGA I2C Read  : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, *val);
-
   return err;
 }
 
@@ -95,13 +93,11 @@ static int tier4_fpga_write_reg(struct device *dev, u16 addr, u8 val)
     strncpy(str_sl_addr, &dev->kobj.name[len - 2], 2);
   }
 
-  dev_dbg(dev, "[%s] : FPGA I2C Write : Reg Address = 0x%04X Data= 0x%02X.\n", __func__, addr, val);
-
   err = regmap_write(priv->regmap, addr, val);
 
   if (err)
   {
-    dev_err(dev, "[%s] : FPGA I2C write failed.    Reg Address = 0x%04X  Data= 0x%02X.\n", __func__, addr, val);
+    dev_err(dev, "[%s] : FPGA I2C write failed. Reg Address = 0x%04X  Data= 0x%02X.\n", __func__, addr, val);
   }
 
   /* delay before next i2c command as required for SERDES link */
@@ -115,7 +111,7 @@ static int tier4_fpga_write_reg(struct device *dev, u16 addr, u8 val)
 
 int tier4_fpga_enable_generate_fsync_signal(struct device *dev)
 {
-  //	struct tier4_fpga *priv = dev_get_drvdata(dev);
+  //    struct tier4_fpga *priv = dev_get_drvdata(dev);
   int err = 0;
 
   err = tier4_fpga_write_reg(dev, FPGA_REG_ENABLE_ADDR, FPGA_ENABLED);
@@ -162,10 +158,6 @@ int tier4_fpga_check_access(struct device *dev)
     dev_err(dev, "[%s] :  Accessing FPGA failed.\n", __func__);
     return err;
   }
-  else
-  {
-    dev_dbg(dev, "[%s] :  Accessing FPGA succeeded.\n", __func__);
-  }
 
   return NO_ERROR;
 }
@@ -186,10 +178,6 @@ int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, in
   {
     dev_err(dev, "[%s] :  Setting the frequency of fsync pulse failed.\n", __func__);
     return err;
-  }
-  else
-  {
-    dev_dbg(dev, "[%s] :  Set the frequency of fsync pulse.\n", __func__);
   }
 
   return NO_ERROR;
@@ -226,32 +214,32 @@ static int tier4_fpga_parse_dt(struct tier4_fpga *priv, struct i2c_client *clien
 {
   struct device_node *node = client->dev.of_node;
   int err = 0;
-  //	const char 					*str_value;
-  //	int 						value;
-  //	const struct of_device_id 	*match;
+  //const char                  *str_value;
+  //int                         value;
+  //const struct of_device_id   *match;
 
   if (!node)
     return -EINVAL;
 
 #if 0
-	match = of_match_device(tier4_fpga_of_match, &client->dev);
-	if (!match) {
-		dev_err(&client->dev, "[%s] : Failed to match fpga device with dt id\n", __func__);
-		return -EFAULT;
-	}
+  match = of_match_device(tier4_fpga_of_match, &client->dev);
+  if (!match) {
+    dev_err(&client->dev, "[%s] : Failed to match fpga device with dt id\n", __func__);
+    return -EFAULT;
+  }
 
-	priv->g_ctx.fpga_generate_fsync = false;
+  priv->g_ctx.fpga_generate_fsync = false;
 
-	err = of_property_read_string(node, "generate-fsync", &str_value);
-	if (err < 0) {
-		dev_info(&client->dev, "[%s] : generate-fsync property not found and disabled gneneration of fsync.\n", __func__);
-	} else {
-		if (!strcmp(str_value, "true")) {
-			priv->g_ctx.fpga_generate_fsync = true;
-		}
-	}
+  err = of_property_read_string(node, "generate-fsync", &str_value);
+  if (err < 0) {
+    dev_info(&client->dev, "[%s] : generate-fsync property not found and disabled gneneration of fsync.\n", __func__);
+  } else {
+    if (!strcmp(str_value, "true")) {
+      priv->g_ctx.fpga_generate_fsync = true;
+    }
+  }
 
-	dev_info(&client->dev, "[%s] : generate-fsync = %d.\n", __func__, priv->g_ctx.fpga_generate_fsync );
+  dev_info(&client->dev, "[%s] : generate-fsync = %d.\n", __func__, priv->g_ctx.fpga_generate_fsync );
 #endif
 
   priv->g_ctx.fpga_generate_fsync = generate_fsync;
@@ -266,8 +254,6 @@ static int tier4_fpga_parse_dt(struct tier4_fpga *priv, struct i2c_client *clien
   }
 
   priv->g_ctx.sdev_fpga_reg = priv->reg_addr;
-
-  dev_dbg(&client->dev, "[%s] : fpga slave addr = 0x%0x.\n", __func__, priv->reg_addr);
 
   return NO_ERROR;
 }
@@ -337,6 +323,8 @@ static int tier4_fpga_remove(struct i2c_client *client)
   return 0;
 }
 
+// ----------------------------------------------
+
 static const struct i2c_device_id tier4_fpga_id[] = {
   { "tier4_fpga", 0 },
   {},
@@ -345,13 +333,13 @@ static const struct i2c_device_id tier4_fpga_id[] = {
 MODULE_DEVICE_TABLE(i2c, tier4_fpga_id);
 
 static struct i2c_driver tier4_fpga_i2c_driver = {
-	.driver = {
-		.name = "tier4_fpga",
-		.owner = THIS_MODULE,
-	},
-	.probe = tier4_fpga_probe,
-	.remove = tier4_fpga_remove,
-	.id_table = tier4_fpga_id,
+  .driver = {
+    .name = "tier4_fpga",
+    .owner = THIS_MODULE,
+  },
+  .probe = tier4_fpga_probe,
+  .remove = tier4_fpga_remove,
+  .id_table = tier4_fpga_id,
 };
 
 static int __init tier4_fpga_init(void)

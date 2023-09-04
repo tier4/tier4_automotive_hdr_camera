@@ -1941,7 +1941,8 @@ str_i2c_isx021_n_p2 = """
         use_decibel_gain = \"true\";
 
         /* enable CID_SENSOR_MODE_ID for sensor modes selection */
-        use_sensor_mode_id = \"true\";
+        //use_sensor_mode_id = \"true\";
+        use_sensor_mode_id = \"false\";
 
         mode0 {
           /*mode ISX021_MODE_1920X1280_CROP_30FPS*/
@@ -1959,6 +1960,135 @@ str_i2c_isx021_n_p2 = """
 
           active_w = \"1920\";
           active_h = \"1280\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+
+          pix_clk_hz = \"94500000\";
+          serdes_pix_clk_hz = \"833333333\";
+
+          gain_factor = \"10\";
+          min_gain_val = \"0\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+
+        mode1 {
+          /*mode ISX021_MODE_1920X1280_CROP_30FPS with Front Embedded data*/
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+
+          active_w = \"1920\";
+          active_h = \"1281\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+
+          pix_clk_hz = \"94500000\";
+          serdes_pix_clk_hz = \"833333333\";
+
+          gain_factor = \"10\";
+          min_gain_val = \"0\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+
+        mode2 {
+          /*mode ISX021_MODE_1920X1280_CROP_30FPS with Rear Embedded data*/
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+
+          active_w = \"1920\";
+          active_h = \"1294\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+
+          pix_clk_hz = \"94500000\";
+          serdes_pix_clk_hz = \"833333333\";
+
+          gain_factor = \"10\";
+          min_gain_val = \"0\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+
+        mode3 {
+          /*mode ISX021_MODE_1920X1280_CROP_30FPS with Front and Rear Embedded data*/
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+
+          active_w = \"1920\";
+          active_h = \"1295\";
           readout_orientation = \"0\";
           line_length = \"2250\";
           inherent_gain = \"1\";
@@ -2122,7 +2252,7 @@ str_i2c_imx490_n_p1 = """
         clock-names = \"extperiph1\", \"pllp_grtba\";
         mclk = \"extperiph1\";
         nvidia,isp-device = <&isp_a>;           // for C2 camera
-        nvidia,gmsl-ser-device = <&ser>;
+        nvidia,gmsl-ser-device = <&max9295_ser_a>;
         nvidia,gmsl-dser-device = <&dser>;
         nvidia,fpga-device  = <&t4_fpga>;
 
@@ -2140,20 +2270,20 @@ str_i2c_imx490_0_p1_r325 = str_i2c_imx490_n_p1
 
 str_i2c_imx490_1_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_b@2c")
-    .replace("&ser_a", "&max9295_ser_b")
+    .replace("&max9295_ser_a", "&max9295_ser_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("isp_a", "isp_b")
 )
 str_i2c_imx490_2_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_c@2b")
-    .replace("&ser_a", "&max9295_ser_b_0")
+    .replace("&max9295_ser_a", "&max9295_ser_b_0")
     .replace("isp_a", "isp_c")
     .replace("&dser", "&dsera")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_imx490_3_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_d@2c")
-    .replace("&ser_a", "&max9295_ser_b_1")
+    .replace("&max9295_ser_a", "&max9295_ser_b_1")
     .replace("isp_a", "isp_d")
     .replace("&dser", "&dsera")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2161,14 +2291,14 @@ str_i2c_imx490_3_p1_r325 = (
 )
 str_i2c_imx490_4_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
-    .replace("&ser_a", "&max9295_ser_c_0")
-    .replace("isp_a", "isp_r")
+    .replace("&max9295_ser_a", "&max9295_ser_c_0")
+    .replace("isp_a", "isp_e")
     .replace("dser_a", "&dserb")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_f@2c")
-    .replace("&ser_a", "&max9295_ser_c_1")
+    .replace("&max9295_ser_a", "&max9295_ser_c_1")
     .replace("isp_a", "isp_f")
     .replace("&dser", "&dserb")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2176,14 +2306,14 @@ str_i2c_imx490_5_p1_r325 = (
 )
 str_i2c_imx490_6_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_g@2b")
-    .replace("&ser_a", "&max9295_ser_d_0")
+    .replace("&max9295_ser_a", "&max9295_ser_d_0")
     .replace("isp_a", "isp_g")
     .replace("&dser", "&dserc")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 str_i2c_imx490_7_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_h@2c")
-    .replace("&ser_a", "&max9295_ser_d_1")
+    .replace("&max9295_ser_a", "&max9295_ser_d_1")
     .replace("isp_a", "isp_h")
     .replace("&dser", "&dserc")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2196,21 +2326,21 @@ str_i2c_imx490_0_p1_r351 = str_i2c_imx490_n_p1.replace("&dser", "&dser_0")
 
 str_i2c_imx490_1_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_b@2c")
-    .replace("&ser_a", "&max9295_ser_b")
+    .replace("&max9295_ser_a", "&max9295_ser_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("&dser", "&dser_0")
     .replace("isp_a", "isp_b")
 )
 str_i2c_imx490_2_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_c@2b")
-    .replace("&ser_a", "&max9295_ser_b_0")
+    .replace("&max9295_ser_a", "&max9295_ser_b_0")
     .replace("isp_a", "isp_c")
     .replace("&dser", "&dser_1")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_imx490_3_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_d@2c")
-    .replace("&ser_a", "&max9295_ser_b_1")
+    .replace("&max9295_ser_a", "&max9295_ser_b_1")
     .replace("isp_a", "isp_d")
     .replace("&dser", "&dser_1")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2218,14 +2348,14 @@ str_i2c_imx490_3_p1_r351 = (
 )
 str_i2c_imx490_4_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
-    .replace("&ser_a", "&max9295_ser_c_0")
+    .replace("&max9295_ser_a", "&max9295_ser_c_0")
     .replace("isp_a", "isp_r")
     .replace("dser_a", "&dser_2")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_f@2c")
-    .replace("&ser_a", "&max9295_ser_c_1")
+    .replace("&max9295_ser_a", "&max9295_ser_c_1")
     .replace("isp_a", "isp_f")
     .replace("&dser", "&dser_2")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2233,14 +2363,14 @@ str_i2c_imx490_5_p1_r351 = (
 )
 str_i2c_imx490_6_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_g@2b")
-    .replace("&ser_a", "&max9295_ser_d_0")
+    .replace("&max9295_ser_a", "&max9295_ser_d_0")
     .replace("isp_a", "isp_g")
     .replace("&dser", "&dser_3")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 str_i2c_imx490_7_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_h@2c")
-    .replace("&ser_a", "&max9295_ser_d_1")
+    .replace("&max9295_ser_a", "&max9295_ser_d_1")
     .replace("isp_a", "isp_h")
     .replace("&dser", "&dser_3")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2585,10 +2715,11 @@ def usage():
     print("** ~~~~~                                                              **")
     print("** Case 1.                                                            **")
     print("**                                                                    **")
-    print("**  $> make_overaly_dts_roscube.py Rev camera1 camera2.. camera8      **")
+    print("**  $> make_overaly_dts_roscube.py Rev Camera1 Camera2.. Camera8      **")
     print("**                                                                    **")
-    print("**     Rev: L4T Revision [ R32.5.1 | R35.1 ]                          **")
-    print("**     cameraX : C1 or C2 ( The camera connected to portX )           **")
+    print("**     Rev: L4T Revision [ R32.5.1 R32.5.2 |  R32.6.1 | R35.1 ]       **")
+    print("**                                                                    **")
+    print("**     CameraX : C1 or C2 ( The camera connected to portX )           **")
     print("**     if no camera connected, specify C1                             **")
     print("**                                                                    **")
     print("**     E.g.                                                           **")
@@ -2614,7 +2745,7 @@ def usage():
     print("**                                                                    **")
     print("**       $> make_overaly_dts_roscube.py R32.5.1 -4 C1 -2 C2 -2 C1     **")
     print("**                                                                    **")
-    print("** Not alloed case: Above 2 cases are Mixed.                          **")
+    print("** The followings should not be specified.( Mixed above 2 cases )     **")
     print("**                                                                    **")
     print("**    [-2, -4, -6, -8] option before [C1/C2]                          **")
     print("**    and [C1/C2] without those options are mixed.                    **")
@@ -2816,14 +2947,14 @@ total_num_args = len(args)
 
 l4t_revision = args[1].upper()
 
-if l4t_revision == "R32.5.1" or l4t_revision == "R32.5.2" or l4t_revision == "R32.5.1":
+if l4t_revision == "R32.5.1" or l4t_revision == "R32.5.2" or l4t_revision == "R32.6.1":
     str_rev_num = "325x"
 elif l4t_revision == "R35.1":
     str_rev_num = "351"
 else:
-    print(" Error!! : 1st argument should be R32.5.1 or R35.1.")
+    print(" Error!! : The first argument should be R32.5.1, R32.5.2, R32.6.1 or R35.1.")
     usage()
-    str_rev_num = "000"
+    sys.exit()
 
 str_n_options = get_n_options(args, total_num_args)
 

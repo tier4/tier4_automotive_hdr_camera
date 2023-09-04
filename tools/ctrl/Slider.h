@@ -1,5 +1,5 @@
 #pragma once
-
+#include <stdio.h>
 #include <gtkmm.h>
 
 class Slider : public Gtk::Box
@@ -32,6 +32,8 @@ public:
 
 private:
   void callback_slidervaluechange();
+  void callback_slidervaluechanged(double v);
+
 
   int digitsNum = -1;
 
