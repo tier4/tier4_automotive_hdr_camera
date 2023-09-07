@@ -64,15 +64,12 @@ void SampleWindowC2::callback_radio(int i)
 
 void SampleWindowC2::callback_check(int i)
 {
-	fprintf(stderr,"%s:%d\n", __func__, i);
   if (buttons[i].get_active() == 0)
   {
-	fprintf(stderr,"off_%s:%d\n", __func__, i);
     available_mask &= (~(1 << i)) & master_available_mask;
   }
   else
   {
-	fprintf(stderr,"on_%s:%d\n", __func__, i);
     available_mask |= (1 << i) & master_available_mask;
   }
 }
@@ -121,10 +118,15 @@ void SampleWindowC2::contrast_callback_scale(double v)
 
 void SampleWindowC2::sharpness_callback_scale(double v)
 {
+  float val = sharpness_scale.get_value();
   for (int i = 0; i < 8; i++)
   {
     if (available_mask & (1 << i))
     {
+      camera_ptr_array[i]->setSharpness(false);
+      camera_ptr_array[i]->setSharpnessVal_Ld((int)val);
+      camera_ptr_array[i]->setSharpnessVal_Ldu((int)val);
+      camera_ptr_array[i]->setSharpnessVal_Lu((int)val);
       camera_ptr_array[i]->setSharpness(true);
     }
   }
