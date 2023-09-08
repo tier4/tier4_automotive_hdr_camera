@@ -611,6 +611,12 @@ int tier4_max9296_sdev_register(struct device *dev, struct gmsl_link_ctx *g_ctx)
 
   mutex_lock(&priv->lock);
 
+  for ( i = 0 ; i < MAX9296_MAX_SOURCES ;  i++ ) {
+    if ( priv->sources[i].g_ctx != NULL ) {
+      priv->sources[i].g_ctx->serdes_csi_link = 0;
+    }
+  }
+
   if (priv->num_src > priv->max_src)
   {
     dev_err(dev, "[%s] : MAX9296 inputs size exhausted\n", __func__);

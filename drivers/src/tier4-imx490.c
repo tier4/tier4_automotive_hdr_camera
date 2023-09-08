@@ -486,6 +486,7 @@ static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
 // --------------------------------------------------------------------------------------
 //  Enable Distortion Coreection
 // --------------------------------------------------------------------------------------
+#if 0
 static int tier4_imx490_set_distortion_correction(struct tegracam_device *tc_dev, bool val)
 {
   int err = 0;
@@ -495,6 +496,8 @@ static int tier4_imx490_set_distortion_correction(struct tegracam_device *tc_dev
 
   return err;
 }
+#endif
+
 // --------------------------------------------------------------------------------------
 //  If you add new ioctl VIDIOC_S_EXT_CTRLS function,
 //  please add the new memeber and the function at the following table.
@@ -704,6 +707,8 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
   err = tier4_max9296_start_streaming(priv->dser_dev, dev);
 
+#if 0
+
   if (enable_distortion_correction == 0xCAFE)
   {
 	  // if not set kernel param, read device tree param
@@ -727,6 +732,8 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 		  }
 		  msleep(20);
    }
+
+#endif
 
   if (err)
   {
@@ -1155,7 +1162,8 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
                 dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
                 goto error;
             }
-        } else {                                                                                                        if (!strcmp(str_value, "true")) {
+        } else {    
+            if (!strcmp(str_value, "true")) {
                 priv->g_ctx.fpga_generate_fsync = true;
             }
         }
@@ -1589,14 +1597,14 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
   wst_priv[camera_channel_count].p_priv = priv;
   wst_priv[camera_channel_count].p_tc_dev = tc_dev;
 
-  //    tier4_isx021_sensor_mutex_unlock();
+//  tier4_isx021_sensor_mutex_unlock();
 
-  dev_info(&client->dev, "Detected Tier4 IMX490 sensor\n");
+//  dev_info(&client->dev, "Detected Tier4 IMX490 sensor\n");
 
 error_exit:
 
-  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p \n", __func__, camera_channel_count,
-           wst_priv[camera_channel_count].p_client);
+//  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p \n", __func__, camera_channel_count,
+//           wst_priv[camera_channel_count].p_client);
 
   camera_channel_count++;
 
