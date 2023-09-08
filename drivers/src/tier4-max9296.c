@@ -611,9 +611,14 @@ int tier4_max9296_sdev_register(struct device *dev, struct gmsl_link_ctx *g_ctx)
 
   mutex_lock(&priv->lock);
 
-  for ( i = 0 ; i < MAX9296_MAX_SOURCES ;  i++ ) {
-    if ( priv->sources[i].g_ctx != NULL ) {
-      priv->sources[i].g_ctx->serdes_csi_link = 0;
+  if (g_ctx->hardware_model == HW_MODEL_NVIDIA_ORIN_DEVKIT )
+  {
+    for ( i = 0 ; i < MAX9296_MAX_SOURCES ;  i++ )
+    {
+      if ( priv->sources[i].g_ctx != NULL )
+      {
+        priv->sources[i].g_ctx->serdes_csi_link = 0;
+      }
     }
   }
 
