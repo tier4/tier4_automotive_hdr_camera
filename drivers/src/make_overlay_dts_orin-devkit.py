@@ -2441,7 +2441,7 @@ str_i2c_imx490_n_p2 = """
 
         mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
           mclk_khz = \"24000\";
-          num_lanes = \"2\";
+          num_lanes = \"4\";
           tegra_sinterface = \"serial_a\";
           vc_id = \"0\";
           discontinuous_clk = \"no\";
