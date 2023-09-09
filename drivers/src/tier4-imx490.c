@@ -144,6 +144,7 @@ static int camera_channel_count = 0;
 
 static int trigger_mode;
 static int fsync_mfp = 0;
+static int enable_distortion_correction = 1;
 
 
 #define IMX490_MIN_EXPOSURE_TIME 11000  // 11 milisecond
@@ -158,6 +159,7 @@ module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
 
 
 module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
+module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
 
 // ------------------------
 static char upper(char c)
@@ -209,10 +211,6 @@ static int tier4_imx490_write_reg(struct camera_common_data *s_data, u16 addr, u
   {
     dev_err(s_data->dev, "[%s] : I2C write failed at x%x=[0x%x]\n", __func__, addr, val);
   }
-  else
-  {
-    dev_dbg(s_data->dev, "[%s] : I2C write at 0x%x=[0x%x]\n", __func__, addr, val);
-  }
 
   return err;
 }
@@ -226,7 +224,7 @@ static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv, int mo
   if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE) ||
       (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN))
   {
-    dev_info(dev, "[%s] : generate-fsync =%d\n", __func__, priv->g_ctx.fpga_generate_fsync);
+    dev_info(dev, "[%s] : FPGA generate-fsync =%d\n", __func__, priv->g_ctx.fpga_generate_fsync);
 
     if (priv->g_ctx.fpga_generate_fsync == false)
     {
@@ -363,8 +361,6 @@ static int tier4_imx490_power_on(struct camera_common_data *s_data)
   struct camera_common_pdata *pdata = s_data->pdata;
   struct device *dev = s_data->dev;
 
-  dev_dbg(dev, "[%s] : power on\n", __func__);
-
   if (pdata && pdata->power_on)
   {
     err = pdata->power_on(pw);
@@ -446,9 +442,7 @@ static int tier4_imx490_set_gain(struct tegracam_device *tc_dev, s64 val)
 
   //  struct camera_common_data   *s_data     = tc_dev->s_data;
 
-  struct device *dev = tc_dev->dev;
-
-  dev_dbg(dev, "[%s] : Gain control is not avilable yet.\n", __func__);
+  // struct device *dev = tc_dev->dev;
 
   return err;
 }
@@ -465,8 +459,6 @@ static int tier4_imx490_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
   /* fixed 30fps */
   priv->frame_length = IMX490_DEFAULT_FRAME_LENGTH;
 
-  dev_dbg(&priv->i2c_client->dev, "[%s] : Setting Frame Rate is not avilable yet.\n", __func__);
-
   return err;
 }
 
@@ -475,9 +467,7 @@ static int tier4_imx490_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
 static int tier4_imx490_set_auto_exposure(struct tegracam_device *tc_dev)
 {
   int err = 0;
-  struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
-
-  dev_dbg(&priv->i2c_client->dev, "[%s] : Setting auto exposure mode is not available.\n", __func__);
+  //struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
 
   return err;
 }
@@ -496,15 +486,18 @@ static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
 // --------------------------------------------------------------------------------------
 //  Enable Distortion Coreection
 // --------------------------------------------------------------------------------------
+#if 0
 static int tier4_imx490_set_distortion_correction(struct tegracam_device *tc_dev, bool val)
 {
   int err = 0;
   struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
-
-  dev_dbg(&priv->i2c_client->dev, "[%s] : Distortion Correction  is not available.\n", __func__);
+  dev_info(&priv->i2c_client->dev, "[%s] : Setting distortion correction mode :%s.\n", __func__,val?"True":"False");
+  tier4_gw5300_set_distortion_correction(priv->isp_dev, val);
 
   return err;
 }
+#endif
+
 // --------------------------------------------------------------------------------------
 //  If you add new ioctl VIDIOC_S_EXT_CTRLS function,
 //  please add the new memeber and the function at the following table.
@@ -599,35 +592,24 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
     goto exit;
   }
 
-  if (priv->distortion_correction == true)
-  {
-    err = tier4_imx490_set_distortion_correction(tc_dev, true);
 
-    if (err)
-    {
-      dev_err(dev, "[%s] : Enabling Distortion Correction  failed\n", __func__);
-      goto exit;
-    }
-    msleep(20);
-  }
 
   dev_info(dev, "[%s] : trigger_mode = %d\n", __func__, trigger_mode);
 
   if (trigger_mode > 0)
   {
     priv->fsync_mode = trigger_mode;
-    dev_info(dev, "[%s] : fsync-mode is set to %d by trigger_mode parameter of the imx490 driver module.\n", __func__,
-             trigger_mode);
   }
 
   switch (priv->fsync_mode)
   {
-    case GW5300_MASTER_MODE_30FPS:
 
-      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_30FPS);
+    case GW5300_MASTER_MODE_10FPS:
+
+      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS);
       if (err)
       {
-        dev_err(dev, "[%s] : setting camera sensor to Master mode 30fps failed\n", __func__);
+        dev_err(dev, "[%s] : setting camera sensor to Master mode 10fps failed\n", __func__);
         return err;
       }
 
@@ -646,12 +628,12 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
       break;
 
-    case GW5300_MASTER_MODE_10FPS:
+    case GW5300_MASTER_MODE_20FPS:
 
-      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS);
+      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_20FPS);
       if (err)
       {
-        dev_err(dev, "[%s] : setting camera sensor to Master mode 10fps failed\n", __func__);
+        dev_err(dev, "[%s] : setting camera sensor to Master mode 20fps failed\n", __func__);
         return err;
       }
 
@@ -668,20 +650,49 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
       break;
 
-    case GW5300_MASTER_MODE_20FPS:
+    case GW5300_MASTER_MODE_30FPS:
 
-      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_20FPS);
+      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_30FPS);
       if (err)
       {
-        dev_err(dev, "[%s] : setting camera sensor to Master mode 20fps failed\n", __func__);
+        dev_err(dev, "[%s] : setting camera sensor to Master mode 30fps failed\n", __func__);
         return err;
       }
 
       break;
 
-    case 0:
+    case GW5300_SLAVE_MODE_30FPS:
 
-      dev_err(dev, "[%s] : setting camera sensor to Master mode 30fps.\n", __func__);
+      err = tier4_imx490_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_30FPS);
+      if (err)
+      {
+        dev_err(dev, "[%s] : setting camera sensor to Slave mode 30fps failed\n", __func__);
+        return err;
+      }
+
+      break;
+
+    case GW5300_SLAVE_MODE_10FPS_SLOW:
+
+      err = tier4_imx490_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_10FPS_SLOW);
+      if (err)
+      {
+        dev_err(dev, "[%s] : setting camera sensor to Slow clock Slave mode 10fps failed\n", __func__);
+        goto exit;
+      }
+
+      msleep(20);
+
+      break;
+
+    case GW5300_MASTER_MODE_10FPS_SLOW:
+
+      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS_SLOW);
+      if (err)
+      {
+        dev_err(dev, "[%s] : setting camera sensor to Slow clock Master mode 10fps failed\n", __func__);
+        return err;
+      }
 
       break;
 
@@ -696,6 +707,34 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
   err = tier4_max9296_start_streaming(priv->dser_dev, dev);
 
+#if 0
+
+  if (enable_distortion_correction == 0xCAFE)
+  {
+	  // if not set kernel param, read device tree param
+	  if (priv->distortion_correction == false)
+	  {
+		  err = tier4_imx490_set_distortion_correction(tc_dev, priv->distortion_correction);
+
+		  if (err)
+		  {
+			  dev_err(dev, "[%s] : Disabling Distortion Correction  failed\n", __func__);
+			  goto exit;
+		  }
+		  msleep(20);
+	  }
+   }else{
+		  err = tier4_imx490_set_distortion_correction(tc_dev, enable_distortion_correction==1);
+		  if (err)
+		  {
+			  dev_err(dev, "[%s] : Setup Distortion Correction  failed\n", __func__);
+			  goto exit;
+		  }
+		  msleep(20);
+   }
+
+#endif
+
   if (err)
   {
     dev_err(dev, "[%s] : tier4_max9296_start_stream() failed\n", __func__);
@@ -705,21 +744,19 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
   
   msleep(1000);
   tier4_gw5300_set_integration_time_on_aemode(priv->isp_dev, shutter_time_max, shutter_time_min);
-  dev_info(dev, "[%s] :  Camera start stream succeeded\n", __func__);
+  dev_info(dev, "[%s] :  Camera has started streaming\n", __func__);
 
   return NO_ERROR;
 
 exit:
 
-  dev_err(dev, "[%s] :  Camera start stream failed\n", __func__);
+  dev_err(dev, "[%s] :  Camera failed to start streaming.\n", __func__);
 
   return err;
 }
 
 static bool tier4_imx490_is_camera_connected_to_port(int nport)
 {
-  //    printk("[%s] : nport = %d  p_client = %p \n", __func__, nport, wst_priv[nport].p_client );
-
   if (wst_priv[nport].p_client)
   {
     return true;
@@ -941,9 +978,7 @@ static struct camera_common_sensor_ops tier4_imx490_common_ops = {
 
 static int tier4_imx490_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
-  struct i2c_client *client = v4l2_get_subdevdata(sd);
-
-  dev_dbg(&client->dev, "%s:\n", __func__);
+  //struct i2c_client *client = v4l2_get_subdevdata(sd);
 
   return NO_ERROR;
 }
@@ -1116,7 +1151,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
     priv->g_ctx.fpga_generate_fsync = false;
 
     if (( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) ||
- 		( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
+        ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
 
         err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
 
@@ -1127,7 +1162,8 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
                 dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
                 goto error;
             }
-        } else {                                                                                                        if (!strcmp(str_value, "true")) {
+        } else {    
+            if (!strcmp(str_value, "true")) {
                 priv->g_ctx.fpga_generate_fsync = true;
             }
         }
@@ -1210,7 +1246,6 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
     priv->g_ctx.sdev_isp_def = ISP_PRIM_SLAVE_ADDR;
   }
 
-  dev_dbg(dev, "[%s] : ISP Prim slave address = 0x%0x.\n", __func__, priv->g_ctx.sdev_isp_def);
   priv->g_ctx.sdev_reg = priv->g_ctx.sdev_isp_reg;
   priv->g_ctx.sdev_def = priv->g_ctx.sdev_isp_def;
 
@@ -1562,14 +1597,14 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
   wst_priv[camera_channel_count].p_priv = priv;
   wst_priv[camera_channel_count].p_tc_dev = tc_dev;
 
-  //    tier4_isx021_sensor_mutex_unlock();
+//  tier4_isx021_sensor_mutex_unlock();
 
-  dev_info(&client->dev, "Detected Tier4 IMX490 sensor\n");
+//  dev_info(&client->dev, "Detected Tier4 IMX490 sensor\n");
 
 error_exit:
 
-  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p \n", __func__, camera_channel_count,
-           wst_priv[camera_channel_count].p_client);
+//  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p \n", __func__, camera_channel_count,
+//           wst_priv[camera_channel_count].p_client);
 
   camera_channel_count++;
 

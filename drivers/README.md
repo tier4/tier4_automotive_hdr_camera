@@ -1,12 +1,24 @@
-# tier4-isx021-gmsl-dkms
+# tier4-camera-gmsl-dkms
 
-This driver has been developped on ROScube RQX58G/Jetson Orin Devkit, it could not be cross compiled at this moment. 
+This driver has been developped on  ROScube RQX58G, it could  not be cross compiled at this moment. 
 
 ## Preparation
+
+In this directory  
 
 ```
 $> sudo apt update
 $> sudo apt install make build-essential debhelper debmake devscripts dkms
+```
+
+Execute a script to hide register value and overwrite sources by the results
+
+```
+$> cd ./tools
+$> python3 gen_firmware.py ../src/tier4-isx021.c
+$> cp ./tier4-isx021.c_out_<timestamp> ../src/tier4-isx021.c
+$> cp ./tier4-isx021.bin_<timestamp> ../src/tier4-isx021.bin
+$> cd ..
 ```
 
 ## Build debian-dkms package
@@ -20,17 +32,17 @@ $> dpkg-buildpackage -b -rfakeroot -us -uc
 ```
 $> cd ..
 $> sudo apt update
-$> sudo apt install ./tier4-isx021-gmsl_1.2.1_arm64.deb
+$> sudo apt install ./tier4-camera-gmsl_1.2.2_arm64.deb
 ```
 
-## Confirm the dtbo file exists
+## Confirm  /boot/tier4-isx021-gmsl-device-tree-overlay-roscube-r3411_r351.dtbo exists
 
 ```
-$> ls /boot/*.dtbo
+$> ls /boot/tier4-isx021-gmsl-device-tree-overlay-roscube-r3411_r351.dtbo
 ```
 
 
-## Combine dtbo file with vanilla dtb
+## Combine /boot/tier4-isx021-gmsl-device-tree-overlay-roscube-r3411_r351.dtbo with  /boot/dtb/kernel_tegra194-rqx-58g.dtb
 
 
 ``` 
@@ -40,14 +52,20 @@ $> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n 2="TIERIV ISX021 GMSL2 Ca
 if you use r32.5.1 BSP, you should use the command below
 
 ``` 
-$> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "TIERIV ISX021 GMSL2 Camera Device Tree Overlay"
+$> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "Tier4 ISX021 GMSL2 Camera Device Tree Overlay"
 ```
 
 
-## Confirm custom dtb file has been generated
+## Confirm /boot/kernel_tegra194-rqx-58g-user-custom.dtb has been generated
 
 ```
-$> ls -al  /boot/*user-custom.dtb
+$> ls  /boot/kernel_tegra194-rqx-58g-user-custom.dtb
+```
+
+if you use r32.5.1 BSP, you should use the command below
+
+```
+$> ls /boot/kernel_tegra194-rqx-58g-tier4-isx021-gmsl2-camera-device-tree-overlay.dtb
 ```
 
 
