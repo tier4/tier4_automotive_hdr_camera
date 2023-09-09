@@ -1,71 +1,53 @@
 # tier4-camera-gmsl-dkms
 
-This driver has been developped on  ROScube RQX58G, it could  not be cross compiled at this moment. 
+This driver has been developed on ROScube RQX58G/Jetson Orin Devkit, it could not be cross-compiled at this moment. 
 
 ## Preparation
 
-In this directory  
-
-```
-$> sudo apt update
-$> sudo apt install make build-essential debhelper debmake devscripts dkms
-```
-
-Execute a script to hide register value and overwrite sources by the results
-
-```
-$> cd ./tools
-$> python3 gen_firmware.py ../src/tier4-isx021.c
-$> cp ./tier4-isx021.c_out_<timestamp> ../src/tier4-isx021.c
-$> cp ./tier4-isx021.bin_<timestamp> ../src/tier4-isx021.bin
-$> cd ..
+``` sh
+sudo apt update
+sudo apt install make build-essential debhelper debmake devscripts dkms
 ```
 
 ## Build debian-dkms package
 
-```
-$> dpkg-buildpackage -b -rfakeroot -us -uc
-```
-
-## Install the debian--dkms package
-
-```
-$> cd ..
-$> sudo apt update
-$> sudo apt install ./tier4-camera-gmsl_1.2.2_arm64.deb
+``` sh
+dpkg-buildpackage -b -rfakeroot -us -uc
 ```
 
-## Confirm  /boot/tier4-isx021-gmsl-device-tree-overlay-roscube-r3411_r351.dtbo exists
+## Install the debian-dkms package
 
-```
-$> ls /boot/tier4-isx021-gmsl-device-tree-overlay-roscube-r3411_r351.dtbo
-```
-
-
-## Combine /boot/tier4-isx021-gmsl-device-tree-overlay-roscube-r3411_r351.dtbo with  /boot/dtb/kernel_tegra194-rqx-58g.dtb
-
-
-``` 
-$> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n 2="TIERIV ISX021 GMSL2 Camera Device Tree Overlay"
+``` sh
+cd ..
+sudo apt update
+sudo apt install ./tier4-isx021-gmsl_1.4.1_arm64.deb
 ```
 
-if you use r32.5.1 BSP, you should use the command below
+## Confirm the dtbo file exists
 
-``` 
-$> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "Tier4 ISX021 GMSL2 Camera Device Tree Overlay"
+```
+ls /boot/*.dtbo
 ```
 
 
-## Confirm /boot/kernel_tegra194-rqx-58g-user-custom.dtb has been generated
+## Combine dtbo file with vanilla dtb
 
-```
-$> ls  /boot/kernel_tegra194-rqx-58g-user-custom.dtb
+
+``` sh
+sudo /opt/nvidia/jetson-io/config-by-hardware.py -n 2="TIERIV ISX021 GMSL2 Camera Device Tree Overlay"
 ```
 
 if you use r32.5.1 BSP, you should use the command below
 
+``` sh
+sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "TIERIV ISX021 GMSL2 Camera Device Tree Overlay"
 ```
-$> ls /boot/kernel_tegra194-rqx-58g-tier4-isx021-gmsl2-camera-device-tree-overlay.dtb
+
+
+## Confirm custom dtb file has been generated
+
+``` sh
+ls -al  /boot/*user-custom.dtb
 ```
 
 
@@ -74,4 +56,3 @@ $> ls /boot/kernel_tegra194-rqx-58g-tier4-isx021-gmsl2-camera-device-tree-overla
 $> sudo shutdown -h now
 
 ## Power on again
-
