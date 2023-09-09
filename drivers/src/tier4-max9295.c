@@ -161,32 +161,29 @@ struct map_ctx
 
 static int tier4_max9295_read_reg(struct device *dev, u16 addr, u8 *val)
 {
-	int err = 0;
-	u32 reg_val = 0;
-	struct tier4_max9295 *priv = dev_get_drvdata(dev);
-	char str_bus_num[4], str_sl_addr[4];
-	int	len = 0;
+    int err = 0;
+    u32 reg_val = 0;
+    struct tier4_max9295 *priv = dev_get_drvdata(dev);
+    char str_bus_num[4], str_sl_addr[4];
+    int len = 0;
 
-	memset(str_bus_num,0,4);
-	memset(str_sl_addr,0,4);
+    memset(str_bus_num,0,4);
+    memset(str_sl_addr,0,4);
 
-	err = regmap_read(priv->regmap, addr, &reg_val);
+    err = regmap_read(priv->regmap, addr, &reg_val);
 
-	*val = reg_val & 0xFF;
+    *val = reg_val & 0xFF;
 
-	dev_info(dev,  "[%s ] : Max9295 I2C Read at 0x%04X=[0x%02X].\n", __func__, addr, *val );
+    dev_info(dev,  "[%s ] : Max9295 I2C Read at 0x%04X=[0x%02X].\n", __func__, addr, *val );
 
-	if (( err == 0 ) && ( dev != NULL ) ) {
-
-		len = strlen(dev->kobj.name);
-
-		if (dev) {
-			strncpy(str_bus_num, &dev->kobj.name[0], 2);
-			strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
-		}
-		dev_dbg(dev, "tier4_max9295_read_reg %s 0x%s 0x%x.\n", str_bus_num, str_sl_addr, addr );
-	}
-	return err;
+    if (( err == 0 ) && ( dev != NULL ) ) {
+        len = strlen(dev->kobj.name);
+        if (dev) {
+            strncpy(str_bus_num, &dev->kobj.name[0], 2);
+            strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
+        }
+    }
+    return err;
 }
 #endif
 
@@ -194,7 +191,7 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 {
   struct tier4_max9295 *priv = dev_get_drvdata(dev);
   int err = 0;
-  //	u8 e;
+  //    u8 e;
   char str_bus_num[4], str_sl_addr[4];
   int len;
 
@@ -213,20 +210,13 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 
   if (err)
   {
-    dev_err(dev, "[%s] : Max9295 I2C write failed Reg at 0x%04X=[0x%02X].\n", __func__, addr, val);
-  }
-  else
-  {
-    if (priv == NULL)
-    {
-      dev_info(dev, "[%s] : priv is NULL].\n", __func__);
-    }
+    dev_dbg(dev, "[%s] : Max9295 I2C write failed Reg at 0x%04X=[0x%02X].\n", __func__, addr, val);
   }
 
   /* delay before next i2c command as required for SERDES link */
 
   usleep_range(100, 110);
-  //	tier4_max9295_read_reg(dev, addr, &e);
+  //    tier4_max9295_read_reg(dev, addr, &e);
   usleep_range(100, 110);
 
   return err;
@@ -454,14 +444,6 @@ int tier4_max9295_setup_control(struct device *dev)
 
   if (prim_priv__[g_ctx->reg_mux] == NULL)
   {
-    dev_info(dev, "[%s]: reg_mux = %d prim_priv__[reg_mux] is null \n", __func__, g_ctx->reg_mux);
-    err = -EINVAL;
-    goto error;
-  }
-  if (&prim_priv__[g_ctx->reg_mux]->i2c_client->dev == NULL)
-  {
-    dev_info(dev, "[%s]: reg_mux = %d prim_priv__[g_ctx->reg_mux]->i2c_client->dev is null\n", __func__,
-             g_ctx->reg_mux);
     err = -EINVAL;
     goto error;
   }
@@ -682,9 +664,6 @@ static int tier4_max9295_probe(struct i2c_client *client, const struct i2c_devic
 
     prim_priv__[channel_count_isx021] = priv;
 
-    dev_dbg(&client->dev,"[%s] : prim_priv__[%d] =%p\n"
-    				, __func__, channel_count_isx021, prim_priv__[channel_count_isx021]);
-
     channel_count_isx021++;
   }
 
@@ -729,14 +708,14 @@ MODULE_DEVICE_TABLE(of, tier4_max9295_of_match);
 MODULE_DEVICE_TABLE(i2c, tier4_max9295_id);
 
 static struct i2c_driver tier4_max9295_i2c_driver = {
-	.driver = {
-		.name = "tier4_max9295",
-		.owner = THIS_MODULE,
-		.of_match_table = of_match_ptr(tier4_max9295_of_match),
-	},
-	.probe = tier4_max9295_probe,
-	.remove = tier4_max9295_remove,
-	.id_table = tier4_max9295_id,
+    .driver = {
+        .name = "tier4_max9295",
+        .owner = THIS_MODULE,
+        .of_match_table = of_match_ptr(tier4_max9295_of_match),
+    },
+    .probe = tier4_max9295_probe,
+    .remove = tier4_max9295_remove,
+    .id_table = tier4_max9295_id,
 };
 
 static int __init tier4_max9295_init(void)

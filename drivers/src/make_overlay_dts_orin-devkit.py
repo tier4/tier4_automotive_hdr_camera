@@ -1951,7 +1951,8 @@ str_i2c_isx021_n_p2 = """
         use_decibel_gain = \"true\";
 
         /* enable CID_SENSOR_MODE_ID for sensor modes selection */
-        use_sensor_mode_id = \"true\";
+        // use_sensor_mode_id = \"true\";
+        use_sensor_mode_id = \"false\";
 
         mode0 {
           /*mode ISX021_MODE_1920X1280_CROP_30FPS*/
@@ -1995,6 +1996,133 @@ str_i2c_isx021_n_p2 = """
           default_exp_time = \"33333\";           /* us */
           embedded_metadata_height = \"0\";
         };
+        mode1 {
+          /*mode ISX021_MODE_1920X1281_CROP_30FPS for Front Embbeded data*/ 
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+
+          active_w = \"1920\";
+          active_h = \"1281\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+
+          pix_clk_hz = \"74250000\";
+          serdes_pix_clk_hz = "350000000";    // MIPI CSI clock 1400Mhz
+
+          gain_factor = \"10\";
+          min_gain_val = \"0\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+        mode2 {
+          /*mode ISX021_MODE_1920X1294_CROP_30FPS  for Rear Embedded data */
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+
+          active_w = \"1920\";
+          active_h = \"1294\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+
+          pix_clk_hz = \"74250000\";
+          serdes_pix_clk_hz = "350000000";    // MIPI CSI clock 1400Mhz
+
+          gain_factor = \"10\";
+          min_gain_val = \"0\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+        mode3 {
+          /*mode ISX021_MODE_1920X1295_CROP_30FPS for both Front and Rear Embedded data */
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+
+          active_w = \"1920\";
+          active_h = \"1295\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+
+          pix_clk_hz = \"74250000\";
+          serdes_pix_clk_hz = "350000000";    // MIPI CSI clock 1400Mhz
+
+          gain_factor = \"10\";
+          min_gain_val = \"0\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+
 """
 
 str_i2c_isx021_0_p2 = str_i2c_isx021_n_p2
@@ -2161,11 +2289,16 @@ str_i2c_isp_n = """
       };
 """
 
-str_i2c_isp_0 = str_i2c_isp_n
+#str_i2c_isp_0 = str_i2c_isp_n
 
-str_i2c_isp_1 = str_i2c_isp_n.replace("isp_a", "isp_c").replace("isp_b", "isp_d")
-str_i2c_isp_2 = str_i2c_isp_n.replace("isp_a", "isp_e").replace("isp_b", "isp_f")
-str_i2c_isp_3 = str_i2c_isp_n.replace("isp_a", "isp_g").replace("isp_b", "isp_h")
+#str_i2c_isp_1 = str_i2c_isp_n.replace("isp_a", "isp_c").replace("isp_b", "isp_d")
+#str_i2c_isp_2 = str_i2c_isp_n.replace("isp_a", "isp_e").replace("isp_b", "isp_f")
+#str_i2c_isp_3 = str_i2c_isp_n.replace("isp_a", "isp_g").replace("isp_b", "isp_h")
+
+str_i2c_0_isp = str_i2c_isp_n
+str_i2c_1_isp = str_i2c_isp_n.replace("isp_a", "isp_c").replace("isp_b", "isp_d")
+str_i2c_2_isp = str_i2c_isp_n.replace("isp_a", "isp_e").replace("isp_b", "isp_f")
+str_i2c_3_isp = str_i2c_isp_n.replace("isp_a", "isp_g").replace("isp_b", "isp_h")
 
 # ==================  IMX490  ===================
 
@@ -2177,9 +2310,9 @@ str_i2c_imx490_n_p1 = """
         clock-names = \"extperiph1\", \"pllp_grtba\";
         mclk = \"extperiph1\";
         nvidia,isp-device = <&isp_a>;           // for C2 camera
-        nvidia,gmsl-ser-device = <&ser>;
+        nvidia,gmsl-ser-device = <&max9295_ser_a>;
         nvidia,gmsl-dser-device = <&dser>;
-        nvidia,fpga-device  = <&t4_fpga>;
+        //nvidia,fpga-device  = <&t4_fpga>;
 
         reg = <0x2b>;
 
@@ -2192,20 +2325,20 @@ str_i2c_imx490_n_p1 = """
 str_i2c_imx490_0_p1 = str_i2c_imx490_n_p1
 str_i2c_imx490_1_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_b@2c")
-    .replace("&ser_a", "&max9295_ser_b")
+    .replace("&max9295_ser_a", "&max9295_ser_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("isp_a", "isp_b")
 )
 str_i2c_imx490_2_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_c@2b")
-    .replace("&ser_a", "&max9295_ser_b_0")
+    .replace("&max9295_ser_a", "&max9295_ser_b_0")
     .replace("isp_a", "isp_c")
     .replace("&dser", "&max9296_dser_b")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_imx490_3_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_d@2c")
-    .replace("&ser_a", "&max9295_ser_b_1")
+    .replace("&max9295_ser_a", "&max9295_ser_b_1")
     .replace("isp_a", "isp_d")
     .replace("&dser", "&max9296_dser_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2213,14 +2346,14 @@ str_i2c_imx490_3_p1 = (
 )
 str_i2c_imx490_4_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
-    .replace("&ser_a", "&max9295_ser_c_0")
-    .replace("isp_a", "isp_r")
-    .replace("dser_a", "&max9296_dser_c")
+    .replace("&max9295_ser_a", "&max9295_ser_c_0")
+    .replace("isp_a", "isp_e")
+    .replace("dmax9295_ser_a", "&max9296_dser_c")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_f@2c")
-    .replace("&ser_a", "&max9295_ser_c_1")
+    .replace("&max9295_ser_a", "&max9295_ser_c_1")
     .replace("isp_a", "isp_f")
     .replace("&dser", "&max9296_dser_c")
     .replace("reg = <0x2b>", "reg = <0x2c>")
@@ -2236,7 +2369,7 @@ str_i2c_imx490_6_p1 = """
         nvidia,isp-device = <&isp_g>;           // for C2 camera
         nvidia,gmsl-ser-device = <&max9295_ser_d_0>;
         nvidia,gmsl-dser-device = <&max9296_dser_d>;
-        nvidia,fpga-device  = <&t4_fpga>;
+        //nvidia,fpga-device  = <&t4_fpga>;
 
         reg = <0x2b>;
 
@@ -2256,7 +2389,7 @@ str_i2c_imx490_7_p1 = """
         nvidia,isp-device = <&isp_g>;           // for C2 camera
         nvidia,gmsl-ser-device = <&max9295_ser_d_0>;
         nvidia,gmsl-dser-device = <&max9296_dser_d>;
-        nvidia,fpga-device  = <&t4_fpga>;
+        //nvidia,fpga-device  = <&t4_fpga>;
 
         reg = <0x2b>;
 
@@ -2308,7 +2441,7 @@ str_i2c_imx490_n_p2 = """
 
         mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
           mclk_khz = \"24000\";
-          num_lanes = \"2\";
+          num_lanes = \"4\";
           tegra_sinterface = \"serial_a\";
           vc_id = \"0\";
           discontinuous_clk = \"no\";
@@ -2499,13 +2632,40 @@ dict_fragment_dser_in_base_dtb = {
     "3521": str_fragment_dser_in_base_dtb_r3521,
 }
 
+# =================  FPGA  ======================
+
+str_fpga = """
+
+// -----  FPGA -----
+//
+//  fragment@100{
+//    target-path = \"/i2c@3180000\";
+//    __overlay__ {
+//     t4_fpga: tier4_fpga@66 {
+//        compatible = \"nvidia,tier4_fpga\";
+//        reg = <0x66>;
+//        generate-fsync = \"false\";
+//        status = \"okay\";
+//      };
+//    };
+//  };
+"""
+
+str_block_end = """
+    };
+  };"""
+
+str_overlay_end = """
+};
+"""
+
 # =================  GPIO  ======================
 
 str_gpio = """
 
 // -----  GPIO -----
 
-  fragment@100 {
+  fragment@101 {
     target-path = "/gpio@2200000";
     _overlay_ {
       camera-control-input {
@@ -2560,10 +2720,11 @@ def usage():
     print("** ~~~~~                                                              **")
     print("** Case 1.                                                            **")
     print("**                                                                    **")
-    print("**  $> make_overaly_dts_orin-devkit.py Rev camera1 camera2.. camera8  **")
+    print("**  $> make_overaly_dts_orin-devkit.py Rev Camera1 Camera2.. Camera8  **")
     print("**                                                                    **")
-    print("**     Rev: L4T Revision [ R35.1 | R35.2.1 ]                          **")
-    print("**     cameraX : C1 or C2 ( The camera connected to portX )           **")
+    print("**     Rev: L4T Revision [ R35.1 | R35.2.1 | R35.3.1 ]                **")
+    print("**                                                                    **")
+    print("**     CameraX : C1 or C2 ( The camera connected to portX )           **")
     print("**     if no camera connected, specify C1                             **")
     print("**                                                                    **")
     print("**     E.g.                                                           **")
@@ -2571,17 +2732,17 @@ def usage():
     print("**             ( Total number of cameras should be 8 )                **")
     print("** Case2:                                                             **")
     print("**                                                                    **")
-    print("**  $> make_overaly_dts_orin-devkit.py option                         **")
+    print("**  $> make_overaly_dts_orin-devkit.py Options                        **")
     print("**                                                                    **")
-    print("**  option :  Rev [ -2 | -4 | -6 | -8] [C1,C2]                        **")
+    print("**  Options :  Rev [ -2 | -4 | -6 | -8] [C1,C2]                       **")
     print("**                                                                    **")
-    print("**     where,    Rev: L4T Revision [ R35.1 | R35.2.1 ]                **")
+    print("**     where,    Rev: L4T Revision [ R35.1 | R35.2.1 | R35.3.1 ]      **")
     print("**      ( -2,-4 are peatable, total number of Ns of -N should be 8 )  **")
     print("**                                                                    **")
     print("**     E.g.                                                           **")
     print("**        1. All cameras are C1                                       **")
     print("**                                                                    **")
-    print("**           $> make_overaly_dts_orin-devkit.py R35.2.1 -8 C1         **")
+    print("**           $> make_overaly_dts_orin-devkit.py R35.1 -8 C1           **")
     print("**        2.                                                          **")
     print("**          4 cameras(port 1 to port 4 ) are C1,                      **")
     print("**          2 cameras( port 5&6 ) are C2                              **")
@@ -2589,7 +2750,7 @@ def usage():
     print("**                                                                    **")
     print("**         $> make_overaly_dts_orin-devkit.py R35.1 -4 C1 -2 C2 -2 C1 **")
     print("**                                                                    **")
-    print("** Not alloed case: Above 2 cases are Mixed.                          **")
+    print("** The followings should not be specified.( Mixed above 2 cases )     **")
     print("**                                                                    **")
     print("**    [-2, -4, -6, -8] option before [C1/C2]                          **")
     print("**    and [C1/C2] without those options are mixed.                    **")
@@ -2867,7 +3028,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_0_p3
                 + str_i2c_imx490_0_p4
             )
-            str_i2c_0_isp = str_i2c_isp_0
+            #str_i2c_0_isp = str_i2c_isp_0
             str_fragment_nvcsi0 = str_w_fragment_nvcsi0.replace(
                 "isx021_out0", "imx490_out0"
             )
@@ -2898,7 +3059,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_1_p3
                 + str_i2c_isx021_1_p4
             )
-            str_i2c_1_isp = ""
+            str_i2c_0_isp = ""
             str_fragment_nvcsi1 = str_w_fragment_nvcsi1
             str_camera_module1 = str_w_camera_module1
         elif camera[i] == "C2":
@@ -2912,7 +3073,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_1_p3
                 + str_i2c_imx490_1_p4
             )
-            str_i2c_1_isp = str_i2c_isp_1
+            #str_i2c_1_isp = str_i2c_isp_1
             str_fragment_nvcsi1 = str_w_fragment_nvcsi1.replace(
                 "isx021_out1", "imx490_out1"
             )
@@ -2943,7 +3104,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_2_p3
                 + str_i2c_isx021_2_p4
             )
-            str_i2c_2_isp = ""
+            str_i2c_1_isp = ""
             str_fragment_nvcsi2 = str_w_fragment_nvcsi2
             str_camera_module2 = str_w_camera_module2
         elif camera[i] == "C2":
@@ -2957,7 +3118,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_2_p3
                 + str_i2c_imx490_2_p4
             )
-            str_i2c_2_isp = str_i2c_isp_2
+            #str_i2c_1_isp = str_i2c_isp_1
             str_fragment_nvcsi2 = str_w_fragment_nvcsi2.replace(
                 "isx021_out2", "imx490_out2"
             )
@@ -2988,7 +3149,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_3_p3
                 + str_i2c_isx021_3_p4
             )
-            str_i2c_3_isp = ""
+            str_i2c_1_isp = ""
             str_fragment_nvcsi3 = str_w_fragment_nvcsi3
             str_camera_module3 = str_w_camera_module3
         elif camera[i] == "C2":
@@ -3002,7 +3163,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_3_p3
                 + str_i2c_imx490_3_p4
             )
-            str_i2c_3_isp = str_i2c_isp_3
+            #str_i2c_1_isp = str_i2c_isp_1
             str_fragment_nvcsi3 = str_w_fragment_nvcsi3.replace(
                 "isx021_out3", "imx490_out3"
             )
@@ -3033,7 +3194,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_4_p3
                 + str_i2c_isx021_4_p4
             )
-            str_i2c_4_isp = ""
+            str_i2c_2_isp = ""
             str_fragment_nvcsi4 = str_w_fragment_nvcsi4
             str_camera_module4 = str_w_camera_module4
         elif camera[i] == "C2":
@@ -3047,7 +3208,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_4_p3
                 + str_i2c_imx490_4_p4
             )
-            str_i2c_4_isp = str_i2c_isp_2
+            #str_i2c_2_isp = str_i2c_isp_2
             str_fragment_nvcsi4 = str_w_fragment_nvcsi4.replace(
                 "isx021_out4", "imx490_out4"
             )
@@ -3078,7 +3239,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_5_p3
                 + str_i2c_isx021_5_p4
             )
-            str_i2c_5_isp = ""
+            str_i2c_2_isp = ""
             str_fragment_nvcsi5 = str_w_fragment_nvcsi5
             str_camera_module5 = str_w_camera_module5
         elif camera[i] == "C2":
@@ -3092,7 +3253,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_5_p3
                 + str_i2c_imx490_5_p4
             )
-            str_i2c_5_isp = str_i2c_isp_2
+            #str_i2c_2_isp = str_i2c_isp_2
             str_fragment_nvcsi5 = str_w_fragment_nvcsi5.replace(
                 "isx021_out5", "imx490_out5"
             )
@@ -3123,7 +3284,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_6_p3
                 + str_i2c_isx021_6_p4
             )
-            str_i2c_6_isp = ""
+            str_i2c_3_isp = ""
             str_fragment_nvcsi6 = str_w_fragment_nvcsi6
             str_camera_module6 = str_w_camera_module6
         elif camera[i] == "C2":
@@ -3137,7 +3298,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_6_p3
                 + str_i2c_imx490_6_p4
             )
-            str_i2c_6_isp = str_i2c_isp_3
+            #str_i2c_3_isp = str_i2c_isp_3
             str_fragment_nvcsi6 = str_w_fragment_nvcsi6.replace(
                 "isx021_out6", "imx490_out6"
             )
@@ -3168,7 +3329,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_7_p3
                 + str_i2c_isx021_7_p4
             )
-            str_i2c_7_isp = ""
+            str_i2c_3_isp = ""
             str_fragment_nvcsi7 = str_w_fragment_nvcsi7
             str_camera_module7 = str_w_camera_module7
         elif camera[i] == "C2":
@@ -3182,7 +3343,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_7_p3
                 + str_i2c_imx490_7_p4
             )
-            str_i2c_7_isp = str_i2c_isp_3
+            #str_i2c_3_isp = str_i2c_isp_3
             str_fragment_nvcsi7 = str_w_fragment_nvcsi7.replace(
                 "isx021_out7", "imx490_out7"
             )
@@ -3310,6 +3471,7 @@ if str_rev_num == "3521":
         + str_i2c1
         + str_i2c2
         + str_i2c3
+        #+ str_fpga
         + str_gpio
         + str_overlay_end
     )
@@ -3341,6 +3503,7 @@ else:
         + str_i2c0
         + str_i2c1
         + str_i2c2
+        #+ str_fpga
         + str_gpio
         + str_overlay_end
     )
