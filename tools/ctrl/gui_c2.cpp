@@ -127,7 +127,6 @@ void SampleWindowC2::createAWBFrame(void)
   awb_grid.attach(awb_radio_box, 0, 0, 4, 1);
 
   awb_r_label.set_label("r gain");
-  awb_g_label.set_label("g gain");
   awb_b_label.set_label("b gain");
 
   awb_r_scale.set_sensitive(false);
@@ -144,13 +143,6 @@ void SampleWindowC2::createAWBFrame(void)
         exec_available_cam<int>(&C2::setAutoWhiteBalanceGainR,(int)value);
       });
 
-#if 1
-  awb_g_scale.set_callbackvaluechanged(
-      [this](double value)
-      {
-        exec_available_cam<int>(&C2::setAutoWhiteBalanceGainG,(int)value);
-      });
-#endif
 
   awb_b_scale.set_callbackvaluechanged(
       [this](double value)
@@ -225,6 +217,7 @@ void SampleWindowC2::createImageTuningFrame(void)
 
         brightness_scale.set_sensitive(brightness_en_button.get_active());
       });
+  
   sharpness_en_button.set_active(false);
   sharpness_en_button.signal_toggled().connect(
       [this]

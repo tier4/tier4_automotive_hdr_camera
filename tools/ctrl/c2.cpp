@@ -136,12 +136,6 @@ int c2_process(cmdline::parser &p)
     std::cout << "set Auto white balance" << val << std::endl;
     ret += c2_a.setAutoWhiteBalance(val);
   }
-  if (p.exist("awb_gain_g"))
-  {
-    float val = p.get<float>("awb_gain_g");
-    std::cout << "set Auto white balance g val:" << val << std::endl;
-    ret += c2_a.setAutoWhiteBalanceGainG((int)val);
-  }
   if (p.exist("awb_gain_r"))
   {
     float val = p.get<float>("awb_gain_r");
