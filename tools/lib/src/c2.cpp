@@ -157,7 +157,6 @@ int C2::setDistortionCorrection(bool on)
 
 int C2::setAutoWhiteBalance(bool on)
 {
-  fprintf(stderr,"[%s:]%d\n", __func__, (int)on);
   uint8_t cmd_auto_white_balance_onoff[] = { 0x33, 0x47, 0x0c, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05,
                                              0x00, 0x96, 0x02, 0x01, 0x00, 0x01, 0x00, 0x01, 0xfb };
   cmd_auto_white_balance_onoff[17] = on ? 0x01 : 0x00;
@@ -183,29 +182,9 @@ int C2::setAutoWhiteBalanceGainR(int val)
       calcCheckSum(cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
   return i2c::transfer(dev_name, i2c_dev_addr, cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
 }
-int C2::setAutoWhiteBalanceGainG(int val)
-{
-  if (val < -1500)
-    val = -1500;
-  else if (val > 1500)
-    val = 1500;
 
-  uint16_t data = val;
-  uint8_t cmd_auto_white_balance[] = { 0x33, 0x47, 0x0d, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05,
-                                       0x00, 0x8c, 0x02, 0x01, 0x00, 0x02, 0x00, 0x2c, 0x01, 0x1e };
-
-  cmd_auto_white_balance[17] = data & 0xFF;
-  cmd_auto_white_balance[18] = (data >> 8) & 0xFF;
-  cmd_auto_white_balance[CHK_POS(sizeof(cmd_auto_white_balance))] =
-      calcCheckSum(cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
-  return i2c::transfer(dev_name, i2c_dev_addr, cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
-}
 int C2::setAutoWhiteBalanceGainB(int val)
 {
-  std::cerr << "Not supported feature" << __func__ << std::endl;
-  return -1;
-
-#if 0
   if (val < -1500)
     val = -1500;
   else if (val > 1500)
@@ -213,14 +192,13 @@ int C2::setAutoWhiteBalanceGainB(int val)
 
   uint16_t data = val;
   uint8_t cmd_auto_white_balance[] = { 0x33, 0x47, 0x0d, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05,
-                                       0x00, 0x8b, 0x02, 0x01, 0x00, 0x02, 0x00, 0xf4, 0x01, 0xe7 };
+                                       0x00, 0x8b, 0x02, 0x01, 0x00, 0x02, 0x00, 0x2c, 0x01, 0x1e };
 
   cmd_auto_white_balance[17] = data & 0xFF;
   cmd_auto_white_balance[18] = (data >> 8) & 0xFF;
   cmd_auto_white_balance[CHK_POS(sizeof(cmd_auto_white_balance))] =
       calcCheckSum(cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
   return i2c::transfer(dev_name, i2c_dev_addr, cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
-#endif
 }
 
 // Image tuning
