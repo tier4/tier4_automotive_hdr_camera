@@ -74,7 +74,6 @@ int C2::setAutoExposure(bool on)
 
 int C2::setSensorGain(float gain)
 {
-  DEBUG_PRINT("[%s]\n\n", __func__);
   uint8_t buf[10];
   uint8_t cmd_sensor_gain[] = { 0x33, 0x47, 0x0f, 0x00, 0x00, 0x00, 0x55,         0x00, 0x80, 0x05, 0x00,
                                 0x09, 0x00, 0x01, 0x00, 0x04, 0x00, /*pos*/ 0x00, 0x00, 0xc8, 0x42, 0x00 };
@@ -91,7 +90,10 @@ int C2::setSensorGain(float gain)
     gain = 503.0;
   }
 
+  gain = static_cast<int>(gain * 10) / 10.0f;
+
   uint32_t *gain_hex = (uint32_t *)&gain;
+  DEBUG_PRINT("[%s]:%f:0x%x\n", __func__,gain,*gain_hex);
 
   cmd_sensor_gain[val_pos] = *gain_hex & 0xff;
   cmd_sensor_gain[val_pos + 1] = (*gain_hex >> 8) & 0xff;
@@ -104,7 +106,6 @@ int C2::setSensorGain(float gain)
 
 int C2::setISPSensorGain(float gain)
 {
-  DEBUG_PRINT("[%s]\n\n", __func__);
   uint8_t buf[10];
   uint8_t cmd_sensor_gain[] = { 0x33, 0x47, 0x0f, 0x00, 0x00, 0x00, 0x55,         0x00, 0x80, 0x05, 0x00,
                                 0x1f, 0x00, 0x01, 0x00, 0x04, 0x00, /*pos*/ 0x00, 0x00, 0x40, 0x40, 0x07 };
@@ -121,7 +122,9 @@ int C2::setISPSensorGain(float gain)
     gain = 31.99;
   }
 
+  gain = static_cast<int>(gain * 10) / 10.0f;
   uint32_t *gain_hex = (uint32_t *)&gain;
+  DEBUG_PRINT("[%s]:%f:0x%x\n", __func__,gain,*gain_hex);
 
   cmd_sensor_gain[val_pos] = *gain_hex & 0xff;
   cmd_sensor_gain[val_pos + 1] = (*gain_hex >> 8) & 0xff;
