@@ -42,6 +42,8 @@ MODULE_SOFTDEP("pre: tier4_gw5300");
 MODULE_SOFTDEP("pre: tier4_fpga");
 MODULE_SOFTDEP("pre: tier4_isx021");
 
+#define USE_DISTORTION_CORRECTION
+
 // Register Address
 
 #define IMX490_DEFAULT_FRAME_LENGTH (2000)
@@ -486,7 +488,8 @@ static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
 // --------------------------------------------------------------------------------------
 //  Enable Distortion Coreection
 // --------------------------------------------------------------------------------------
-#if 0
+#ifdef USE_DISTORTION_CORRECTION
+
 static int tier4_imx490_set_distortion_correction(struct tegracam_device *tc_dev, bool val)
 {
   int err = 0;
@@ -596,10 +599,10 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
   dev_info(dev, "[%s] : trigger_mode = %d\n", __func__, trigger_mode);
 
-  if (trigger_mode > 0)
-  {
+//  if (trigger_mode > 0)
+//  {
     priv->fsync_mode = trigger_mode;
-  }
+//  }
 
   switch (priv->fsync_mode)
   {
@@ -703,34 +706,34 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
       return err;
   }
 
-  usleep_range(50000, 51000);
+  usleep_range(100000, 110000);
 
   err = tier4_max9296_start_streaming(priv->dser_dev, dev);
 
-#if 0
+#ifdef USE_DISTORTION_CORRECTION
 
   if (enable_distortion_correction == 0xCAFE)
   {
-	  // if not set kernel param, read device tree param
-	  if (priv->distortion_correction == false)
-	  {
-		  err = tier4_imx490_set_distortion_correction(tc_dev, priv->distortion_correction);
+    // if not set kernel param, read device tree param
+    if (priv->distortion_correction == false)
+    {
+      err = tier4_imx490_set_distortion_correction(tc_dev, priv->distortion_correction);
 
-		  if (err)
-		  {
-			  dev_err(dev, "[%s] : Disabling Distortion Correction  failed\n", __func__);
-			  goto exit;
-		  }
-		  msleep(20);
-	  }
+      if (err)
+      {
+        dev_err(dev, "[%s] : Disabling Distortion Correction  failed\n", __func__);
+        goto exit;
+      }
+      msleep(20);
+    }
    }else{
-		  err = tier4_imx490_set_distortion_correction(tc_dev, enable_distortion_correction==1);
-		  if (err)
-		  {
-			  dev_err(dev, "[%s] : Setup Distortion Correction  failed\n", __func__);
-			  goto exit;
-		  }
-		  msleep(20);
+      err = tier4_imx490_set_distortion_correction(tc_dev, enable_distortion_correction==1);
+      if (err)
+      {
+        dev_err(dev, "[%s] : Setup Distortion Correction  failed\n", __func__);
+        goto exit;
+      }
+      msleep(20);
    }
 
 #endif
@@ -740,8 +743,7 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
     dev_err(dev, "[%s] : tier4_max9296_start_stream() failed\n", __func__);
     return err;
   }
-  
-  
+
   msleep(1000);
   tier4_gw5300_set_integration_time_on_aemode(priv->isp_dev, shutter_time_max, shutter_time_min);
   dev_info(dev, "[%s] :  Camera has started streaming\n", __func__);
@@ -1162,7 +1164,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
                 dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
                 goto error;
             }
-        } else {    
+        } else {
             if (!strcmp(str_value, "true")) {
                 priv->g_ctx.fpga_generate_fsync = true;
             }
