@@ -60,19 +60,19 @@ static u8 slave_10fps[] = {
                           , 0x00, 0x42
 };
 
-static u8 master_20fps[] = { 
+static u8 master_20fps[] = {
                              0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
                            , 0x80, 0x03, 0x00, 0x00, 0x00, 0x5A, 0x00, 0x00
                            , 0x00, 0x74
 };
 
-static u8 slave_20fps[] = { 
+static u8 slave_20fps[] = {
                             0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
                           , 0x80, 0x03, 0x00, 0x00, 0x00, 0x5F, 0x00, 0x00
                           , 0x00, 0x79
 };
 
-static u8 slave_30fps[] = { 
+static u8 slave_30fps[] = {
                             0x33, 0x47, 0x0B, 0x00, 0x00, 0x00, 0x12, 0x00
                           , 0x80, 0x03, 0x00, 0x00, 0x00, 0x55, 0x00, 0x00
                           , 0x00, 0x6F
@@ -138,12 +138,12 @@ static int tier4_gw5300_send_and_recv_msg(struct device *dev, u8 *wdata, int wda
 
   err = i2c_transfer(priv->i2c_client->adapter, msg, 2);
 
-  if (err < 0)
+  if (err <= 0)
   {
     dev_err(dev, "[%s] : i2c_transer send message failed. %d: slave addr = 0x%x\n", __func__, err, msg[0].addr);
   }
 
-  return err;
+  return err;  //  the total number of bytes to have been sent or recived
 }
 
 uint8_t calcCheckSum(const uint8_t *data, size_t size){
@@ -159,10 +159,10 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_inte
 #define MS_TO_LINE_UNIT 80
   u8    buf[6];
   int ret = 0;
-  
+
   u8 cmd_integration_max[22] = {0x33, 0x47, 0x0f, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05, 0x00, 0x15, 0x00, 0x01, 0x00, 0x04, 0x00, 0x70, 0x03, 0x00, 0x00, 0x00}; // val = 0x70, 0x03, 0x00, 0x00
-  u8 cmd_integration_min[20] = {0x33, 0x47, 0x0d, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05, 0x00, 0x21, 0x00, 0x01, 0x00, 0x02, 0x00, 0x70, 0x03, 0x00}; //val = 0x70, 0x03 
-  
+  u8 cmd_integration_min[20] = {0x33, 0x47, 0x0d, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05, 0x00, 0x21, 0x00, 0x01, 0x00, 0x02, 0x00, 0x70, 0x03, 0x00}; //val = 0x70, 0x03
+
   const size_t max_val_pos = 17;
   const size_t min_val_pos = 17;
   uint32_t min_line =  min_integration_time / 1000 * MS_TO_LINE_UNIT;
@@ -171,7 +171,7 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_inte
   uint8_t b2 = (max_line >> 8)&0xFF;
   uint8_t b3 = 0;
   uint8_t b4 = 0;
-  
+
   cmd_integration_max[max_val_pos] = b1;
   cmd_integration_max[max_val_pos+1] = b2;
   cmd_integration_max[max_val_pos+2] = b3;
@@ -189,9 +189,9 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_inte
 
 
     msleep(20);
-  ret += tier4_gw5300_send_and_recv_msg(dev, cmd_integration_max, sizeof(cmd_integration_max), buf, sizeof(buf));   
+  ret += tier4_gw5300_send_and_recv_msg(dev, cmd_integration_max, sizeof(cmd_integration_max), buf, sizeof(buf));
     msleep(20);
-  ret += tier4_gw5300_send_and_recv_msg(dev, cmd_integration_min, sizeof(cmd_integration_min), buf, sizeof(buf));   
+  ret += tier4_gw5300_send_and_recv_msg(dev, cmd_integration_min, sizeof(cmd_integration_min), buf, sizeof(buf));
 
   return ret;
 
@@ -201,15 +201,15 @@ EXPORT_SYMBOL(tier4_gw5300_set_integration_time_on_aemode);
 int tier4_gw5300_set_distortion_correction(struct device *dev, bool val)
 {
 int ret = 0;
-  u8 	buf[6];
-	u8 cmd_dwp_on[]={0x33, 0x47, 0x06, 0x00, 0x00, 0x00, 0x4d, 0x00, 0x80, 0x04, 0x00, 0x01, 0x52};
-	u8 cmd_dwp_off[]={0x33, 0x47, 0x03, 0x00, 0x00, 0x00, 0x45, 0x00, 0x80, 0x42};
-    
-	if(val){
-		ret += tier4_gw5300_send_and_recv_msg(dev, cmd_dwp_on, sizeof(cmd_dwp_on), buf, sizeof(buf));   
-	}else{	
-		ret += tier4_gw5300_send_and_recv_msg(dev, cmd_dwp_off, sizeof(cmd_dwp_off), buf, sizeof(buf));   
-	}
+  u8  buf[6];
+  u8 cmd_dwp_on[]={0x33, 0x47, 0x06, 0x00, 0x00, 0x00, 0x4d, 0x00, 0x80, 0x04, 0x00, 0x01, 0x52};
+  u8 cmd_dwp_off[]={0x33, 0x47, 0x03, 0x00, 0x00, 0x00, 0x45, 0x00, 0x80, 0x42};
+
+  if(val){
+    ret += tier4_gw5300_send_and_recv_msg(dev, cmd_dwp_on, sizeof(cmd_dwp_on), buf, sizeof(buf));
+  }else{
+    ret += tier4_gw5300_send_and_recv_msg(dev, cmd_dwp_off, sizeof(cmd_dwp_off), buf, sizeof(buf));
+  }
   return ret;
 }
 EXPORT_SYMBOL(tier4_gw5300_set_distortion_correction);
