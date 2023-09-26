@@ -2348,7 +2348,7 @@ str_i2c_imx490_4_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
     .replace("&max9295_ser_a", "&max9295_ser_c_0")
     .replace("isp_a", "isp_e")
-    .replace("dmax9295_ser_a", "&max9296_dser_c")
+    .replace("&dser", "&max9296_dser_c")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1 = (
