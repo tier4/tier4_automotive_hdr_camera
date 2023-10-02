@@ -187,6 +187,7 @@ int8_t C1::setAEMode(int mode)
 }
 
 #define FME_SHTVAL 0xABEC
+#define FME_SHTVAL_S1 0xABF4
 int8_t C1::setShutterSpeedforFME(float val)
 {
   int8_t ret;
@@ -195,6 +196,8 @@ int8_t C1::setShutterSpeedforFME(float val)
   for (int i = 0; i < 4; i++)
   {
     i2c::write16(dev_name, i2c_dev_addr, FME_SHTVAL + i, (uint8_t)data & 0xFF);
+    i2c::write16(dev_name, i2c_dev_addr, FME_SHTVAL_S1 + i, (uint8_t)data & 0xFF);
+
     data = data >> 8;
   }
 
