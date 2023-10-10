@@ -2472,7 +2472,7 @@ str_i2c_imx490_6_p1 = """
 #)
 
 str_i2c_imx490_7_p1 = """
-      imx490_hg@2b {
+      imx490_h@2b {
         compatible = \"nvidia,tier4_imx490\";
         def-addr = <0x1a>;
         // clocks = <&bpmp_clks 36>, <&bpmp_clks 36>;
@@ -2483,7 +2483,7 @@ str_i2c_imx490_7_p1 = """
         nvidia,gmsl-dser-device = <&max9296_dser_c>;
         //nvidia,fpga-device  = <&t4_fpga>;
 
-        reg = <0x2b>;
+        reg = <0x2c>;
 
         /* Physical dimensions of sensor */
         physical_w = \"15.0\";

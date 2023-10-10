@@ -25,6 +25,8 @@
 #include "tier4-max9295.h"
 #include "tier4-gmsl-link.h"
 
+#define MAX9295_SHOW_I2C_WRITE_MSG  0
+
 /* register specifics */
 
 #define MAX9295_DEV_ADDR 0x0000
@@ -210,8 +212,14 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 
   if (err)
   {
-    dev_dbg(dev, "[%s] : Max9295 I2C write failed Reg at 0x%04X=[0x%02X].\n", __func__, addr, val);
+    dev_err(dev, "[%s] : Max9295 I2C write failed Reg at 0x%04X:[0x%02X].\n", __func__, addr, val);
   }
+#if MAX9295_SHOW_I2C_WRITE_MSG
+  else
+  {
+    dev_info(dev, "[%s] : Max9295 I2C write register at 0x%04X:[0x%02X]\n", __func__, addr, val);
+  }
+#endif
 
   /* delay before next i2c command as required for SERDES link */
 
