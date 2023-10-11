@@ -1,6 +1,5 @@
 find_package(yaml-cpp REQUIRED)
 
-#add_compile_options(-D X86_DEBUG)
 add_compile_options(-fPIC)
 add_compile_options(-D DEBUG)
 set(CMAKE_CXX_FLAGS, "${CMAKE_CXX_FLAGS} -fPIC")

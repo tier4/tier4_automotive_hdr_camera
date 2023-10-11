@@ -195,7 +195,6 @@ public:
   int setDistortionCorrection(bool on);
   int setAutoWhiteBalance(bool on);
   int setAutoWhiteBalanceGainR(int val);
-  int setAutoWhiteBalanceGainG(int val);
   int setAutoWhiteBalanceGainB(int val);
   int setHue(bool on);
   int setHueVal(int val);

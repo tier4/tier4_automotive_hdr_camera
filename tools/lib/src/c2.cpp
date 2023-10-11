@@ -74,7 +74,6 @@ int C2::setAutoExposure(bool on)
 
 int C2::setSensorGain(float gain)
 {
-  DEBUG_PRINT("[%s]\n\n", __func__);
   uint8_t buf[10];
   uint8_t cmd_sensor_gain[] = { 0x33, 0x47, 0x0f, 0x00, 0x00, 0x00, 0x55,         0x00, 0x80, 0x05, 0x00,
                                 0x09, 0x00, 0x01, 0x00, 0x04, 0x00, /*pos*/ 0x00, 0x00, 0xc8, 0x42, 0x00 };
@@ -91,7 +90,10 @@ int C2::setSensorGain(float gain)
     gain = 503.0;
   }
 
+  gain = static_cast<int>(gain * 10) / 10.0f;
+
   uint32_t *gain_hex = (uint32_t *)&gain;
+  DEBUG_PRINT("[%s]:%f:0x%x\n", __func__,gain,*gain_hex);
 
   cmd_sensor_gain[val_pos] = *gain_hex & 0xff;
   cmd_sensor_gain[val_pos + 1] = (*gain_hex >> 8) & 0xff;
@@ -104,7 +106,6 @@ int C2::setSensorGain(float gain)
 
 int C2::setISPSensorGain(float gain)
 {
-  DEBUG_PRINT("[%s]\n\n", __func__);
   uint8_t buf[10];
   uint8_t cmd_sensor_gain[] = { 0x33, 0x47, 0x0f, 0x00, 0x00, 0x00, 0x55,         0x00, 0x80, 0x05, 0x00,
                                 0x1f, 0x00, 0x01, 0x00, 0x04, 0x00, /*pos*/ 0x00, 0x00, 0x40, 0x40, 0x07 };
@@ -121,7 +122,9 @@ int C2::setISPSensorGain(float gain)
     gain = 31.99;
   }
 
+  gain = static_cast<int>(gain * 10) / 10.0f;
   uint32_t *gain_hex = (uint32_t *)&gain;
+  DEBUG_PRINT("[%s]:%f:0x%x\n", __func__,gain,*gain_hex);
 
   cmd_sensor_gain[val_pos] = *gain_hex & 0xff;
   cmd_sensor_gain[val_pos + 1] = (*gain_hex >> 8) & 0xff;
@@ -157,7 +160,6 @@ int C2::setDistortionCorrection(bool on)
 
 int C2::setAutoWhiteBalance(bool on)
 {
-  fprintf(stderr,"[%s:]%d\n", __func__, (int)on);
   uint8_t cmd_auto_white_balance_onoff[] = { 0x33, 0x47, 0x0c, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05,
                                              0x00, 0x96, 0x02, 0x01, 0x00, 0x01, 0x00, 0x01, 0xfb };
   cmd_auto_white_balance_onoff[17] = on ? 0x01 : 0x00;
@@ -183,29 +185,9 @@ int C2::setAutoWhiteBalanceGainR(int val)
       calcCheckSum(cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
   return i2c::transfer(dev_name, i2c_dev_addr, cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
 }
-int C2::setAutoWhiteBalanceGainG(int val)
-{
-  if (val < -1500)
-    val = -1500;
-  else if (val > 1500)
-    val = 1500;
 
-  uint16_t data = val;
-  uint8_t cmd_auto_white_balance[] = { 0x33, 0x47, 0x0d, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05,
-                                       0x00, 0x8c, 0x02, 0x01, 0x00, 0x02, 0x00, 0x2c, 0x01, 0x1e };
-
-  cmd_auto_white_balance[17] = data & 0xFF;
-  cmd_auto_white_balance[18] = (data >> 8) & 0xFF;
-  cmd_auto_white_balance[CHK_POS(sizeof(cmd_auto_white_balance))] =
-      calcCheckSum(cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
-  return i2c::transfer(dev_name, i2c_dev_addr, cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
-}
 int C2::setAutoWhiteBalanceGainB(int val)
 {
-  std::cerr << "Not supported feature" << __func__ << std::endl;
-  return -1;
-
-#if 0
   if (val < -1500)
     val = -1500;
   else if (val > 1500)
@@ -213,14 +195,13 @@ int C2::setAutoWhiteBalanceGainB(int val)
 
   uint16_t data = val;
   uint8_t cmd_auto_white_balance[] = { 0x33, 0x47, 0x0d, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05,
-                                       0x00, 0x8b, 0x02, 0x01, 0x00, 0x02, 0x00, 0xf4, 0x01, 0xe7 };
+                                       0x00, 0x8b, 0x02, 0x01, 0x00, 0x02, 0x00, 0x2c, 0x01, 0x1e };
 
   cmd_auto_white_balance[17] = data & 0xFF;
   cmd_auto_white_balance[18] = (data >> 8) & 0xFF;
   cmd_auto_white_balance[CHK_POS(sizeof(cmd_auto_white_balance))] =
       calcCheckSum(cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
   return i2c::transfer(dev_name, i2c_dev_addr, cmd_auto_white_balance, sizeof(cmd_auto_white_balance));
-#endif
 }
 
 // Image tuning
