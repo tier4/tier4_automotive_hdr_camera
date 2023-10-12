@@ -2039,6 +2039,24 @@ def get_n_options(args, l_total_num_args):
 # -----------------------------------------------
 
 
+def get_n_to_end(lst_args, n):
+    l = len(lst_args)
+    if n <= l:
+        rc = lst_args[n:]
+    else:
+        rc[0] = "fail"
+        print(
+            " get_n_to_args : n larger than length of lst_args l ="
+            + str(l)
+            + "n ="
+            + str(n)
+        )
+    return rc
+
+
+# -----------------------------------------------
+
+
 def deploy_n_options(str_n_options):
     l_camera = [None] * MAX_NUM_CAMERAS
 
