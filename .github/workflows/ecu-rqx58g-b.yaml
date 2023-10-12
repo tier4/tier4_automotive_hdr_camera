@@ -1,0 +1,47 @@
+name: ROSCube RQX-58G B C2x8
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-drivers:
+    uses: ./.github/workflows/build-drivers-hosted.yaml
+    with:
+      platform: rqx58g-b
+
+  camera-hotplug:
+    needs: build-drivers
+    uses: ./.github/workflows/camera-hotplug-hosted.yaml
+    with:
+      platform: rqx58g-b
+      dt-overlay-options: roscube R32.6.1 -8 C2
+
+  test-camera-0:
+    needs: camera-hotplug
+    uses: ./.github/workflows/test-v4l2-gstreamer-hosted.yaml
+    with:
+      platform: rqx58g-b
+      video-device: /dev/video0
+      gstreamer-options: 'video/x-raw, width=2880, height=1860, framerate=30/1, format=UYVY'
+      artifact-name: gstreamer-v4l2-mjpeg-c2-0
+
+  test-camera-1:
+    needs: camera-hotplug
+    uses: ./.github/workflows/test-v4l2-gstreamer-hosted.yaml
+    with:
+      platform: rqx58g-b
+      video-device: /dev/video1
+      gstreamer-options: 'video/x-raw, width=2880, height=1860, framerate=30/1, format=UYVY'
+      artifact-name: gstreamer-v4l2-mjpeg-c2-1
+
+  unload-camera-drivers:
+    needs: [test-camera-0, test-camera-1]
+    uses: ./.github/workflows/unload-drivers-hosted.yaml
+    with:
+      platform: rqx58g-b
+      camera-module: C2

@@ -1,0 +1,92 @@
+name: Test camera devicetree overlay generation scripts
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - 'drivers/src/make_overlay_dts*.py'
+
+jobs:
+  test-make-overlay-dts-roscube:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R32.5.1, R32.5.2, R32.6.1, R35.1]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test devicetree overlay generation script for ROSCube
+        run: |
+          ./drivers/src/make_overlay_dts_roscube.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
+
+  test-make-overlay-dts-roscube-orin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R35.1, R35.2.1]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test devicetree overlay generation script for ROSCube Orin
+        run: |
+          ./drivers/src/make_overlay_dts_roscube-orin.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
+
+  test-make-overlay-dts-orin-devkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R35.1, R35.2.1]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test devicetree overlay generation script for Orin Developer Kit
+        run: |
+          ./drivers/src/make_overlay_dts_orin-devkit.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
+
+  test-make-overlay-dts-xavier-devkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R32.5.1, R32.5.2, R32.6.1, R35.1, R35.2.1, R35.3.1]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test devicetree overlay generation script for Xavier Developer Kit
+        run: |
+          ./drivers/src/make_overlay_dts_xavier-devkit.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
