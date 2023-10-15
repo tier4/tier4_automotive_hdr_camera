@@ -42,7 +42,7 @@ MODULE_SOFTDEP("pre: tier4_gw5300");
 MODULE_SOFTDEP("pre: tier4_fpga");
 MODULE_SOFTDEP("pre: tier4_isx021");
 
-#define USE_DISTORTION_CORRECTION
+#define USE_DISTORTION_CORRECTION  1
 
 // Register Address
 
@@ -116,6 +116,7 @@ struct tier4_imx490
   struct tegracam_device *tc_dev;
   int fsync_mode;
   bool distortion_correction;
+  bool last_distortion_correction;
   bool auto_exposure;
   struct device *fpga_dev;
 };
@@ -308,6 +309,7 @@ static int tier4_imx490_gmsl_serdes_setup(struct tier4_imx490 *priv)
 
   /* setup serdes addressing and control pipeline */
 
+
   err = tier4_max9296_setup_link(priv->dser_dev, &priv->i2c_client->dev);
 
   if (err)
@@ -488,14 +490,30 @@ static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
 // --------------------------------------------------------------------------------------
 //  Enable Distortion Coreection
 // --------------------------------------------------------------------------------------
-#ifdef USE_DISTORTION_CORRECTION
+#if USE_DISTORTION_CORRECTION
 
 static int tier4_imx490_set_distortion_correction(struct tegracam_device *tc_dev, bool val)
 {
   int err = 0;
   struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
-  dev_info(&priv->i2c_client->dev, "[%s] : Setting distortion correction mode :%s.\n", __func__,val?"True":"False");
-  tier4_gw5300_set_distortion_correction(priv->isp_dev, val);
+
+//  dev_info(&priv->i2c_client->dev, "[%s] : distortion correction mode to be set :%s.\n", __func__,val?"True":"False");
+//  dev_info(&priv->i2c_client->dev, "[%s] : last distortion correction mode :%s.\n", __func__,  priv->last_distortion_correction?"True":"False");
+
+  if (priv->last_distortion_correction != val)
+  {
+    dev_info(&priv->i2c_client->dev, "[%s] : Setting distortion correction mode :%s.\n", __func__,val?"True":"False");
+    err = tier4_gw5300_set_distortion_correction(priv->isp_dev, val);
+    if (err <= 0)
+    {
+      dev_info(&priv->i2c_client->dev, "[%s] : Setting distortion correction mode failed.\n", __func__ );
+    }
+    else
+    {
+      err = 0;
+      priv->last_distortion_correction = val;
+    }
+  }
 
   return err;
 }
@@ -595,14 +613,9 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
     goto exit;
   }
 
-
-
   dev_info(dev, "[%s] : trigger_mode = %d\n", __func__, trigger_mode);
 
-//  if (trigger_mode > 0)
-//  {
-    priv->fsync_mode = trigger_mode;
-//  }
+  priv->fsync_mode = trigger_mode;
 
   switch (priv->fsync_mode)
   {
@@ -616,6 +629,8 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
         return err;
       }
 
+      priv->last_distortion_correction = 1;
+
       break;
 
     case GW5300_SLAVE_MODE_10FPS:
@@ -626,6 +641,8 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
         dev_err(dev, "[%s] : setting camera sensor to Slave mode 10fps failed\n", __func__);
         goto exit;
       }
+
+      priv->last_distortion_correction = 1;
 
       msleep(20);
 
@@ -640,6 +657,8 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
         return err;
       }
 
+      priv->last_distortion_correction = 1;
+
       break;
 
     case GW5300_SLAVE_MODE_20FPS:
@@ -650,6 +669,8 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
         dev_err(dev, "[%s] : setting camera sensor to Slave mode 20fps failed\n", __func__);
         return err;
       }
+
+      priv->last_distortion_correction = 1;
 
       break;
 
@@ -673,6 +694,8 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
         return err;
       }
 
+      priv->last_distortion_correction = 1;
+
       break;
 
     case GW5300_SLAVE_MODE_10FPS_SLOW:
@@ -683,6 +706,8 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
         dev_err(dev, "[%s] : setting camera sensor to Slow clock Slave mode 10fps failed\n", __func__);
         goto exit;
       }
+
+      priv->last_distortion_correction = 1;
 
       msleep(20);
 
@@ -697,6 +722,8 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
         return err;
       }
 
+      priv->last_distortion_correction = 1;
+
       break;
 
     default:  //   case of  fsync_mode  < 0
@@ -706,11 +733,13 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
       return err;
   }
 
-  usleep_range(100000, 110000);
 
-  err = tier4_max9296_start_streaming(priv->dser_dev, dev);
+#if USE_DISTORTION_CORRECTION
 
-#ifdef USE_DISTORTION_CORRECTION
+  if (priv->last_distortion_correction != enable_distortion_correction)
+  {
+    usleep_range(900000, 910000);
+  }
 
   if (enable_distortion_correction == 0xCAFE)
   {
@@ -726,7 +755,7 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
       }
       msleep(20);
     }
-   }else{
+  } else {
       err = tier4_imx490_set_distortion_correction(tc_dev, enable_distortion_correction==1);
       if (err)
       {
@@ -738,14 +767,21 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
 #endif
 
+  err = tier4_max9296_start_streaming(priv->dser_dev, dev);
+
   if (err)
   {
     dev_err(dev, "[%s] : tier4_max9296_start_stream() failed\n", __func__);
     return err;
   }
 
+  msleep(200);
+
+#if 0
   msleep(1000);
   tier4_gw5300_set_integration_time_on_aemode(priv->isp_dev, shutter_time_max, shutter_time_min);
+#endif
+
   dev_info(dev, "[%s] :  Camera has started streaming\n", __func__);
 
   return NO_ERROR;
@@ -1152,24 +1188,24 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 #if 0
     priv->g_ctx.fpga_generate_fsync = false;
 
-    if (( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) ||
-        ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
+  if (( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) ||
+     ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
 
-        err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
+    err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
 
-        if ( err < 0) {
-            if ( err == -EINVAL ) {
-                dev_info(dev, "[%s] : Parameter of fpga-generate-fsync does not exist.\n", __func__);
-            } else {
-                dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
-                goto error;
-            }
-        } else {
-            if (!strcmp(str_value, "true")) {
-                priv->g_ctx.fpga_generate_fsync = true;
-            }
-        }
+    if ( err < 0) {
+      if ( err == -EINVAL ) {
+        dev_info(dev, "[%s] : Parameter of fpga-generate-fsync does not exist.\n", __func__);
+      } else {
+        dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
+        goto error;
+      }
+    } else {
+      if (!strcmp(str_value, "true")) {
+          priv->g_ctx.fpga_generate_fsync = true;
+      }
     }
+  }
 #endif
 
   // For Ser node

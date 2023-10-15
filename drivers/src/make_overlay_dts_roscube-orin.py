@@ -1953,7 +1953,7 @@ def check_and_set_next_port(num, camera):
                 return -2
         elif camera[num] == "NC":
             if camera[num + 1] == "C2" or camera[num + 1] == "C1":
-                camer[num] = camera[num + 1]
+                camera[num] = camera[num + 1]
                 return 0
             else:
                 return -2
@@ -2057,7 +2057,7 @@ def get_n_to_end(lst_args, n):
 # -----------------------------------------------
 
 
-def deploy_n_options(str_n_optiosn):
+def deploy_n_options(str_n_options):
     l_camera = [None] * MAX_NUM_CAMERAS
 
     l_pos = 0

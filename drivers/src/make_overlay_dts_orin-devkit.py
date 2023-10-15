@@ -1229,7 +1229,7 @@ str_fragment_camera_module_r351 = """
     target-path = "/tegra-camera-platform\";
     __overlay__ {
       status = \"okay\";
-      num_csi_lanes = <0x02>;
+      num_csi_lanes = <0x04>;
       max_lane_speed = <4000000>;
     };
   };
@@ -1439,7 +1439,7 @@ str_fragment_camera_module_r3521 = """
     target-path = "/tegra-camera-platform\";
     __overlay__ {
       status = \"okay\";
-      num_csi_lanes = <0x02>;
+      num_csi_lanes = <0x04>;
       max_lane_speed = <4000000>;
     };
   };
@@ -2348,7 +2348,7 @@ str_i2c_imx490_4_p1 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
     .replace("&max9295_ser_a", "&max9295_ser_c_0")
     .replace("isp_a", "isp_e")
-    .replace("dmax9295_ser_a", "&max9296_dser_c")
+    .replace("&dser", "&max9296_dser_c")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1 = (
@@ -2380,18 +2380,18 @@ str_i2c_imx490_6_p1 = """
 """
 
 str_i2c_imx490_7_p1 = """
-      imx490_hg@2b {
+      imx490_h@2c {
         compatible = \"nvidia,tier4_imx490\";
         def-addr = <0x1a>;
         // clocks = <&bpmp_clks 36>, <&bpmp_clks 36>;
         clock-names = \"extperiph1\", \"pllp_grtba\";
         mclk = \"extperiph1\";
-        nvidia,isp-device = <&isp_g>;           // for C2 camera
-        nvidia,gmsl-ser-device = <&max9295_ser_d_0>;
+        nvidia,isp-device = <&isp_h>;           // for C2 camera
+        nvidia,gmsl-ser-device = <&max9295_ser_d_1>;
         nvidia,gmsl-dser-device = <&max9296_dser_d>;
         //nvidia,fpga-device  = <&t4_fpga>;
 
-        reg = <0x2b>;
+        reg = <0x2c>;
 
         /* Physical dimensions of sensor */
         physical_w = \"15.0\";
@@ -2457,7 +2457,7 @@ str_i2c_imx490_n_p2 = """
           readout_orientation = \"0\";
           line_length = \"2250\";
           inherent_gain = \"1\";
-          pix_clk_hz = \"160704000\";
+          pix_clk_hz = \"757\";
           serdes_pix_clk_hz = \"350000000\";
         
           gain_factor = \"5\";
@@ -2778,7 +2778,7 @@ def check_and_set_next_port(num, camera):
                 return -2
         elif camera[num] == "NC":
             if camera[num + 1] == "C2" or camera[num + 1] == "C1":
-                camer[num] = camera[num + 1]
+                camera[num] = camera[num + 1]
                 return 0
             else:
                 return -2
@@ -2864,7 +2864,7 @@ def get_n_options(args, l_total_num_args):
 # -----------------------------------------------
 
 
-def deploy_n_options(str_n_optiosn):
+def deploy_n_options(str_n_options):
     l_camera = [None] * MAX_NUM_CAMERAS
 
     l_pos = 0
