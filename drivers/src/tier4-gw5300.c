@@ -112,7 +112,7 @@ static int tier4_gw5300_receive_msg(struct device *dev, u8 *data, int data_size 
 
     err = i2c_transfer(priv->i2c_client->adapter, &msg, 1);
 
-    if (err < 0 ) {
+    if (err <= 0 ) {
         dev_err(dev, "[%s] : i2c_transer receive message failed : slave addr = 0x%x\n", __func__, msg.addr );
     }
 

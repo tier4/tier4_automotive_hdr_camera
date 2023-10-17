@@ -37,6 +37,8 @@ struct tier4_max9296_source_ctx
 
 #define _USE_CHECK_LINK_LOCKED_ 1
 
+#define MAX9296_SHOW_I2C_WRITE_MSG 1
+
 /* register specifics */
 
 #define MAX9296_LINK_ADDR 0x0013
@@ -223,10 +225,15 @@ static int tier4_max9296_write_reg(struct device *dev, u16 addr, u8 val)
 
   if (err)
   {
-    dev_err(dev, "[%s] : Max9296 I2C write failed Reg at 0x%04X=[0x%02X]\n", __func__, addr, val);
+    dev_err(dev, "[%s] : Max9296 I2C write failed Reg at 0x%04X:[0x%02X]\n", __func__, addr, val);
     return err;
   }
-
+#if MAX9296_SHOW_I2C_WRITE_MSG
+  else
+  {
+    dev_info(dev, "[%s] : Max9296 I2C write register at 0x%04X:[0x%02X]\n", __func__, addr, val);
+  }
+#endif
   /* delay before next i2c command as required for SERDES link */
 
   usleep_range(100, 110);
@@ -250,7 +257,7 @@ static int tier4_max9296_get_sdev_idx(struct device *dev, struct device *s_dev, 
     }
   }
   if (i == priv->max_src)
-  {
+  { 
     dev_err(dev, "[%s] : No sdev found\n", __func__);
     err = -EINVAL;
     goto ret;
