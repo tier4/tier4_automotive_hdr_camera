@@ -111,6 +111,67 @@ str_fragment_vi_0_r351 = """
     __overlay__ {
       status = \"okay\";
       num-channels = <0x08>;
+      ports {
+        status = \"okay\";
+        #address-cells = <1>;
+        #size-cells = <0>;
+        port@0 {
+          status = \"okay\";
+          reg = <0>;
+          vi_in0: endpoint {
+            status = \"okay\";
+          };
+        };
+        port@1 {
+          status = \"okay\";
+          reg = <1>;
+          vi_in1: endpoint {
+            status = \"okay\";
+          };
+        };
+        port@2 {
+          status = \"okay\";
+          reg = <2>;
+          vi_in2: endpoint {
+            status = \"okay\";
+          };
+        };
+        port@3 {
+          status = \"okay\";
+          reg = <3>;
+          vi_in3: endpoint {
+            status = \"okay\";
+          };
+        };
+        port@4 {
+          status = \"okay\";
+          reg = <4>;
+          vi_in4: endpoint {
+            status = \"okay\";
+          };
+        };
+        port@5 {
+          status = \"okay\";
+          reg = <5>;
+          vi_in5: endpoint {
+            status = \"okay\";
+          };
+        };
+        port@6 {
+          status = \"okay\";
+          reg = <6>;
+          vi_in6: endpoint {
+            status = \"okay\";
+          };
+        };
+        port@7 {
+          status = \"okay\";
+          reg = <7>;
+          vi_in7: endpoint {
+            status = \"okay\";
+          };
+        };
+      };
     };
   };
 
@@ -130,7 +191,7 @@ str_fragment_vi_0_r351 = """
       port-index = <0>;
       vc-id = <0>;
       bus-width = <4>;
-      retmote-endpoint = <&csi_out0>;
+      remote-endpoint = <&csi_out0>;
     };
   };
 """
@@ -153,7 +214,7 @@ str_fragment_vi_1_r351 = """
       vc-id = <1>;
       port-index = <0>;
       bus-width = <4>;
-      retmote-endpoint = <&csi_out1>;
+      remote-endpoint = <&csi_out1>;
     };
   };
 """
@@ -176,7 +237,7 @@ str_fragment_vi_2_r351 = """
       vc-id = <0>;
       port-index = <2>;
       bus-width = <4>;
-      retmote-endpoint = <&csi_out2>;
+      remote-endpoint = <&csi_out2>;
     };
   };
 """
@@ -199,7 +260,7 @@ str_fragment_vi_3_r351 = """
       vc-id = <1>;
       port-index = <2>;
       bus-width = <4>;
-      retmote-endpoint = <&csi_out3>;
+      remote-endpoint = <&csi_out3>;
     };
   };
 """
@@ -222,7 +283,7 @@ str_fragment_vi_4_r351 = """
       vc-id = <0>;
       port-index = <4>;
       bus-width = <4>;
-      retmote-endpoint = <&csi_out4>;
+      remote-endpoint = <&csi_out4>;
     };
   };
 """
@@ -245,7 +306,7 @@ str_fragment_vi_5_r351 = """
       vc-id = <1>;
       port-index = <4>;
       bus-width = <4>;
-      retmote-endpoint = <&csi_out5>;
+      remote-endpoint = <&csi_out5>;
     };
   };
 """
@@ -268,7 +329,7 @@ str_fragment_vi_6_r351 = """
       vc-id = <0>;
       port-index = <5>;
       bus-width = <4>;
-      retmote-endpoint = <&csi_out6>;
+      remote-endpoint = <&csi_out6>;
     };
   };
 """
@@ -289,7 +350,7 @@ str_fragment_vi_7_r351 = """
       vc-id = <1>;
       port-index = <5>;
       bus-width = <4>;
-      retmote-endpoint = <&csi_out7>;
+      remote-endpoint = <&csi_out7>;
     };
   };
 """
@@ -365,8 +426,205 @@ str_fragment_nvcsi_others_r325 = ""
 # ================= NVCSI R35.1 =================
 
 
+
+
 str_fragment_nvcsi_ch0_r351 = """
 // -----   NVCSI  ------
+
+  fragment@19 {
+    target-path = \"/host1x@13e00000/nvcsi@15a00000\";
+    __overlay__ {
+        status = \"okay\";
+        #address-cells = <1>;
+        #size-cells = <0>;
+        num-channels = <8>;
+        channel@0 {
+          status = \"okay\";
+          reg = <0>;
+          ports {
+            status = \"okay\";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            port@0 {
+              status = \"okay\";
+              reg = <0>;
+              csi_in0: endpoint@0 {
+                status = \"okay\";
+              };
+            };
+            port@1 {
+              status = \"okay\";
+              reg = <1>;
+              csi_out0: endpoint@1 {
+                status = \"okay\";
+              };
+            };
+          };
+        };
+        channel@1 {
+          status = \"okay\";
+          reg = <1>;
+          ports {
+            status = \"okay\";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            port@0 {
+              status = \"okay\";
+              reg = <0>;
+              csi_in1: endpoint@0 {
+                status = \"okay\";
+              };
+            };
+            port@1 {
+              status = \"okay\";
+              reg = <1>;
+              csi_out1: endpoint@1 {
+                status = \"okay\";
+              };
+            };
+          };
+        };
+        channel@2 {
+          status = \"okay\";
+          reg = <2>;
+          ports {
+            status = \"okay\";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            port@0 {
+              status = \"okay\";
+              reg = <0>;
+              csi_in2: endpoint@0 {
+                status = \"okay\";
+              };
+            };
+            port@1 {
+              status = \"okay\";
+              reg = <1>;
+              csi_out2: endpoint@1 {
+                status = \"okay\";
+              };
+            };
+          };
+        };
+        channel@3 {
+          status = \"okay\";
+          reg = <3>;
+          ports {
+            status = \"okay\";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            port@0 {
+              status = \"okay\";
+              reg = <0>;
+              csi_in3: endpoint@0 {
+                status = \"okay\";
+              };
+            };
+            port@1 {
+              status = \"okay\";
+              reg = <1>;
+              csi_out3: endpoint@1 {
+                status = \"okay\";
+              };
+            };
+          };
+        };
+        channel@4 {
+          status = \"okay\";
+          reg = <4>;
+          ports {
+            status = \"okay\";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            port@0 {
+              status = \"okay\";
+              reg = <0>;
+              csi_in4: endpoint@0 {
+                status = \"okay\";
+              };
+            };
+            port@1 {
+              status = \"okay\";
+              reg = <1>;
+              csi_out4: endpoint@1 {
+                status = \"okay\";
+              };
+            };
+          };
+        };
+        channel@5 {
+          status = \"okay\";
+          reg = <5>;
+          ports {
+            status = \"okay\";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            port@0 {
+              status = \"okay\";
+              reg = <0>;
+              csi_in5: endpoint@0 {
+                status = \"okay\";
+              };
+            };
+            port@1 {
+              status = \"okay\";
+              reg = <1>;
+              csi_out5: endpoint@1 {
+                status = \"okay\";
+              };
+            };
+          };
+        };
+        channel@6 {
+          status = \"okay\";
+          reg = <6>;
+          ports {
+            status = \"okay\";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            port@0 {
+              status = \"okay\";
+              reg = <0>;
+              csi_in6: endpoint@0 {
+                status = \"okay\";
+              };
+            };
+            port@1 {
+              status = \"okay\";
+              reg = <1>;
+              csi_out6: endpoint@1 {
+                status = \"okay\";
+              };
+            };
+          };
+        };
+        channel@7 {
+          status = \"okay\";
+          reg = <7>;
+          ports {
+            status = \"okay\";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            port@0 {
+              status = \"okay\";
+              reg = <0>;
+              csi_in7: endpoint@0 {
+                status = \"okay\";
+              };
+            };
+            port@1 {
+              status = \"okay\";
+              reg = <1>;
+              csi_out7: endpoint@1 {
+                status = \"okay\";
+              };
+            };
+          };
+        };
+    };
+  };
+
 
 // channel@0
 
@@ -821,14 +1079,58 @@ str_fragment_isx021_camera_module7_r325 = ""
 str_fragment_camera_module_r351 = """
 
 // ----- Camera modules -----
-
+  
   fragment@70 {
     //tcp
-    target-path = "/tegra-camera-platform\";
+    target-path = \"/\";
     __overlay__ {
-      status = \"okay\";
-      num_csi_lanes = <16>;
-      max_lane_speed = <4000000>;
+        tegra-camera-platform {
+          compatible = \"nvidia, tegra-camera-platform\";
+          status = \"okay\";
+          num_csi_lanes = <16>;
+          max_lane_speed = <4000000>;
+          min_bits_per_pixel = <10>;
+          vi_peak_byte_per_pixel = <2>;
+          vi_bw_margin_pct = <25>;
+          max_pixel_rate = <160000>;
+          isp_peak_byte_per_pixel = <5>;
+          isp_bw_margin_pct = <25>;
+
+          modules {
+            module0 {
+              drivernode0 {
+              };
+            };
+            module1 {
+              drivernode0 {
+              };
+            };
+            module2 {
+              drivernode0 {
+              };
+            };
+            module3 {
+              drivernode0 {
+              };
+            };
+            module4 {
+              drivernode0 {
+              };
+            };
+            module5 {
+              drivernode0 {
+              };
+            };
+            module6 {
+              drivernode0 {
+              };
+            };
+            module7 {
+              drivernode0 {
+              };
+            };
+          };
+        };
     };
   };
 """
@@ -851,8 +1153,8 @@ str_fragment_isx021_camera_module0_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 30-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_a@1b\";
+      devname = \"isx021 30-005b\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_a@5b\";
     };
   };
 """
@@ -875,8 +1177,8 @@ str_fragment_isx021_camera_module1_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 30-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_b@1c\";
+      devname = \"isx021 30-005c\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_b@5c\";
     };
   };
 """
@@ -899,8 +1201,8 @@ str_fragment_isx021_camera_module2_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 31-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_c@1b\";
+      devname = \"isx021 31-005b\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_c@5b\";
     };
   };
 """
@@ -923,8 +1225,8 @@ str_fragment_isx021_camera_module3_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 31-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_d@1c\";
+      devname = \"isx021 31-005c\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_d@5c\";
     };
   };
 """
@@ -947,8 +1249,8 @@ str_fragment_isx021_camera_module4_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 32-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_e@1b\";
+      devname = \"isx021 32-005b\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_e@5b\";
     };
   };
 """
@@ -971,8 +1273,8 @@ str_fragment_isx021_camera_module5_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 32-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_f@1c\";
+      devname = \"isx021 32-005c\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_f@5c\";
     };
   };
 """
@@ -995,8 +1297,8 @@ str_fragment_isx021_camera_module6_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 33-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_g@1b\";
+      devname = \"isx021 33-005b\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_g@5b\";
     };
   };
 """
@@ -1015,12 +1317,12 @@ str_fragment_isx021_camera_module7_r351 = """
   };
 
   fragment@86 {
-    target-path = \"/tegra-camera-platform/modules/module6/drivernode0\";
+    target-path = \"/tegra-camera-platform/modules/module7/drivernode0\";
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 33-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_h@1c\";
+      devname = \"isx021 33-005c\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_h@5c\";
     };
   };
 """
@@ -1082,18 +1384,30 @@ str_i2c_switch = """
     // declare the i2c switch for the four i2c clients
     target-path = \"/i2c@c250000\";
     __overlay__ {
-      status = \"okay\";
       tca9546@70 {
+        status = \"okay\";
         #address-cells = <1>;
         #size-cells = <0>;
         compatible = \"nxp,pca9546\";
         reg = <0x70>;
         skip_mux_detect = \"yes\";
         force_bus_start = <0x1e>;
-        i2c@0 {};
-        i2c@1 {};
-        i2c@2 {};
-        i2c@3 {};
+        i2c@0 {
+          status = \"okay\";
+          reg = <0>;
+        };
+        i2c@1 {
+          status = \"okay\";
+          reg = <1>;
+        };
+        i2c@2 {
+          status = \"okay\";
+          reg = <2>;
+        };
+        i2c@3 {
+          status = \"okay\";
+          reg = <3>;
+        };
       };
     };
   };
@@ -1111,8 +1425,7 @@ str_fragment_i2c_n = """
       i2c-mux,deselect-on-exit;
       #address-cells = <1>;
       #size-cells = <0>;
-      status = "okay";
-
+      status = \"okay\";
       reg = <0>;
 """
 if IO_BOARD_TYPE == "LEOPARD":
@@ -1196,7 +1509,7 @@ str_i2c_ser_3 = (
 # ==================  ISX021  ===================
 
 str_i2c_isx021_n_p1 = """
-      isx021_a@1b {
+      isx021_a@5b {
         //cvb
         status = \"okay\";
         def-addr = <0x1a>;
@@ -1209,7 +1522,7 @@ str_i2c_isx021_n_p1 = """
 
         // common modul;e
         compatible = \"nvidia,tier4_isx021\";
-        reg = <0x1b>;
+        reg = <0x5b>;
 
         /* Physical dimensions of sensor */
         physical_w = \"15.0\";
@@ -1220,47 +1533,47 @@ str_i2c_isx021_n_p1 = """
 str_i2c_isx021_0_p1 = str_i2c_isx021_n_p1
 
 str_i2c_isx021_1_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_b@1c")
+    str_i2c_isx021_n_p1.replace("isx021_a@5b", "isx021_b@5c")
     .replace("max9295_ser_a", "max9295_ser_b")
-    .replace("reg = <0x1b>", "reg = <0x1c>")
+    .replace("reg = <0x5b>", "reg = <0x5c>")
 )
 str_i2c_isx021_2_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_c@1b")
+    str_i2c_isx021_n_p1.replace("isx021_a@5b", "isx021_c@5b")
     .replace("max9295_ser_a", "max9295_ser_b_0")
     .replace("&dser_0", "&dser_1")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_isx021_3_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_d@1c")
+    str_i2c_isx021_n_p1.replace("isx021_a@5b", "isx021_d@5c")
     .replace("max9295_ser_a", "max9295_ser_b_1")
     .replace("&dser_0", "&dser_1")
-    .replace("reg = <0x1b>", "reg = <0x1c>")
+    .replace("reg = <0x5b>", "reg = <0x5c>")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_isx021_4_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_e@1b")
+    str_i2c_isx021_n_p1.replace("isx021_a@5b", "isx021_e@5b")
     .replace("max9295_ser_a", "max9295_ser_c_0")
     .replace("&dser_0", "&dser_2")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_isx021_5_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_f@1c")
+    str_i2c_isx021_n_p1.replace("isx021_a@5b", "isx021_f@5c")
     .replace("max9295_ser_a", "max9295_ser_c_1")
     .replace("&dser_0", "&dser_2")
-    .replace("reg = <0x1b>", "reg = <0x1c>")
+    .replace("reg = <0x5b>", "reg = <0x5c>")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_isx021_6_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_g@1b")
+    str_i2c_isx021_n_p1.replace("isx021_a@5b", "isx021_g@5b")
     .replace("max9295_ser_a", "max9295_ser_d_0")
     .replace("&dser_0", "&dser_3")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 str_i2c_isx021_7_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_h@1c")
+    str_i2c_isx021_n_p1.replace("isx021_a@5b", "isx021_h@5c")
     .replace("max9295_ser_a", "max9295_ser_d_1")
     .replace("&dser_0", "&dser_3")
-    .replace("reg = <0x1b>", "reg = <0x1c>")
+    .replace("reg = <0x5b>", "reg = <0x5c>")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 
@@ -1284,7 +1597,7 @@ str_i2c_isx021_n_p2 = """
         use_decibel_gain = \"true\";
 
         /* enable CID_SENSOR_MODE_ID for sensor modes selection */
-        use_sensor_mode_id = \"true\";
+        use_sensor_mode_id = \"false\";
 
         mode0 {
           /*mode ISX021_MODE_1920X1280_CROP_30FPS*/
@@ -1310,7 +1623,124 @@ str_i2c_isx021_n_p2 = """
           serdes_pix_clk_hz = "375000000";    // MIPI CSI clock 1500Mhz
 
           gain_factor = \"10\";
-          min_gain_val = \"0\";                   /* dB */
+          min_gain_val = \"1\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+        mode1 {
+          /*mode ISX021_MODE_1920X1280_CROP_30FPS  for Front Embedded data */
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+          active_w = \"1920\";
+          active_h = \"1281\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+          pix_clk_hz = \"94500000\";
+          serdes_pix_clk_hz = \"375000000\";      /* MIPI CSI clock 1500Mhz */
+          gain_factor = \"10\";
+          min_gain_val = \"1\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+        mode2 {
+          /*mode ISX021_MODE_1920X1280_CROP_30FPS  for Rear Embedded data */
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+          active_w = \"1920\";
+          active_h = \"1294\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+          pix_clk_hz = \"94500000\";
+          serdes_pix_clk_hz = \"375000000\";      /* MIPI CSI clock 1500Mhz */
+          gain_factor = \"10\";
+          min_gain_val = \"1\";                   /* dB */
+          max_gain_val = \"300\";                 /* dB */
+          step_gain_val = \"3\";                  /* 0.3 */
+          default_gain = \"0\";
+          min_hdr_ratio = \"1\";
+          max_hdr_ratio = \"1\";
+          framerate_factor = \"1000000\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
+          step_framerate = \"1\";
+          default_framerate = \"30000000\";
+          exposure_factor = \"1000000\";
+          min_exp_time = \"24\";                  /* us 1 line */
+          max_exp_time = \"33333\";
+          step_exp_time = \"1\";
+          default_exp_time = \"33333\";           /* us */
+          embedded_metadata_height = \"0\";
+        };
+        mode3 {
+          /*mode ISX021_MODE_1920X1280_CROP_30FPS  for Front and Rear Embedded data */
+          mclk_khz = \"24000\";
+          num_lanes = \"4\";
+          tegra_sinterface = \"serial_a\";
+          vc_id = \"0\";
+          discontinuous_clk = \"no\";
+          dpcm_enable = \"false\";
+          cil_settletime = \"0\";
+          dynamic_pixel_bit_depth = \"16\";
+          csi_pixel_bit_depth = \"16\";
+          mode_type = \"yuv\";
+          pixel_phase = \"uyvy\";
+          active_w = \"1920\";
+          active_h = \"1295\";
+          readout_orientation = \"0\";
+          line_length = \"2250\";
+          inherent_gain = \"1\";
+          pix_clk_hz = \"94500000\";
+          serdes_pix_clk_hz = \"375000000\";      /* MIPI CSI clock 1500Mhz */
+          gain_factor = \"10\";
+          min_gain_val = \"1\";                   /* dB */
           max_gain_val = \"300\";                 /* dB */
           step_gain_val = \"3\";                  /* 0.3 */
           default_gain = \"0\";
@@ -1567,7 +1997,7 @@ str_i2c_imx490_n_p2 = """
         use_decibel_gain = \"true\";
 
         /* enable CID_SENSOR_MODE_ID for sensor modes selection */
-        use_sensor_mode_id = \"true\";
+        use_sensor_mode_id = \"false\";
 
         mode0 {/*mode IMX490_MODE_2880X1860_CROP_30FPS*/
           mclk_khz = \"24000\";
@@ -1591,7 +2021,7 @@ str_i2c_imx490_n_p2 = """
           serdes_pix_clk_hz = \"375000000\";    // MIPI CSI clock 1500Mhz
 
           gain_factor = \"5\";
-          min_gain_val = \"0\";                         /* dB */
+          min_gain_val = \"1\";                         /* dB */
           max_gain_val = \"300\";                       /* dB */
           step_gain_val = \"1\";                        /* 0.3 */
           default_gain = \"0\";
@@ -1835,14 +2265,14 @@ def build_symlink_c1c2(dev_num, v_num, camera_type):
 
     if camera_type == "C1":
         driver_name = [
-            'tier4_isx021 30-001b", ',
-            'tier4_isx021 30-001c", ',
-            'tier4_isx021 31-001b", ',
-            'tier4_isx021 31-001c", ',
-            'tier4_isx021 32-001b", ',
-            'tier4_isx021 32-001c", ',
-            'tier4_isx021 33-001b", ',
-            'tier4_isx021 33-001c", ',
+            'tier4_isx021 30-005b", ',
+            'tier4_isx021 30-005c", ',
+            'tier4_isx021 31-005b", ',
+            'tier4_isx021 31-005c", ',
+            'tier4_isx021 32-005b", ',
+            'tier4_isx021 32-005c", ',
+            'tier4_isx021 33-005b", ',
+            'tier4_isx021 33-005c", ',
         ]
 
     elif camera_type == "C2":
@@ -1946,7 +2376,7 @@ def check_and_set_next_port(num, camera):
                 return -2
         elif camera[num] == "NC":
             if camera[num + 1] == "C2" or camera[num + 1] == "C1":
-                camer[num] = camera[num + 1]
+                camera[num] = camera[num + 1]
                 return 0
             else:
                 return -2
@@ -2050,7 +2480,7 @@ def get_n_to_end(lst_args, n):
 # -----------------------------------------------
 
 
-def deploy_n_options(str_n_optiosn):
+def deploy_n_options(str_n_options):
     l_camera = [None] * MAX_NUM_CAMERAS
 
     l_pos = 0
@@ -2222,8 +2652,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module0 = (
                 str_w_camera_module0.replace("isx021", "imx490")
-                .replace("001b", "002b")
-                .replace("@1b", "@2b")
+                .replace("005b", "002b")
+                .replace("@5b", "@2b")
             )
         else:
             str_camera1 = ""
@@ -2267,8 +2697,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module1 = (
                 str_w_camera_module1.replace("isx021", "imx490")
-                .replace("001c", "002c")
-                .replace("@1c", "@2c")
+                .replace("005c", "002c")
+                .replace("@5c", "@2c")
             )
         else:
             str_camera2 = ""
@@ -2312,8 +2742,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module2 = (
                 str_w_camera_module2.replace("isx021", "imx490")
-                .replace("001b", "002b")
-                .replace("@1b", "@2b")
+                .replace("005b", "002b")
+                .replace("@5b", "@2b")
             )
         else:
             str_camera3 = ""
@@ -2357,8 +2787,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module3 = (
                 str_w_camera_module3.replace("isx021", "imx490")
-                .replace("001c", "002c")
-                .replace("@1c", "@2c")
+                .replace("005c", "002c")
+                .replace("@5c", "@2c")
             )
         else:
             str_camera4 = ""
@@ -2402,8 +2832,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module4 = (
                 str_w_camera_module4.replace("isx021", "imx490")
-                .replace("001b", "002b")
-                .replace("@1b", "@2b")
+                .replace("005b", "002b")
+                .replace("@5b", "@2b")
             )
         else:
             str_camera5 = ""
@@ -2447,8 +2877,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module5 = (
                 str_w_camera_module5.replace("isx021", "imx490")
-                .replace("001c", "002c")
-                .replace("@1c", "@2c")
+                .replace("005c", "002c")
+                .replace("@5c", "@2c")
             )
         else:
             str_camera6 = ""
@@ -2492,8 +2922,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module6 = (
                 str_w_camera_module6.replace("isx021", "imx490")
-                .replace("001b", "002b")
-                .replace("@1b", "@2b")
+                .replace("005b", "002b")
+                .replace("@5b", "@2b")
             )
         else:
             str_camera7 = ""
@@ -2537,8 +2967,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module7 = (
                 str_w_camera_module7.replace("isx021", "imx490")
-                .replace("001c", "002c")
-                .replace("@1c", "@2c")
+                .replace("005c", "002c")
+                .replace("@5c", "@2c")
             )
         else:
             str_camera8 = ""

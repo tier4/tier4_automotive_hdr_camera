@@ -327,9 +327,11 @@ int tier4_max9296_power_on(struct device *dev)
       }
     }
 
-    if (priv->reset_gpio)
-      //			gpio_set_value(priv->reset_gpio, 0);
+    // TODO: Implement ROScube reset function
+	  if (gpio_is_valid(priv->reset_gpio))
+	  {
       gpio_direction_output(priv->reset_gpio, 0);
+    }
 
     usleep_range(50, 80);
 
@@ -342,14 +344,14 @@ int tier4_max9296_power_on(struct device *dev)
 
     usleep_range(50, 80);
 
+    // TODO: Implement ROScube reset function
     /*exit reset mode: XCLR */
-    if (priv->reset_gpio)
+    if (gpio_is_valid(priv->reset_gpio))
     {
-      //			gpio_set_value(priv->reset_gpio, 0);
       gpio_direction_output(priv->reset_gpio, 0);
       usleep_range(50, 80);
       msleep(1000);
-      //			gpio_set_value(priv->reset_gpio, 1);
+
       gpio_direction_output(priv->reset_gpio, 1);
       usleep_range(50, 80);
     }
@@ -378,9 +380,11 @@ void tier4_max9296_power_off(struct device *dev)
   {
     /* enter reset mode: XCLR */
     usleep_range(1, 2);
-    if (priv->reset_gpio)
-      //			gpio_set_value(priv->reset_gpio, 0);
+    // TODO: Implement ROScube reset function
+    if (gpio_is_valid(priv->reset_gpio))
+    {
       gpio_direction_output(priv->reset_gpio, 0);
+    }
 
     if (priv->vdd_cam_1v2)
       regulator_disable(priv->vdd_cam_1v2);
@@ -1084,8 +1088,9 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv, struct i2c_client 
   priv->reset_gpio = of_get_named_gpio(node, "reset-gpios", 0);
   if (priv->reset_gpio < 0)
   {
+    // TODO: Implement ROScube reset function
     dev_err(&client->dev, "[%s] : reset-gpios not found %d\n", __func__, err);
-    return err;
+    // return err;
   }
 
   dev_dbg(&client->dev, "[%s] priv->reset_gpio = %d\n", __func__, priv->reset_gpio);
