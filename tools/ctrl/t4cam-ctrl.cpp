@@ -57,6 +57,8 @@ int main(int argc, char *argv[])
  
   p.add<bool>("auto_exposure", 'A', "set auto exposure", false);
   p.add<int>("shutter_on_ae", 0,"set shutter time on Ae", false);
+  p.add<int>("shutter_fme", 0,"set shutter time on ME", false);
+
 
   p.add("vv", 'v', "get debug_message");
 

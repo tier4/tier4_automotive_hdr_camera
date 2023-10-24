@@ -89,6 +89,24 @@ int c1_process(cmdline::parser &p)
       c1_a.setATRBrightnessGain(val);
       std::cout << "setATR Brightness gain" << val << std::endl;
     }
+    if (p.exist("auto_exposure"))
+    {
+      bool val = p.get<bool>("auto_exposure");
+      if(val)
+      {
+        c1_a.setAEMode(0);
+      } else
+      {
+        c1_a.setAEMode(3);
+      }
+      std::cout << "set auto_exposure " << val << std::endl;
+    }
+    if (p.exist("shutter_fme"))
+    {
+      int val = p.get<int>("shutter_fme");
+      c1_a.setShutterSpeedforFME(val);
+      std::cout << "set exposure time " << val << std::endl;
+    }
   
   }
 
