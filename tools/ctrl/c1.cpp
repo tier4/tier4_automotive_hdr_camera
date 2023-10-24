@@ -24,6 +24,7 @@ int c1_process(cmdline::parser &p)
 {
   if (p.exist("vv"))
   {
+    std::cerr << "/************** t4cam-ctrl  **********/" << std::endl;
     std::cerr << "/************** Enabling debug message **********/" << std::endl;
     debug_flag = true;
   }
@@ -95,17 +96,18 @@ int c1_process(cmdline::parser &p)
       if(val)
       {
         c1_a.setAEMode(0);
+        std::cout << "Enabled auto exposure: " << val << std::endl;
       } else
       {
         c1_a.setAEMode(3);
+        std::cout << "Disabled auto exposure: " << val << std::endl;
       }
-      std::cout << "set auto_exposure " << val << std::endl;
     }
     if (p.exist("shutter_fme"))
     {
-      int val = p.get<int>("shutter_fme");
+      float val = p.get<float>("shutter_fme");
       c1_a.setShutterSpeedforFME(val);
-      std::cout << "set exposure time " << val << std::endl;
+      std::cout << "set exposure time " << val << " msec" << std::endl;
     }
   
   }
