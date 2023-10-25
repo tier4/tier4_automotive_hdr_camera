@@ -363,7 +363,7 @@ static int shutter_time_max = ISX021_MAX_EXPOSURE_TIME;
 static int fsync_mfp = 0;
 // static int debug_i2c_write = 0;
 
-module_param(trigger_mode, int, S_IRUGO);
+module_param(trigger_mode, int, S_IRUGO | S_IWUSR);
 module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
 module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
 module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
@@ -722,13 +722,14 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
   struct device *dev = s_data->dev;
   int des_num = 0;
 
-  if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE)
+  if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER) ||
+      (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN))
   {
-    dev_info(dev, "[%s] : FPGA automatic generate-fsync =%d\n", __func__, priv->g_ctx.fpga_generate_fsync);
-
-    if (priv->g_ctx.fpga_generate_fsync == false)
+    if (tier4_fpga_get_fsync_mode() == FPGA_FSYNC_MODE_DISABLE)
     {
-      err = tier4_fpga_disable_generate_fsync_signal(priv->fpga_dev);
+      dev_info(dev, "[%s] : Disabling FPGA fsync.\n", __func__);
+
+      err = tier4_fpga_disable_fsync_mode(priv->fpga_dev);
       if (err)
       {
         dev_err(dev, "[%s] : Disabling FPGA automatic fsync generation failed.\n", __func__);
@@ -736,21 +737,45 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
       }
     }
     else
-    {
-      err = tier4_fpga_enable_generate_fsync_signal(priv->fpga_dev);
+    {      
+      err = tier4_fpga_enable_fsync_mode(priv->fpga_dev);
       if (err)
       {
         dev_err(dev, "[%s] : Enabling FPGA automatic fsync generation failed.\n", __func__);
         return err;
       }
 
-      des_num = priv->g_ctx.reg_mux;
-
-      err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num, FSYNC_FREQ_HZ);
-      if (err)
+      if (tier4_fpga_get_fsync_mode() == FPGA_FSYNC_MODE_AUTO) 
       {
-        dev_err(dev, "[%s] : FPGA automatic fsync generation failed.\n", __func__);
-        return err;
+        // Auto Trigger Mode
+        dev_info(dev, "[%s] : Enabling FPGA Fsync Auto Trigger mode.\n", __func__);
+
+        err = tier4_fpga_set_fsync_auto_trigger(priv->fpga_dev);
+        if (err)
+        {
+          dev_err(dev, "[%s] : Enabling FPGA Fsync Auto Trigger mode failed.\n", __func__);
+          return err;
+        }
+  
+        des_num = priv->g_ctx.reg_mux;
+        err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num);
+        if (err)
+        {
+          dev_err(dev, "[%s] : Setting the frequency of fsync genrated by FPGA failed.\n", __func__);
+          return err;
+        }
+      }
+      else if (tier4_fpga_get_fsync_mode() == FPGA_FSYNC_MODE_MANUAL)
+      {
+        // Manual Trigger Mode 
+        dev_info(dev, "[%s] : Enabling FPGA Fsync Manual Trigger mode.\n", __func__);
+        
+        err = tier4_fpga_set_fsync_manual_trigger(priv->fpga_dev);
+        if (err)
+        {
+          dev_err(dev, "[%s] : Enabling FPGA Fsync Maunal Trigger mode failed.\n", __func__);
+          return err;
+        }
       }
     }
   }
@@ -880,7 +905,7 @@ static int tier4_isx021_gmsl_serdes_setup(struct tier4_isx021 *priv)
 
   /* For now no separate power on required for serializer device */
 
-  if ((priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE) &&
+  if ((priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_XAVIER) &&
       (priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_ORIN))
   {
     tier4_max9296_power_on(priv->dser_dev);
@@ -925,7 +950,7 @@ static void tier4_isx021_gmsl_serdes_reset(struct tier4_isx021 *priv)
 
   tier4_max9296_reset_control(priv->dser_dev, &priv->i2c_client->dev, false);
 
-  if ((priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE) &&
+  if ((priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_XAVIER) &&
       (priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_ORIN))
   {
     tier4_max9296_power_off(priv->dser_dev);
@@ -2151,7 +2176,6 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
   const char *str_model;
   char upper_str_model[64];
   char *str_err;
-  char *sub_str_err;
 
   root_node = of_find_node_opts_by_path("/", &of_stdout_options);
   err = of_property_read_string(root_node, "model", &str_model);
@@ -2163,35 +2187,32 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 
   memset(upper_str_model, 0, 64);
   to_upper_string(upper_str_model, str_model);
-  str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ORIN);
   priv->g_ctx.hardware_model = HW_MODEL_UNKNOWN;
 
-  if (str_err)
+  if (str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE_ORIN))
   {
+    // ROScube Orin (RQX-590)
+    priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE_ORIN;
+  }
+  else if (str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE_XAVIER))
+  {
+    // ROScube Xavier (RQX-58G)
+    priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE_XAVIER;
+  }
+  else if (str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ORIN))
+  {
+    // Orin dev-kit
     priv->g_ctx.hardware_model = HW_MODEL_NVIDIA_ORIN_DEVKIT;
   }
-
-  str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_XAVIER);
-  if (str_err)
+  else if (str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_XAVIER))
   {
+    // Xavier dev-kit
     priv->g_ctx.hardware_model = HW_MODEL_NVIDIA_XAVIER_DEVKIT;
   }
 
-  str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE);
-  if (str_err)
-  {
-    sub_str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE_ORIN);
-    if (sub_str_err)
-    {
-      priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE_ORIN;
-    }
-    else
-    {
-      priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
-    }
-  }
 
   dev_info(dev, "[%s] : model=%s\n", __func__, str_model);
+  dev_info(dev, "[%s] : hardware_model=%d\n", __func__, priv->g_ctx.hardware_model);
 
   //    priv->g_ctx.debug_i2c_write = debug_i2c_write;
 
@@ -2289,76 +2310,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 
   priv->auto_exposure = enable_auto_exposure != 0 ? true : false;
 
-#if 0
-    priv->g_ctx.fpga_generate_fsync = false;
-
-    if ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
-
-
-        err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
-        if ( err < 0) {
-            if ( err == -EINVAL ) {
-                dev_info(dev, "[%s] : fpga-generate-fsync does not exist.\n", __func__);
-            } else {
-                dev_err(dev, "[%s]  : fpga-generate-fsync  is invalid .\n", __func__);
-                goto error;
-            }
-        } else {
-            if (!strcmp(str_value, "true")) {
-                priv->g_ctx.fpga_generate_fsync = true;
-            }
-        }
-
-    }
-#endif
-
-  mode_node = of_get_child_by_name(node, "mode0");
-
-  dev_dbg(dev, "[%s] : node->full_name = %s, mode_node->full_name = %s.\n", __func__, node->full_name, mode_node->full_name );
-
-
-#ifdef USE_EMBEDDED_METADAT_HEIGHT_IN_DTB
-  /* check embedded_metadata_height */
-
-  err = of_property_read_string(mode_node, "embedded_metadata_height", &str_value);
-  dev_info(dev, "[%s] : err = %d, embedded_metadata_height = %s\n", __func__, err, str_value );
-
-  err = kstrtoul(str_value, 10, &u_value);
-  embedded_metadata_height = u_value;
-  if (err)
-  {
-    embedded_metadata_height = 0;
-  }
-  else
-  {
-    embedded_metadata_height = u_value;
-  }
-
-  switch( embedded_metadata_height )
-  {
-    case 0:
-      priv->enable_embedded_data = DISABLE_BOTH_EMBEDDED_DATA;
-      break;
-    case 1:
-      priv->enable_embedded_data = ENABLE_FRONT_EMBEDDED_DATA;
-      break;
-    case 14:
-      priv->enable_embedded_data = ENABLE_REAR_EMBEDDED_DATA;
-      break;
-    case 15:
-      priv->enable_embedded_data = ENABLE_BOTH_EMBEDDED_DATA;
-      break;
-    default:
-      priv->enable_embedded_data = DISABLE_BOTH_EMBEDDED_DATA;
-  }
-#else // ifdef USE_EMBEDDED_METADAT_HEIGHT_IN_DTB
-
-  priv->enable_embedded_data = DISABLE_BOTH_EMBEDDED_DATA;    // priv->enable_embedded_data is defined by camera sensor image mode
-
-#endif  // ifdef USE_EMBEDDED_METADAT_HEIGHT_IN_DTB
-
   // for Ser node
-
   ser_node = of_parse_phandle(node, "nvidia,gmsl-ser-device", 0);
 
   if (ser_node == NULL)
@@ -2425,7 +2377,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
   priv->dser_dev = &dser_i2c->dev;
 
 
-  if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE) ||
+  if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER) ||
       (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN))
   {
     // for FPGA node

@@ -331,9 +331,12 @@ int tier4_max9296_power_on(struct device *dev)
         break;
       }
     }
-    if (priv->reset_gpio)
-      //            gpio_set_value(priv->reset_gpio, 0);
+
+    // TODO: Implement ROScube reset function
+	  if (gpio_is_valid(priv->reset_gpio))
+	  {
       gpio_direction_output(priv->reset_gpio, 0);
+    }
 
     usleep_range(50, 80);
 
@@ -345,16 +348,14 @@ int tier4_max9296_power_on(struct device *dev)
     }
     usleep_range(50, 80);
 
+    // TODO: Implement ROScube reset function
     /*exit reset mode: XCLR */
-    if (priv->reset_gpio)
+    if (gpio_is_valid(priv->reset_gpio))
     {
-
-      //            gpio_set_value(priv->reset_gpio, 0);
       gpio_direction_output(priv->reset_gpio, 0);
 
       usleep_range(50, 80);
-      usleep_range(1000000,1100000);
-      //            gpio_set_value(priv->reset_gpio, 1);
+      msleep(1000);
 
       gpio_direction_output(priv->reset_gpio, 1);
 
@@ -386,9 +387,11 @@ void tier4_max9296_power_off(struct device *dev)
   {
     /* enter reset mode: XCLR */
     usleep_range(1, 2);
-    if (priv->reset_gpio)
-      //            gpio_set_value(priv->reset_gpio, 0);
+    // TODO: Implement ROScube reset function
+    if (gpio_is_valid(priv->reset_gpio))
+    {
       gpio_direction_output(priv->reset_gpio, 0);
+    }
 
     if (priv->vdd_cam_1v2)
       regulator_disable(priv->vdd_cam_1v2);
@@ -992,20 +995,9 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
     {
       tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
     }
-    else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
+    else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN || g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER)
     {
-      tier4_max9296_write_reg(dev,
-                              //                MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2500MHZ);
-                              MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1600MHZ);
-    }
-    else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE)
-    {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 65)
-      //            tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
       tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
-#else
-      tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1800MHZ);
-#endif
     }
     else
     {
@@ -1089,8 +1081,9 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv, struct i2c_client 
   priv->reset_gpio = of_get_named_gpio(node, "reset-gpios", 0);
   if (priv->reset_gpio < 0)
   {
+    // TODO: Implement ROScube reset function
     dev_err(&client->dev, "[%s] : reset-gpios not found %d\n", __func__, err);
-    return err;
+    // return err;
   }
 
   /* digital 1.2v */
