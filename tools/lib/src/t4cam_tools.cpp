@@ -284,7 +284,7 @@ int8_t C1::setAnalogGain(int db)
 
   if (db < ANALOG_GAIN_MIN || ANALOG_GAIN_MAX < db)
   {
-    fprintf(stderr, "[WARN][%s]: please set in the range of %lf ≤ db ≤ %lf. Digitalgain is not set.\n", __func__,
+    fprintf(stderr, "[WARN][%s]: please set in the range of %lf ≤ db ≤ %lf. Analoggain is not set.\n", __func__,
             ANALOG_GAIN_MIN, ANALOG_GAIN_MAX);
     return -1;
   }
