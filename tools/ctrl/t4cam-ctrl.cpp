@@ -63,7 +63,8 @@ int main(int argc, char *argv[])
   p.add("vv", 'v', "get debug_message");
 
   p.add<float>("evrefoffset", 'e', "set EvrefOffset val", false);
-  p.add<float>("digitalgain", 'D', "set DigitalGain val", false);
+  p.add<float>("digital_gain", 'D', "set DigitalGain val", false);
+  p.add<float>("analog_gain", 0, "set AnalogGain val", false);
 
   p.parse_check(argc, argv);
 
