@@ -5,7 +5,7 @@ If you want to use the official driver, please refer to the [Installation and Us
 
 If you want to modify the driver, please refer to the [How to create a package from source section](#create-debian-dkms-package).
 
-For the simple image parameter tuning tool(t4cam-ctrl), please refer to the documentation here [t4cam-ctrl](https://tier4.github.io/camera_docs/t4cam-ctrl/).
+For the simple image parameter tuning tool(t4cam-ctrl), please refer to the documentation here [t4cam-ctrl](https://tier4.github.io/edge-auto-docs/user_manual/camera-control-tool-user-manual.html).
 
 ## Installation and Usage
 
