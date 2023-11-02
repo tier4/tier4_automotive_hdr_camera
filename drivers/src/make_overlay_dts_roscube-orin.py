@@ -1153,8 +1153,8 @@ str_fragment_isx021_camera_module0_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 30-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_a@1b\";
+      devname = \"isx021 30-001d\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_a@1d\";
     };
   };
 """
@@ -1177,8 +1177,8 @@ str_fragment_isx021_camera_module1_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 30-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_b@1c\";
+      devname = \"isx021 30-001e\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_b@1e\";
     };
   };
 """
@@ -1201,8 +1201,8 @@ str_fragment_isx021_camera_module2_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 31-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_c@1b\";
+      devname = \"isx021 31-001d\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_c@1d\";
     };
   };
 """
@@ -1225,8 +1225,8 @@ str_fragment_isx021_camera_module3_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 31-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_d@1c\";
+      devname = \"isx021 31-001e\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_d@1e\";
     };
   };
 """
@@ -1249,8 +1249,8 @@ str_fragment_isx021_camera_module4_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 32-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_e@1b\";
+      devname = \"isx021 32-001d\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_e@1d\";
     };
   };
 """
@@ -1273,8 +1273,8 @@ str_fragment_isx021_camera_module5_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 32-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_f@1c\";
+      devname = \"isx021 32-001e\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_f@1e\";
     };
   };
 """
@@ -1297,8 +1297,8 @@ str_fragment_isx021_camera_module6_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 33-001b\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_g@1b\";
+      devname = \"isx021 33-001d\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_g@1d\";
     };
   };
 """
@@ -1321,8 +1321,8 @@ str_fragment_isx021_camera_module7_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 33-001c\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_h@1c\";
+      devname = \"isx021 33-001e\";
+      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_h@1e\";
     };
   };
 """
@@ -1509,7 +1509,7 @@ str_i2c_ser_3 = (
 # ==================  ISX021  ===================
 
 str_i2c_isx021_n_p1 = """
-      isx021_a@1b {
+      isx021_a@1d {
         //cvb
         status = \"okay\";
         def-addr = <0x1a>;
@@ -1522,7 +1522,7 @@ str_i2c_isx021_n_p1 = """
 
         // common modul;e
         compatible = \"nvidia,tier4_isx021\";
-        reg = <0x1b>;
+        reg = <0x1d>;
 
         /* Physical dimensions of sensor */
         physical_w = \"15.0\";
@@ -1533,47 +1533,47 @@ str_i2c_isx021_n_p1 = """
 str_i2c_isx021_0_p1 = str_i2c_isx021_n_p1
 
 str_i2c_isx021_1_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_b@1c")
+    str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_b@1e")
     .replace("max9295_ser_a", "max9295_ser_b")
-    .replace("reg = <0x1b>", "reg = <0x1c>")
+    .replace("reg = <0x1d>", "reg = <0x1e>")
 )
 str_i2c_isx021_2_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_c@1b")
+    str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_c@1d")
     .replace("max9295_ser_a", "max9295_ser_c")
     .replace("&dser_0", "&dser_1")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_isx021_3_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_d@1c")
+    str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_d@1e")
     .replace("max9295_ser_a", "max9295_ser_d")
     .replace("&dser_0", "&dser_1")
-    .replace("reg = <0x1b>", "reg = <0x1c>")
+    .replace("reg = <0x1d>", "reg = <0x1e>")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_isx021_4_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_e@1b")
+    str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_e@1d")
     .replace("max9295_ser_a", "max9295_ser_e")
     .replace("&dser_0", "&dser_2")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_isx021_5_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_f@1c")
+    str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_f@1e")
     .replace("max9295_ser_a", "max9295_ser_f")
     .replace("&dser_0", "&dser_2")
-    .replace("reg = <0x1b>", "reg = <0x1c>")
+    .replace("reg = <0x1d>", "reg = <0x1e>")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_isx021_6_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_g@1b")
+    str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_g@1d")
     .replace("max9295_ser_a", "max9295_ser_g")
     .replace("&dser_0", "&dser_3")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 str_i2c_isx021_7_p1 = (
-    str_i2c_isx021_n_p1.replace("isx021_a@1b", "isx021_h@1c")
+    str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_h@1e")
     .replace("max9295_ser_a", "max9295_ser_h")
     .replace("&dser_0", "&dser_3")
-    .replace("reg = <0x1b>", "reg = <0x1c>")
+    .replace("reg = <0x1d>", "reg = <0x1e>")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 
@@ -2279,14 +2279,14 @@ def build_symlink_c1c2(dev_num, v_num, camera_type):
 
     if camera_type == "C1":
         driver_name = [
-            'tier4_isx021 30-001b", ',
-            'tier4_isx021 30-001c", ',
-            'tier4_isx021 31-001b", ',
-            'tier4_isx021 31-001c", ',
-            'tier4_isx021 32-001b", ',
-            'tier4_isx021 32-001c", ',
-            'tier4_isx021 33-001b", ',
-            'tier4_isx021 33-001c", ',
+            'tier4_isx021 30-001d", ',
+            'tier4_isx021 30-001e", ',
+            'tier4_isx021 31-001d", ',
+            'tier4_isx021 31-001e", ',
+            'tier4_isx021 32-001d", ',
+            'tier4_isx021 32-001e", ',
+            'tier4_isx021 33-001d", ',
+            'tier4_isx021 33-001e", ',
         ]
 
     elif camera_type == "C2":
@@ -2678,8 +2678,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module0 = (
                 str_w_camera_module0.replace("isx021", "imx490")
-                .replace("001b", "002b")
-                .replace("@1b", "@2b")
+                .replace("001d", "002b")
+                .replace("@1d", "@2b")
             )
         else:
             str_camera1 = ""
@@ -2729,8 +2729,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module1 = (
                 str_w_camera_module1.replace("isx021", "imx490")
-                .replace("001c", "002c")
-                .replace("@1c", "@2c")
+                .replace("001e", "002c")
+                .replace("@1e", "@2c")
             )
         else:
             str_camera2 = ""
@@ -2780,8 +2780,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module2 = (
                 str_w_camera_module2.replace("isx021", "imx490")
-                .replace("001b", "002b")
-                .replace("@1b", "@2b")
+                .replace("001d", "002b")
+                .replace("@1d", "@2b")
             )
         else:
             str_camera3 = ""
@@ -2831,8 +2831,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module3 = (
                 str_w_camera_module3.replace("isx021", "imx490")
-                .replace("001c", "002c")
-                .replace("@1c", "@2c")
+                .replace("001e", "002c")
+                .replace("@1e", "@2c")
             )
         else:
             str_camera4 = ""
@@ -2882,8 +2882,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module4 = (
                 str_w_camera_module4.replace("isx021", "imx490")
-                .replace("001b", "002b")
-                .replace("@1b", "@2b")
+                .replace("001d", "002b")
+                .replace("@1d", "@2b")
             )
         else:
             str_camera5 = ""
@@ -2933,8 +2933,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module5 = (
                 str_w_camera_module5.replace("isx021", "imx490")
-                .replace("001c", "002c")
-                .replace("@1c", "@2c")
+                .replace("001e", "002c")
+                .replace("@1e", "@2c")
             )
         else:
             str_camera6 = ""
@@ -2984,8 +2984,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module6 = (
                 str_w_camera_module6.replace("isx021", "imx490")
-                .replace("001b", "002b")
-                .replace("@1b", "@2b")
+                .replace("001d", "002b")
+                .replace("@1d", "@2b")
             )
         else:
             str_camera7 = ""
@@ -3035,8 +3035,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
             str_camera_module7 = (
                 str_w_camera_module7.replace("isx021", "imx490")
-                .replace("001c", "002c")
-                .replace("@1c", "@2c")
+                .replace("001e", "002c")
+                .replace("@1e", "@2c")
             )
         else:
             str_camera8 = ""
