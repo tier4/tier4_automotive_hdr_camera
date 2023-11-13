@@ -1700,25 +1700,33 @@ str_fragment_i2c_3 = str_fragment_i2c_n.replace("@91", "@94").replace("c@0", "c@
 
 # ==================   DSER   ====================
 
-str_i2c_dser_n = """
-      max9296@48 {
-        compatible = \"nvidia,tier4_max9296\";
-        reg = <0x48>;
-        status = \"okay\";
-        csi-mode = \"2x4\";
-        max-src = <2>;
-        //reset-gpios = <&tegra_main_gpio CAM0_PWDN GPIO_ACTIVE_HIGH>;
-        //reset-gpios = <&tegra_main_gpio 0x3E 0x0>;
-      };
-"""
-str_i2c_dser_0 = str_i2c_dser_n
-str_i2c_dser_1 = str_i2c_dser_n
-str_i2c_dser_2 = str_i2c_dser_n
-str_i2c_dser_3 = str_i2c_dser_n
+str_fragment_dser_n = """
 
-#str_i2c_dser_1 = str_i2c_dser_n.replace("dser_a", "dser_b")
-#str_i2c_dser_2 = str_i2c_dser_n.replace("dser_a", "dser_c")
-#str_i2c_dser_3 = str_i2c_dser_n.replace("dser_a", "dser_d")
+  fragment@95{
+    target = <&dser>;
+    __overlay__ {
+      compatible = \"nvidia,tier4_max9296\";
+      reg = <0x48>;
+      status = \"okay\";
+      csi-mode = \"2x4\";
+      max-src = <2>;
+      //reset-gpios = <&tegra_main_gpio CAM0_PWDN GPIO_ACTIVE_HIGH>;
+      //reset-gpios = <&tegra_main_gpio 0x3E 0x0>;
+    };
+  };
+
+"""
+
+str_fragment_dser_0 = str_fragment_dser_n
+str_fragment_dser_1 = str_fragment_dser_n \
+    .replace("fragment@95", "fragment@96") \
+    .replace("&dser", "&dsera")
+str_fragment_dser_2 = str_fragment_dser_n \
+    .replace("fragment@95", "fragment@97") \
+    .replace("&dser", "&dserb")
+str_fragment_dser_3 = str_fragment_dser_n \
+    .replace("fragment@95", "fragment@98") \
+    .replace("&dser", "&dserc")
 
 # ==================   SER   ====================
 
@@ -3382,7 +3390,6 @@ str_fragment_dser_in_dtb = dict_fragment_dser_in_base_dtb[str_rev_num]
 
 str_i2c0 = (
     str_fragment_i2c_0
-    + str_i2c_dser_0
     + str_i2c_ser_0[str_rev_num]
     + str_i2c_0_isp
     + str_camera2
@@ -3392,7 +3399,6 @@ str_i2c0 = (
 
 str_i2c1 = (
     str_fragment_i2c_1
-    + str_i2c_dser_1
     + str_i2c_ser_1[str_rev_num]
     + str_i2c_1_isp
     + str_camera4
@@ -3402,7 +3408,6 @@ str_i2c1 = (
 
 str_i2c2 = (
     str_fragment_i2c_2
-    + str_i2c_dser_2
     + str_i2c_ser_2[str_rev_num]
     + str_i2c_2_isp
     + str_camera6
@@ -3412,7 +3417,6 @@ str_i2c2 = (
 
 str_i2c3 = (
     str_fragment_i2c_3
-    + str_i2c_dser_3
     + str_i2c_ser_3[str_rev_num]
     + str_i2c_3_isp
     + str_camera8
@@ -3483,6 +3487,10 @@ str_whole_dts = (
     + str_i2c1
     + str_i2c2
     + str_i2c3
+    + str_fragment_dser_0
+    + str_fragment_dser_1
+    + str_fragment_dser_2
+    + str_fragment_dser_3
     + str_fpga
     + str_overlay_end
 )
