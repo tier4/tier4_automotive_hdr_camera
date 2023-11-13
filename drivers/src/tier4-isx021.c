@@ -2739,7 +2739,7 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
   if (err)
   {
     dev_err(dev, "[%s] : Board Setup failed.\n", __func__);
-    goto errret;
+    goto err_tegracam_unreg;
   }
 
   /* Pair sensor to serializer dev */
@@ -2748,7 +2748,7 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
   if (err)
   {
     dev_err(&client->dev, "[%s] : GMSL Ser Pairing failed.\n", __func__);
-    goto errret;
+    goto err_tegracam_unreg;
   }
 
   /* Register sensor to deserializer dev */
@@ -2757,7 +2757,7 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
   if (err)
   {
     dev_err(&client->dev, "[%s] : GMSL Deserializer Register failed.\n", __func__);
-    goto errret;
+    goto err_max9295_unpair;
   }
 
   //    priv->g_ctx.debug_i2c_write = debug_i2c_write;
@@ -2781,14 +2781,14 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
   if (err)
   {
     dev_err(&client->dev, "[%s] : Setup for  GMSL Serdes failed.\n", __func__);
-    goto errret;
+    goto err_max9296_unreg;
   }
 
   err = tegracam_v4l2subdev_register(tc_dev, true);
   if (err)
   {
     dev_err(dev, "[%s] : Tegra Camera Subdev Registration failed.\n", __func__);
-    goto errret;
+    goto err_max9296_unreg;
   }
 
 
@@ -2800,6 +2800,7 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
   if (err)
   {
     dev_warn(dev, "[%s] : Transition to response mode failed.\n", __func__);
+    goto err_tegracam_v4l2_unreg;
   }
 
   dev_info(&client->dev, "Detected ISX021 sensor.\n");
@@ -2808,20 +2809,9 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
   wst_priv[camera_channel_count].p_priv = priv;
   wst_priv[camera_channel_count].p_tc_dev = tc_dev;
 
-errret:
-
   camera_channel_count++;
 
   tier4_isx021_sensor_mutex_unlock();
-
-  if (err)
-  {
-    dev_err(&client->dev, "Detection for ISX021 sensor failed.\n");
-  }
-  else
-  {
-    dev_info(&client->dev, "Detected ISX021 sensor.\n");
-  }
 
 #if ( LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 65) ) & 0
 
@@ -2830,14 +2820,36 @@ errret:
 #else
   return err;
 #endif
+
+err_tegracam_v4l2_unreg:
+  tegracam_v4l2subdev_unregister(priv->tc_dev);
+err_max9296_unreg:
+  tier4_max9296_sdev_unregister(priv->dser_dev, &client->dev);
+err_max9295_unpair:
+  tier4_max9295_sdev_unpair(priv->ser_dev, &client->dev);
+err_tegracam_unreg:
+  tegracam_device_unregister(priv->tc_dev);
+errret:
+  tier4_isx021_sensor_mutex_unlock();
+
+  dev_err(&client->dev, "Detection for ISX021 sensor failed.\n");
+
+  return err;
 }
+
+static void tier4_isx021_shutdown(struct i2c_client *client);
 
 static int tier4_isx021_remove(struct i2c_client *client)
 {
   struct camera_common_data *s_data = to_camera_common_data(&client->dev);
   struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
 
+  tier4_isx021_shutdown(client);
+
   tier4_isx021_gmsl_serdes_reset(priv);
+
+  tier4_max9296_sdev_unregister(priv->dser_dev, &client->dev);
+  tier4_max9295_sdev_unpair(priv->ser_dev, &client->dev);
 
   tegracam_v4l2subdev_unregister(priv->tc_dev);
 
