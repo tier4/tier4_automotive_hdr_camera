@@ -1570,7 +1570,7 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
   if (err)
   {
     dev_err(dev, "[%s] : Board Setup failed\n", __func__);
-    goto error_exit;
+    goto err_tegracam_unreg;
   }
 
   /* Pair sensor to serializer dev */
@@ -1580,7 +1580,7 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
   if (err)
   {
     dev_err(&client->dev, "[%s] : GMSL Ser Pairing failed\n", __func__);
-    goto error_exit;
+    goto err_tegracam_unreg;
   }
   /* Register sensor to deserializer dev */
 
@@ -1589,7 +1589,7 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
   if (err)
   {
     dev_err(&client->dev, "[%s] : GMSL Deserializer Register failed\n", __func__);
-    goto error_exit;
+    goto err_max9295_unpair;
   }
 
   /*
@@ -1612,7 +1612,7 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
   if (err)
   {
     dev_err(&client->dev, "[%s] : GMSL Serdes setup failed\n", __func__);
-    goto error_exit;
+    goto err_max9296_unreg;
   }
 
   err = tegracam_v4l2subdev_register(tc_dev, true);
@@ -1620,36 +1620,53 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
   if (err)
   {
     dev_err(dev, "[%s] : Tegra Camera Subdev Registration failed\n", __func__);
-    goto error_exit;
+    goto err_max9296_unreg;
   }
 
   wst_priv[camera_channel_count].p_client = client;
   wst_priv[camera_channel_count].p_priv = priv;
   wst_priv[camera_channel_count].p_tc_dev = tc_dev;
 
-//  tier4_isx021_sensor_mutex_unlock();
-
-//  dev_info(&client->dev, "Detected Tier4 IMX490 sensor\n");
-
-error_exit:
-
-//  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p \n", __func__, camera_channel_count,
-//           wst_priv[camera_channel_count].p_client);
-
   camera_channel_count++;
 
   tier4_isx021_sensor_mutex_unlock();
 
-  // return err;
-  return NO_ERROR;  // err;
+  return NO_ERROR;
+
+//  tier4_isx021_sensor_mutex_unlock();
+
+//  dev_info(&client->dev, "Detected Tier4 IMX490 sensor\n");
+
+err_max9296_unreg:
+  tier4_max9296_sdev_unregister(priv->dser_dev, &client->dev);
+err_max9295_unpair:
+  tier4_max9295_sdev_unpair(priv->ser_dev, &client->dev);
+err_tegracam_unreg:
+  tegracam_device_unregister(priv->tc_dev);
+
+  tier4_isx021_sensor_mutex_unlock();
+
+//  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p \n", __func__, camera_channel_count,
+//           wst_priv[camera_channel_count].p_client);
+
+
+  return err;
+  //return NO_ERROR;  // err;
 }
+
+static void tier4_imx490_shutdown(struct i2c_client *client);
 
 static int tier4_imx490_remove(struct i2c_client *client)
 {
   struct camera_common_data *s_data = to_camera_common_data(&client->dev);
   struct tier4_imx490 *priv = (struct tier4_imx490 *)s_data->priv;
 
+  tier4_imx490_shutdown(client);
+
   tier4_imx490_gmsl_serdes_reset(priv);
+
+  tier4_max9296_sdev_unregister(priv->dser_dev, &client->dev);
+  tier4_max9295_sdev_unpair(priv->ser_dev, &client->dev);
 
   tegracam_v4l2subdev_unregister(priv->tc_dev);
 

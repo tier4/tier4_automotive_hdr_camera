@@ -1,0 +1,31 @@
+name: Hotplug cameras
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: false
+        type: string
+      dt-overlay-options:
+        required: true
+        type: string
+
+jobs:
+  camera-hotplug:
+    runs-on: [self-hosted, linux, ARM64, "${{ inputs.platform }}"]
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Build dtbocfg
+        run: |
+          cd ./scripts/common/hotplug/dtbocfg/
+          make
+          ls -l ./dtbocfg.ko
+          sudo rmmod dtbocfg || true
+          sudo insmod ./dtbocfg.ko || true
+          lsmod | grep dtbocfg
+      - name: Hotplug
+        run: |
+          ./scripts/common/hotplug/camera-hotplug.sh ${{ inputs.dt-overlay-options }}

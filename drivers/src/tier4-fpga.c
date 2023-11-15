@@ -383,8 +383,6 @@ static int tier4_fpga_remove(struct i2c_client *client)
   {
     priv = dev_get_drvdata(&client->dev);
     mutex_destroy(&priv->lock);
-    i2c_unregister_device(client);
-    client = NULL;
   }
 
   return 0;
