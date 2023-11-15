@@ -1947,7 +1947,7 @@ str_i2c_isx021_n_p2 = """
         mode0 {
           /*mode ISX021_MODE_1920X1280_CROP_30FPS*/
           mclk_khz = \"24000\";
-          num_lanes = \"4\";
+          num_lanes = \"2\";
           tegra_sinterface = \"serial_a\";
           vc_id = \"0\";
           discontinuous_clk = \"no\";
@@ -2117,15 +2117,21 @@ str_i2c_isx021_n_p2 = """
         };
 """
 
-str_i2c_isx021_0_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_1_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_2_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_3_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_4_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_5_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_6_p2 = str_i2c_isx021_n_p2
-str_i2c_isx021_7_p2 = str_i2c_isx021_n_p2
 
+str_i2c_isx021_0_p2 = str_i2c_isx021_n_p2
+str_i2c_isx021_1_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"')
+str_i2c_isx021_2_p2 = str_i2c_isx021_n_p2.replace("serial_a", "serial_c")
+str_i2c_isx021_3_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_c"
+)
+str_i2c_isx021_4_p2 = str_i2c_isx021_n_p2.replace("serial_a", "serial_e")
+str_i2c_isx021_5_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_e"
+)
+str_i2c_isx021_6_p2 = str_i2c_isx021_n_p2.replace("serial_a", "serial_g")
+str_i2c_isx021_7_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_g"
+)
 
 # -----------------------------------------------
 
@@ -2457,13 +2463,19 @@ str_i2c_imx490_n_p2 = """
 """
 
 str_i2c_imx490_0_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_1_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_2_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_3_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_4_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_5_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_6_p2 = str_i2c_imx490_n_p2
-str_i2c_imx490_7_p2 = str_i2c_imx490_n_p2
+str_i2c_imx490_1_p2 = str_i2c_imx490_n_p2.replace('vc_id = "0"', 'vc_id = "1"')
+str_i2c_imx490_2_p2 = str_i2c_imx490_n_p2.replace("serial_a", "serial_c")
+str_i2c_imx490_3_p2 = str_i2c_imx490_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_c"
+)
+str_i2c_imx490_4_p2 = str_i2c_imx490_n_p2.replace("serial_a", "serial_e")
+str_i2c_imx490_5_p2 = str_i2c_imx490_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_e"
+)
+str_i2c_imx490_6_p2 = str_i2c_imx490_n_p2.replace("serial_a", "serial_g")
+str_i2c_imx490_7_p2 = str_i2c_imx490_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
+    "serial_a", "serial_g"
+)
 
 # -----------------------------------------------
 
@@ -2607,7 +2619,6 @@ str_fpga = """
        t4_fpga: tier4_fpga@66 {
        compatible = \"nvidia,tier4_fpga\";
        reg = <0x66>;
-       generate-fsync = \"false\";
        status = \"okay\";
      };
    };
