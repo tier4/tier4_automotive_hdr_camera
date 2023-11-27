@@ -244,6 +244,8 @@ public:
   uint8_t getAEMode(void);
   int8_t setAEMode(int mode);
   int8_t setDigitalGain(int db);
+  int8_t setAnalogGain(int db);
+
   // set parameter
 
   // for easily tuning
@@ -263,6 +265,7 @@ public:
 
   // get parameter
   int getDigitalGain();
+  int getAnalogGain();
   float getSharpness();
   int getHue();
   float getSaturation();

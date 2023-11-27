@@ -57,11 +57,14 @@ int main(int argc, char *argv[])
  
   p.add<bool>("auto_exposure", 'A', "set auto exposure", false);
   p.add<int>("shutter_on_ae", 0,"set shutter time on Ae", false);
+  p.add<float>("shutter_fme", 0,"set shutter time on ME", false);
+
 
   p.add("vv", 'v', "get debug_message");
 
   p.add<float>("evrefoffset", 'e', "set EvrefOffset val", false);
-  p.add<float>("digitalgain", 'D', "set DigitalGain val", false);
+  p.add<float>("digital_gain", 'D', "set DigitalGain val", false);
+  p.add<float>("analog_gain", 0, "set AnalogGain val", false);
 
   p.parse_check(argc, argv);
 

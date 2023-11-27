@@ -186,8 +186,7 @@ int8_t C1::setAEMode(int mode)
   return ret;
 }
 
-#define FME_SHTVAL 0xABEC
-#define FME_SHTVAL_S1 0xABF4
+
 int8_t C1::setShutterSpeedforFME(float val)
 {
   int8_t ret;
@@ -257,6 +256,45 @@ int C1::getDigitalGain(void)
   fprintf(stderr, "%x:%x, %x:%x, %d\n", DIGITAL_GAIN_L, l, DIGITAL_GAIN_U, u, data);
 
   return (int)(data / 10);
+}
+
+int C1::getAnalogGain(void)
+{
+  uint8_t l, u;
+  int16_t data;
+
+  i2c::read16(dev_name, i2c_dev_addr, ANALOG_GAIN_L, &l);
+  i2c::read16(dev_name, i2c_dev_addr, ANALOG_GAIN_U, &u);
+  data = (int16_t)(l + (u << 8));
+
+  fprintf(stderr, "%x:%x, %x:%x, %d\n", ANALOG_GAIN_L, l, ANALOG_GAIN_U, u, data);
+
+  return (int)(data / 10);
+}
+
+int8_t C1::setAnalogGain(int db)
+{
+  uint8_t u;
+  uint8_t l;
+
+  if (getAEMode() != AE_MODE_ME)
+  {
+    fprintf(stderr, "[WARN]: AEMode is not ME. DigitalGain parameter has not effect in this mode.\n");
+  }
+
+  if (db < ANALOG_GAIN_MIN || ANALOG_GAIN_MAX < db)
+  {
+    fprintf(stderr, "[WARN][%s]: please set in the range of %lf ≤ db ≤ %lf. Analoggain is not set.\n", __func__,
+            ANALOG_GAIN_MIN, ANALOG_GAIN_MAX);
+    return -1;
+  }
+
+  calcHexVal((float)db, 0.1, 0, u, l, 0xFF);
+  fprintf(stderr, "%d, %x, %x\n", db, u, l);
+  i2c::write16(dev_name, i2c_dev_addr, ANALOG_GAIN_L, l);
+  i2c::write16(dev_name, i2c_dev_addr, ANALOG_GAIN_U, u);
+
+  return 0;
 }
 
 int8_t C1::setSharpness(float gain)
