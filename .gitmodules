@@ -1,0 +1,3 @@
+[submodule "scripts/common/hotplug/dtbocfg"]
+	path = scripts/common/hotplug/dtbocfg
+	url = https://github.com/ikwzm/dtbocfg

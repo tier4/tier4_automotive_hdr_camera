@@ -1,0 +1,19 @@
+name: Build and install camera drivers
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: false
+        type: string
+
+jobs:
+  build-drivers:
+    runs-on: [self-hosted, linux, ARM64, "${{ inputs.platform }}"]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build deb package
+        run: cd ./drivers/ && ./create_deb_pkg.sh
+      - name: Install deb package and build drivers with DKMS
+        run: yes Y | sudo dpkg -i *.deb

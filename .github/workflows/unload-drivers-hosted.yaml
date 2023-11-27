@@ -1,0 +1,28 @@
+name: Unload camera drivers
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: false
+        type: string
+      camera-module:
+        required: true
+        type: string
+
+jobs:
+  unload-camera-drivers:
+    runs-on: [self-hosted, linux, ARM64, "${{ inputs.platform }}"]
+    timeout-minutes: 2
+    steps:
+      - name: Unload C1 camera modules
+        id: unload-c1
+        if: ${{ inputs.camera-module == 'C1' }}
+        run: sudo modprobe -r tier4-isx021
+      - name: Unload C2 camera modules
+        id: unload-c2
+        if: ${{ inputs.camera-module == 'C2' }}
+        run: sudo modprobe -r tier4-imx490
+      - name: Unload camera module
+        if: ${{ steps.unload-c1.conclusion == 'skipped' && steps.unload-c2.conclusion == 'skipped' }}
+        run: sudo modprobe -r "${{ inputs.camera-module }}"
