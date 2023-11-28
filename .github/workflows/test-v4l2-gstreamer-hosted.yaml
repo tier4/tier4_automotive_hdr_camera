@@ -26,7 +26,7 @@ jobs:
           find /proc/device-tree/ -name "*max9295*"
           find /proc/device-tree/ -name "*max9296*"
           find /proc/device-tree/ -name "*fpga*"
-          ls -l /dev/video*
+          ls -l ${{ inputs.video-device }}
           ls -l /dev/v4l-subdev*
           ls -l /dev/media*
           v4l2-ctl --all
