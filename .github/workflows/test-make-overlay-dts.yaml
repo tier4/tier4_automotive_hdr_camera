@@ -23,10 +23,14 @@ jobs:
         ]
     steps:
       - uses: actions/checkout@v3
-      - name: Test devicetree overlay generation script for ROSCube
+      - name: Install device-tree-compiler
+        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+      - name: Generate devicetree overlay
         run: |
           ./drivers/src/make_overlay_dts_roscube.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
           ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
           dtc -O dtb -@ *.dts -o compiled.dtbo
           ls -l *.dtbo
 
@@ -46,10 +50,14 @@ jobs:
         ]
     steps:
       - uses: actions/checkout@v3
-      - name: Test devicetree overlay generation script for ROSCube Orin
+      - name: Install device-tree-compiler
+        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+      - name: Generate devicetree overlay
         run: |
           ./drivers/src/make_overlay_dts_roscube-orin.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
           ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
           dtc -O dtb -@ *.dts -o compiled.dtbo
           ls -l *.dtbo
 
@@ -69,10 +77,14 @@ jobs:
         ]
     steps:
       - uses: actions/checkout@v3
-      - name: Test devicetree overlay generation script for Orin Developer Kit
+      - name: Install device-tree-compiler
+        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+      - name: Generate devicetree overlay
         run: |
           ./drivers/src/make_overlay_dts_orin-devkit.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
           ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
           dtc -O dtb -@ *.dts -o compiled.dtbo
           ls -l *.dtbo
 
@@ -92,9 +104,13 @@ jobs:
         ]
     steps:
       - uses: actions/checkout@v3
-      - name: Test devicetree overlay generation script for Xavier Developer Kit
+      - name: Install device-tree-compiler
+        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+      - name: Generate devicetree overlay
         run: |
           ./drivers/src/make_overlay_dts_xavier-devkit.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
           ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
           dtc -O dtb -@ *.dts -o compiled.dtbo
           ls -l *.dtbo
