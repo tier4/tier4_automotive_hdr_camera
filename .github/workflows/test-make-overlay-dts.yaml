@@ -27,6 +27,8 @@ jobs:
         run: |
           ./drivers/src/make_overlay_dts_roscube.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
           ls -l *.dts
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
 
   test-make-overlay-dts-roscube-orin:
     runs-on: ubuntu-latest
@@ -48,6 +50,8 @@ jobs:
         run: |
           ./drivers/src/make_overlay_dts_roscube-orin.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
           ls -l *.dts
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
 
   test-make-overlay-dts-orin-devkit:
     runs-on: ubuntu-latest
@@ -69,6 +73,8 @@ jobs:
         run: |
           ./drivers/src/make_overlay_dts_orin-devkit.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
           ls -l *.dts
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
 
   test-make-overlay-dts-xavier-devkit:
     runs-on: ubuntu-latest
@@ -90,3 +96,5 @@ jobs:
         run: |
           ./drivers/src/make_overlay_dts_xavier-devkit.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
           ls -l *.dts
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
