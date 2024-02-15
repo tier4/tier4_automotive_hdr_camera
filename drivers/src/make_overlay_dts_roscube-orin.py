@@ -2181,7 +2181,7 @@ for i in range(MAX_NUM_CAMERAS):
             " ***** Error! : port["
             + str(i + 1)
             + "] should be "
-            + +temp_cam[i]
+            + temp_cam[i]
             + " or NC. *****\n"
         )
         usage()

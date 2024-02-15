@@ -1,3 +1,9 @@
+tier4-camera-gmsl (1.4.3) focal; urgency=medium
+
+  * Fixed cache coherency issue.
+
+ -- tier4 <ros@rqx58g>  Wed, 14 Feb 2024 11:42:59 +0900
+
 tier4-camera-gmsl (1.4.2) focal; urgency=medium 
 
   * Support distortion correction for C2 camera
