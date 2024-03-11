@@ -114,3 +114,30 @@ jobs:
         run: |
           dtc -O dtb -@ *.dts -o compiled.dtbo
           ls -l *.dtbo
+
+  test-make-overlay-dts-eac-5000:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R35.3.1]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install device-tree-compiler
+        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+      - name: Generate devicetree overlay
+        run: |
+          ./drivers/src/make_overlay_dts_eac-5000.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
