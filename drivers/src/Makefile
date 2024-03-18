@@ -11,6 +11,7 @@ Orin_Compatible_word  := p3737-0000+p3701-0000nvidia
 ROScube_word          := ROScube-X
 ROScube_Orin_word     := 590
 ROScube_Orin_Model_word  := ROScube-Orin
+EAC_5000_word         := EAC-5000
 
 INST_PACKAGE_NAME     ?=  $(shell cat dkms.conf | grep 'PACKAGE_NAME' | cut -d '=' -f 2 | cut -d '"' -f 2 )
 INST_PACKAGE_VERSION  ?=  $(shell cat dkms.conf | grep 'PACKAGE_VERSION' | cut -d '=' -f 2 | cut -d '"' -f 2 )
@@ -27,9 +28,9 @@ dt_model := $(shell cat /proc/device-tree/model | tr -d "\0" )
 
 dt_compatible := $(shell cat /proc/device-tree/compatible | tr -d "\0")
 
-L4T_RELEASE_MAIN  := $(shell cat /etc/nv_tegra_release | cut -d ' ' -f 2 )
-L4T_RELEASE_MAJOR := $(shell cat /etc/nv_tegra_release | cut -d ' ' -f 5 | cut -d ',' -f 1 | cut -d '.' -f 1 )
-L4T_RELEASE_MINOR := $(shell cat /etc/nv_tegra_release | cut -d ' ' -f 5 | cut -d ',' -f 1 | cut -d '.' -f 2 )
+L4T_RELEASE_MAIN  := $(shell head -n 1 /etc/nv_tegra_release | cut -d ' ' -f 2 )
+L4T_RELEASE_MAJOR := $(shell head -n 1 /etc/nv_tegra_release | cut -d ' ' -f 5 | cut -d ',' -f 1 | cut -d '.' -f 1 )
+L4T_RELEASE_MINOR := $(shell head -n 1 /etc/nv_tegra_release | cut -d ' ' -f 5 | cut -d ',' -f 1 | cut -d '.' -f 2 )
 L4T_RELEASE       := $(L4T_RELEASE_MAIN).$(L4T_RELEASE_MAJOR).$(L4T_RELEASE_MINOR)
 
 $(warning L4T_RELEASE_MAIN  = $(L4T_RELEASE_MAIN))
@@ -44,7 +45,9 @@ ifeq ($(Xavier_word), $(filter $(Xavier_word),$(dt_model)))
 else ifeq ($(Xavier_other_word_1), $(filter $(Xavier_other_word_1),$(dt_model)))
     MODEL := Xavier
 else ifeq ($(Orin_word), $(filter $(Orin_word),$(dt_model)))
-    ifeq ($(Orin_Compatible_word), $(findstring $(Orin_Compatible_word),$(dt_compatible)))
+    ifeq ($(EAC_5000_word), $(filter $(EAC_5000_word),$(dt_model)))
+        MODEL := EAC-5000
+    else ifeq ($(Orin_Compatible_word), $(findstring $(Orin_Compatible_word),$(dt_compatible)))
         MODEL := Orin
     else
         MODEL := Not_Supported_Orin
@@ -169,6 +172,12 @@ else ifeq ($(L4T_RELEASE_MAIN), R35)
             TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-roscube-orin-r351
             TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-orin-r351
             MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_roscube-orin.py r35.1
+        else ifeq ($(MODEL),$(EAC_5000_word))
+            KERNELRELEASE            := 5.10.104-tegra
+            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-eac-5000-r3531
+            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-eac-5000-r3531
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-eac-5000-r3531
+            MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_eac-5000.py r35.3.1
         else
             KERNELRELEASE            := 5.1.104-unknown
             TARGET_ISX021_DTS        := Unknown
