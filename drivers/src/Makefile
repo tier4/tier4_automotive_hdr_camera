@@ -206,9 +206,9 @@ else ifeq ($(L4T_RELEASE_MAIN), R35)
             KERNELRELEASE            := 5.10.104-tegra
             TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-eac-5000-r3531
             TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-eac-5000-r3531
-            TARGET_IMX728_DTS        := tier4-imx728-gmsl-device-tree-overlay-orin-eac-5000-r3531
+            TARGET_IMX728_DTS        := tier4-imx728-gmsl-device-tree-overlay-eac-5000-r3531
             TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-eac-5000-r3531
-            TARGET_ISX021_IMX490_IMX728_DTS := tier4-isx021-imx490-imx728-gmsl-device-tree-overlay-orin-eac-5000-r3531
+            TARGET_ISX021_IMX490_IMX728_DTS := tier4-isx021-imx490-imx728-gmsl-device-tree-overlay-eac-5000-r3531
             MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_eac-5000.py r35.3.1
         else ifeq ($(MODEL),$(Anvil_Model_word))
             KERNELRELEASE            := 5.10.104-tegra

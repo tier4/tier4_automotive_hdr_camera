@@ -21,10 +21,11 @@ dtc -O dtb -o target.dtbo -@ $(ls *.dts)
 
 sudo modprobe -r tier4-isx021 || true
 sudo modprobe -r tier4-imx490 || true
+sudo modprobe -r tier4-imx728 || true
 sudo rmdir /sys/kernel/config/device-tree/overlays/camera/ || true
 
 sudo mkdir -p /sys/kernel/config/device-tree/overlays/camera/
 sudo cp target.dtbo /sys/kernel/config/device-tree/overlays/camera/dtbo
 echo 1 | sudo tee /sys/kernel/config/device-tree/overlays/camera/status
 
-sudo modprobe tier4-imx490
+sudo modprobe tier4-imx728
