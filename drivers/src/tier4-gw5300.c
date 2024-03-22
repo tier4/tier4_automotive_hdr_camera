@@ -38,7 +38,7 @@ struct tier4_gw5300
 #define NO_ERROR 0
 
 /* count channel,the max MAX_CHANNEL_NUM*/
-static __u32 channel_count_imx490;
+static __u32 channel_count_gw5300;
 
 static struct tier4_gw5300 *prim_priv__[MAX_CHANNEL_NUM];
 
@@ -120,6 +120,8 @@ static int tier4_gw5300_receive_msg(struct device *dev, u8 *data, int data_size 
 }
 #endif
 
+// -------------------------------------------------------------------
+
 static int tier4_gw5300_send_and_recv_msg(struct device *dev, u8 *wdata, int wdata_size, u8 *rdata, int rdata_size)
 {
   int err = 0;
@@ -145,6 +147,19 @@ static int tier4_gw5300_send_and_recv_msg(struct device *dev, u8 *wdata, int wda
 
   return err;  //  the total number of bytes to have been sent or recived
 }
+
+// -------------------------------------------------------------------
+
+static int tier4_gw5300_c3_send_and_recv_msg(struct device *dev, u8 *wdata, int wdata_size, u8 *rdata, int rdata_size)
+{
+  int err = 0;
+
+  err =  tier4_gw5300_send_and_recv_msg(dev, wdata, wdata_size, rdata, rdata_size);
+
+  return err;
+}
+
+// -------------------------------------------------------------------
 
 uint8_t calcCheckSum(const uint8_t *data, size_t size){
     uint8_t result = 0;
@@ -198,6 +213,8 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_inte
 }
 EXPORT_SYMBOL(tier4_gw5300_set_integration_time_on_aemode);
 
+// ------------------------------------------------------------------
+
 int tier4_gw5300_set_distortion_correction(struct device *dev, bool val)
 {
 int ret = 0;
@@ -213,6 +230,44 @@ int ret = 0;
   return ret;
 }
 EXPORT_SYMBOL(tier4_gw5300_set_distortion_correction);
+
+// ------------------------------------------------------------------
+
+int tier4_gw5300_c3_set_distortion_correction(struct device *dev, bool val)
+{
+int ret = 0;
+  u8  buf[6];
+  u8 cmd_dwp_on[]   ={ 0x33, 0x47, 0x6, 0x00, 0x00, 0x00, 0x4d, 0x00, 0x80, 0x04, 0x00, 0x01, 0x52};
+  u8 cmd_dwp_off[]  ={ 0x33, 0x47, 0x3, 0x00, 0x00, 0x00, 0x45, 0x00, 0x80, 0x042};
+
+  if(val){
+    ret += tier4_gw5300_c3_send_and_recv_msg(dev, cmd_dwp_on, sizeof(cmd_dwp_on), buf, sizeof(buf));
+  }else{
+    ret += tier4_gw5300_c3_send_and_recv_msg(dev, cmd_dwp_off, sizeof(cmd_dwp_off), buf, sizeof(buf));
+  }
+  return ret;
+}
+EXPORT_SYMBOL(tier4_gw5300_c3_set_distortion_correction);
+
+// ------------------------------------------------------------------
+
+int tier4_gw5300_c3_set_auto_exposure(struct device *dev, bool val)
+{
+int ret = 0;
+  u8  buf[6];
+  u8 cmd_auto_exp_on[]  ={ 0x33, 0x47, 0x0C, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05, 0x00, 0x07, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x69 };
+  u8 cmd_auto_exp_off[] ={ 0x33, 0x47, 0x0C, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05, 0x00, 0x07, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x6A };
+
+  if(val){
+    ret += tier4_gw5300_c3_send_and_recv_msg(dev, cmd_auto_exp_on, sizeof(cmd_auto_exp_on), buf, sizeof(buf));
+  }else{
+    ret += tier4_gw5300_c3_send_and_recv_msg(dev, cmd_auto_exp_off, sizeof(cmd_auto_exp_off), buf, sizeof(buf));
+  }
+  return ret;
+}
+EXPORT_SYMBOL(tier4_gw5300_c3_set_auto_exposure);
+
+// ------------------------------------------------------------------
 
 int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size )
 {
@@ -244,11 +299,11 @@ int tier4_gw5300_prim_slave_addr(struct tier4_gmsl_link_ctx *g_ctx)
 {
   if (!g_ctx)
   {
-    dev_err(&prim_priv__[channel_count_imx490 - 1]->i2c_client->dev, "[%s] : Failed. g_ctx is null\n", __func__);
+    dev_err(&prim_priv__[channel_count_gw5300 - 1]->i2c_client->dev, "[%s] : Failed. g_ctx is null\n", __func__);
     return -1;
   }
 
-  g_ctx->sdev_isp_def = prim_priv__[channel_count_imx490 - 1]->def_addr;
+  g_ctx->sdev_isp_def = prim_priv__[channel_count_gw5300 - 1]->def_addr;
 
   return 0;
 }
@@ -427,6 +482,183 @@ error:
 }
 EXPORT_SYMBOL(tier4_gw5300_setup_sensor_mode);
 
+// -----------   for C3 camera   ----------
+
+int tier4_gw5300_c3_setup_sensor_mode(struct device *dev, int sensor_mode)
+{
+  int err = 0;
+  u8 buf[6];
+
+  memset(buf, 0x00, 6);
+
+  switch (sensor_mode)
+  {
+//    case GW5300_MASTER_MODE_10FPS:
+//      err = tier4_gw5300_send_and_recv_msg(dev, master_10fps, sizeof(master_10fps), buf, sizeof(buf));
+//      if (err < 0)
+//      {
+//        dev_err(dev, "[%s] : Setting up Master mode 10fps failed. %d message has been sent to gw5300.\n", __func__,
+//                err);
+//        goto error;
+//      }
+//      else if (err == 0)
+//      {  // it means that 0 message has been sent.
+//        dev_err(dev, "[%s] : Setting up Master mode 10fps failed. %d message has been sent to gw5300.\n", __func__,
+//                err);
+//        err = -999;
+//        goto error;
+//      }
+//      else
+//      {
+//        err = 0;
+//      }
+//      break;
+//
+//    case GW5300_SLAVE_MODE_10FPS:
+//      err = tier4_gw5300_send_and_recv_msg(dev, slave_10fps, sizeof(slave_10fps), buf, sizeof(buf));
+//      if (err < 0)
+//      {
+//        dev_err(dev, "[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n", __func__, err);
+//        goto error;
+//      }
+//      else if (err == 0)
+//      {  // it means that 0 message has been sent.
+//        dev_err(dev, "[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n", __func__, err);
+//        err = -999;
+//        goto error;
+//      }
+//      else
+//      {
+//        err = 0;
+//      }
+//      break;
+    case GW5300_MASTER_MODE_20FPS:
+#if 1
+//      err = tier4_gw5300_c3_send_and_recv_msg(dev, master_20fps, sizeof(master_20fps), buf, sizeof(buf));
+      if (err < 0)
+      {
+        dev_err(dev, "[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n", __func__,
+                err);
+        goto error;
+      }
+      else if (err == 0)
+      {  // it means that 0 message has been sent.
+        dev_err(dev, "[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n", __func__,
+                err);
+        err = -999;
+        goto error;
+      }
+      else
+      {
+        err = 0;
+      }
+#endif
+      break;
+//    case GW5300_SLAVE_MODE_20FPS:
+//      err = tier4_gw5300_send_and_recv_msg(dev, slave_20fps, sizeof(slave_20fps), buf, sizeof(buf));
+//      if (err < 0)
+//      {
+//        dev_err(dev, "[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n", __func__, err);
+//        goto error;
+//      }
+//      else if (err == 0)
+//      {  // it means that 0 message has been sent.
+//        dev_err(dev, "[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n", __func__, err);
+//        err = -999;
+//        goto error;
+//      }
+//      else
+//      {
+//        err = 0;
+//      }
+//      break;
+//    case GW5300_MASTER_MODE_30FPS:
+//      err = tier4_gw5300_send_and_recv_msg(dev, master_30fps, sizeof(master_30fps), buf, sizeof(buf));
+//      if (err < 0)
+//      {
+//        dev_err(dev, "[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n", __func__,
+//                err);
+//        goto error;
+//      }
+//      else if (err == 0)
+//      {  // it means that 0 message has been sent.
+//        dev_err(dev, "[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n", __func__,
+//                err);
+//        err = -999;
+//        goto error;
+//      }
+//      else
+//      {
+//        err = 0;
+//      }
+//      break;
+//
+//    case GW5300_SLAVE_MODE_30FPS:
+//      err = tier4_gw5300_send_and_recv_msg(dev, slave_30fps, sizeof(slave_30fps), buf, sizeof(buf));
+//      if (err < 0)
+//      {
+//        dev_err(dev, "[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n", __func__, err);
+//        goto error;
+//      }
+//      else if (err == 0)
+//      {  // it means that 0 message has been sent.
+//        dev_err(dev, "[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n", __func__, err);
+//        err = -999;
+//        goto error;
+//      }
+//      else
+//      {
+//        err = 0;
+//      }
+//      break;
+//    case GW5300_MASTER_MODE_10FPS_SLOW:
+//      err = tier4_gw5300_send_and_recv_msg(dev, master_10fps_slow, sizeof(master_10fps_slow), buf, sizeof(buf));
+//      if (err < 0)
+//      {
+//        dev_err(dev, "[%s] : Setting up Slow clock Master mode 10fps failed. %d message has been sent to gw5300.\n", __func__,
+//                err);
+//        goto error;
+//      }
+//      else if (err == 0)
+//      {  // it means that 0 message has been sent.
+//        dev_err(dev, "[%s] : Setting up Slow clock Master mode 10fps failed. %d message has been sent to gw5300.\n", __func__,
+//                err);
+//        err = -999;
+//        goto error;
+//      }
+//      else
+//      {
+//        err = 0;
+//      }
+//      break;
+//    case GW5300_SLAVE_MODE_10FPS_SLOW:
+//      err = tier4_gw5300_send_and_recv_msg(dev, slave_10fps_slow, sizeof(slave_10fps_slow), buf, sizeof(buf));
+//      if (err < 0)
+//      {
+//        dev_err(dev, "[%s] : Setting up Slow clock Slave mode 10fps failed. %d message has been sent to gw5300.\n", __func__, err);
+//        goto error;
+//      }
+//      else if (err == 0)
+//      {  // it means that 0 message has been sent.
+//        dev_err(dev, "[%s] : Setting up Slow clock Slave mode 10fps failed. %d message has been sent to gw5300.\n", __func__, err);
+//        err = -999;
+//        goto error;
+//      }
+//      else
+//      {
+//        err = 0;
+//      }
+//      break;
+    default:
+      break;
+  }
+
+error:
+
+  return err;
+}
+EXPORT_SYMBOL(tier4_gw5300_c3_setup_sensor_mode);
+
 
 static int tier4_gw5300_probe(struct i2c_client *client,
                 const struct i2c_device_id *id)
@@ -444,7 +676,7 @@ static int tier4_gw5300_probe(struct i2c_client *client,
 
   if (of_get_property(node, "is-prim-isp", NULL))
   {
-    if (prim_priv__[channel_count_imx490] && channel_count_imx490 >= MAX_CHANNEL_NUM)
+    if (prim_priv__[channel_count_gw5300] && channel_count_gw5300 >= MAX_CHANNEL_NUM)
     {
       dev_err(&client->dev, "[%s] : prim-isp already exists\n", __func__);
       return -EEXIST;
@@ -457,8 +689,8 @@ static int tier4_gw5300_probe(struct i2c_client *client,
       return -EINVAL;
     }
 
-    prim_priv__[channel_count_imx490] = priv;
-    channel_count_imx490++;
+    prim_priv__[channel_count_gw5300] = priv;
+    channel_count_gw5300++;
   }
 
   dev_set_drvdata(&client->dev, priv);
@@ -473,8 +705,8 @@ static int tier4_gw5300_remove(struct i2c_client *client)
 {
   struct tier4_gw5300 *priv;
 
-  if (channel_count_imx490 > 0)
-    channel_count_imx490--;
+  if (channel_count_gw5300 > 0)
+    channel_count_gw5300--;
 
   if (client != NULL)
   {

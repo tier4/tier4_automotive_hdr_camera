@@ -110,6 +110,11 @@ struct tier4_max9296_source_ctx
 #define MAX9296_PHY1_CLK_1400MHZ 0x2E
 #define MAX9296_PHY1_CLK_1300MHZ 0x2D
 #define MAX9296_PHY1_CLK_1200MHZ 0x2C
+#define MAX9296_PHY1_CLK_1100MHZ 0x2B
+#define MAX9296_PHY1_CLK_1000MHZ 0x2A
+#define MAX9296_PHY1_CLK_900MHZ  0x29
+#define MAX9296_PHY1_CLK_800MHZ  0x28
+#define MAX9296_PHY1_CLK_700MHZ  0x27
 
 #define MAX9296_PHY1_CLK MAX9296_PHY1_CLK_1500MHZ
 
@@ -257,7 +262,7 @@ static int tier4_max9296_get_sdev_idx(struct device *dev, struct device *s_dev, 
     }
   }
   if (i == priv->max_src)
-  { 
+  {
     dev_err(dev, "[%s] : No sdev found\n", __func__);
     err = -EINVAL;
     goto ret;
@@ -331,9 +336,11 @@ int tier4_max9296_power_on(struct device *dev)
         break;
       }
     }
-    if (priv->reset_gpio)
-      //            gpio_set_value(priv->reset_gpio, 0);
+//    if (priv->reset_gpio)
+    if (gpio_is_valid(priv->reset_gpio))
+    {
       gpio_direction_output(priv->reset_gpio, 0);
+    }
 
     usleep_range(50, 80);
 
@@ -346,7 +353,8 @@ int tier4_max9296_power_on(struct device *dev)
     usleep_range(50, 80);
 
     /*exit reset mode: XCLR */
-    if (priv->reset_gpio)
+//    if (priv->reset_gpio)
+    if (gpio_is_valid(priv->reset_gpio))
     {
 
       //            gpio_set_value(priv->reset_gpio, 0);
@@ -618,7 +626,8 @@ int tier4_max9296_sdev_register(struct device *dev, struct tier4_gmsl_link_ctx *
 
   mutex_lock(&priv->lock);
 
-  if (g_ctx->hardware_model == HW_MODEL_NVIDIA_ORIN_DEVKIT )
+  if ((g_ctx->hardware_model == HW_MODEL_NVIDIA_ORIN_DEVKIT ) ||
+      (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN ))
   {
     for ( i = 0 ; i < MAX9296_MAX_SOURCES ;  i++ )
     {
@@ -646,11 +655,20 @@ int tier4_max9296_sdev_register(struct device *dev, struct tier4_gmsl_link_ctx *
     goto error;
   }
 
+ asm("dsb sy");
+
   for (i = 0; i < priv->num_src; i++)
   {
+//     dev_info(dev, "[%s]: g_ctx->serdes_csi_link = %u priv->sources[%d].g_ctx->serdes_csi_link = %u\n"
+//              , __func__,  g_ctx->serdes_csi_link, i, priv->sources[i].g_ctx->serdes_csi_link );
+
+//    usleep_range(1000,1100);
+
     if (g_ctx->serdes_csi_link == priv->sources[i].g_ctx->serdes_csi_link)
     {
-      dev_err(dev, "[%s] : Serdes CSI link is in use\n", __func__);
+//      WARN_ON(1);
+      dev_info(dev, "[%s]: g_ctx->serdes_csi_link = %u\n" , __func__,  g_ctx->serdes_csi_link );
+      dev_err(dev,  "[%s] : Serdes CSI link is in use\n", __func__);
       err = -EINVAL;
       goto error;
     }
@@ -994,11 +1012,9 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
     }
     else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
     {
-      tier4_max9296_write_reg(dev,
-                              //                MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2500MHZ);
-                              MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1600MHZ);
+      tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
     }
-    else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE)
+    else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER)
     {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 65)
       //            tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);

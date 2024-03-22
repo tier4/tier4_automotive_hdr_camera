@@ -45,10 +45,13 @@
 
 #define USE_FIRMWARE
 
-#define USE_I2C_TRANSFER
+//#define USE_I2C_TRANSFER
 #define USE_I2C_READ_REG
+
 #undef  SHOW_I2C_READ_MSG
-#undef  SHOW_I2C_WRITE_MSG
+
+#define SHOW_I2C_WRITE_MSG
+//#undef  SHOW_I2C_WRITE_MSG
 
 #undef USE_CHECK_MODE_SEL
 
@@ -220,6 +223,9 @@ MODULE_SOFTDEP("pre: tier4_fpga");
 #define TIER4_ISX021_REG_90_ADDR    90
 #define TIER4_ISX021_REG_91_ADDR    91
 
+#define TIER4_ISX021_REG_92_ADDR    92
+#define TIER4_ISX021_REG_93_ADDR    93
+
 // --- End of  Register definition ------------------------
 
 #define MAX_NUM_OF_REG (100)
@@ -319,12 +325,14 @@ struct tier4_isx021
   u32 frame_length;
   struct camera_common_data *s_data;
   struct tegracam_device *tc_dev;
-  bool fsync_mode;
+//  bool fsync_mode;
   bool distortion_correction;
   bool auto_exposure;
   u16 *firmware_buffer;
   int es_number;
   struct device *fpga_dev;
+  int trigger_mode;
+  bool inhibit_fpga_access;
   int  enable_embedded_data;  // 0:disable all embedded data 1: enable front embedded data 2:enable rear embedded data 3: enable front and rear embedded data
 };
 
@@ -349,11 +357,6 @@ static struct st_priv wst_priv[MAX_NUM_CAMERA];
 
 static int camera_channel_count = 0;
 
-//static int front_embedded_data[MAX_NUM_CAMERA];
-//static int rear_embedded_data[MAX_NUM_CAMERA];
-
-// Parameter
-
 static int trigger_mode = 0xCAFE;
 static int enable_auto_exposure = 0xCAFE;
 static int enable_distortion_correction = 0xCAFE;
@@ -363,7 +366,7 @@ static int shutter_time_max = ISX021_MAX_EXPOSURE_TIME;
 static int fsync_mfp = 0;
 // static int debug_i2c_write = 0;
 
-module_param(trigger_mode, int, S_IRUGO);
+module_param(trigger_mode, int, S_IRUGO | S_IWUSR);
 module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
 module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
 module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
@@ -666,6 +669,7 @@ static int tier4_isx021_transit_to_streaming_state(struct tegracam_device *tc_de
     dev_err(dev, "[%s] : Write to MODE_SET_F register failed.\n", __func__);
   }
   usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
+  //msleep(120);
 
   return err;
 }
@@ -684,6 +688,7 @@ static int tier4_isx021_transit_to_startup_state(struct tegracam_device *tc_dev)
     dev_err(dev, "[%s] : Write to MODE_SET_F register failed.\n", __func__);
   }
   usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
+  //msleep(120);
 
   return err;
 }
@@ -717,49 +722,98 @@ static int tier4_isx021_check_mode_sel(struct camera_common_data *s_data, u8 *va
 static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 {
   int err = 0;
-  struct tegracam_device *tc_dev = priv->tc_dev;
   struct camera_common_data *s_data = priv->s_data;
   struct device *dev = s_data->dev;
   int des_num = 0;
 
-  if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE)
-  {
-    dev_info(dev, "[%s] : FPGA automatic generate-fsync =%d\n", __func__, priv->g_ctx.fpga_generate_fsync);
+  dev_info(dev, "[%s] : hardware_model=%d.\n", __func__, priv->g_ctx.hardware_model );
 
-    if (priv->g_ctx.fpga_generate_fsync == false)
+  if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER) ||
+      (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN))
+  {
+    priv->inhibit_fpga_access = false;
+
+    err = tier4_fpga_check_access(priv->fpga_dev);
+    if (err)
     {
-      err = tier4_fpga_disable_generate_fsync_signal(priv->fpga_dev);
+      priv->inhibit_fpga_access = true;
+    }
+
+    if (tier4_fpga_get_fsync_mode() == FPGA_FSYNC_MODE_DISABLE)
+    {
+      dev_info(dev, "[%s] : Disabling FPGA fsync.\n", __func__);
+
+      err = tier4_fpga_disable_fsync_mode(priv->fpga_dev);
       if (err)
       {
-        dev_err(dev, "[%s] : Disabling FPGA automatic fsync generation failed.\n", __func__);
-        return err;
+        dev_err(dev, "[%s] : Disabling FPGA generate fsync failed.\n", __func__);
+        if ( !priv->inhibit_fpga_access )
+        {
+          return err;
+        }
       }
     }
     else
     {
-      err = tier4_fpga_enable_generate_fsync_signal(priv->fpga_dev);
+      err = tier4_fpga_enable_fsync_mode(priv->fpga_dev);
       if (err)
       {
-        dev_err(dev, "[%s] : Enabling FPGA automatic fsync generation failed.\n", __func__);
-        return err;
+        dev_err(dev, "[%s] : Enabling FPGA generate fsync failed.\n", __func__);
+        if ( !priv->inhibit_fpga_access )
+        {
+          return err;
+        }
       }
 
-      des_num = priv->g_ctx.reg_mux;
-
-      err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num, FSYNC_FREQ_HZ);
-      if (err)
+      if (tier4_fpga_get_fsync_mode() == FPGA_FSYNC_MODE_AUTO)
       {
-        dev_err(dev, "[%s] : FPGA automatic fsync generation failed.\n", __func__);
-        return err;
+        // Auto Trigger Mode
+        dev_info(dev, "[%s] : Enabling FPGA Fsync Auto Trigger mode.\n", __func__);
+
+        err = tier4_fpga_set_fsync_auto_trigger(priv->fpga_dev);
+        if (err)
+        {
+          dev_err(dev, "[%s] : Enabling FPGA Fsync Auto Trigger mode failed.\n", __func__);
+          if ( !priv->inhibit_fpga_access )
+          {
+            return err;
+          }
+        }
+
+        des_num = priv->g_ctx.reg_mux;
+        err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num, priv->trigger_mode);
+        if (err)
+        {
+          dev_err(dev, "[%s] : Setting the frequency of fsync genrated by FPGA failed.\n", __func__);
+          if ( !priv->inhibit_fpga_access )
+          {
+            return err;
+          }
+        }
       }
-    }
-  }
+      else if (tier4_fpga_get_fsync_mode() == FPGA_FSYNC_MODE_MANUAL)
+      {
+        // Manual Trigger Mode
+        dev_info(dev, "[%s] : Enabling FPGA Fsync Manual Trigger mode.\n", __func__);
+
+        err = tier4_fpga_set_fsync_manual_trigger(priv->fpga_dev);
+        if (err)
+        {
+          dev_err(dev, "[%s] : Enabling FPGA Fsync Maunal Trigger mode failed.\n", __func__);
+          if ( !priv->inhibit_fpga_access )
+          {
+            return err;
+          }
+        }
+      } // if (tier4_fpga_get_fsync_mode() == FPGA_FSYNC_MODE_MANUAL)
+    } // else (tier4_fpga_get_fsync_mode() != FPGA_FSYNC_MODE_DISABLE)
+  } // if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER)
 
   err = tier4_max9296_setup_gpi(priv->dser_dev, fsync_mfp);
 
   if (err)
   {
-    dev_err(dev, "[%s] : Setup for Max9296 GPI failed.\n", __func__);
+    dev_err(dev, "[%s] : tier4_max9296_setup_gpi failed.\n", __func__);
     return err;
   }
 
@@ -767,7 +821,7 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 
   if (err)
   {
-    dev_err(dev, "[%s] : Setup for Max9295 GPO failed.\n", __func__);
+    dev_err(dev, "[%s] : tier4_max9295_setup_gpo failed.\n", __func__);
     return err;
   }
 
@@ -776,18 +830,43 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
   err = tier4_isx021_write_mode_set_f_lock_register(s_data, 0x53);
   if (err)
   {
-    dev_err(dev, "[%s] : Write to MODE_SET_F_LOCK register caused Time out.\n", __func__);
+    dev_err(dev, "[%s] : Time out Error occurred in tier4_isx021_write_register_mode_set_f_lock.\n", __func__);
     return err;
   }
 
-  err = tier4_isx021_transit_to_startup_state(tc_dev);
+  usleep_range(TIME_50_MS, PLUS_10(TIME_50_MS));
+
+  err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_62_ADDR, 0x00);
+
   if (err)
   {
-    dev_err(dev, "[%s] : Transition to Startup state failed.\n", __func__);
+    dev_err(dev, "[%s] : tier4_isx021_write_reg failed.\n", __func__);
+    return err;
+  }
+
+  usleep_range(TIME_50_MS, PLUS_10(TIME_50_MS));
+
+  // set FSYNC_FUNCSEL to 0 for FSYNC triggered mode
+
+  err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_92_ADDR, 0x00);
+
+  if (err)
+  {
     goto error_exit;
   }
 
-  usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
+  usleep_range(TIME_50_MS, PLUS_10(TIME_50_MS));
+
+  // set FSYNC_DRVABTY to 3 for FSYNC triggered mode
+
+  err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_93_ADDR, 0xFF);
+
+  if (err)
+  {
+    goto error_exit;
+  }
+
+  usleep_range(TIME_50_MS, PLUS_10(TIME_50_MS));
 
   // set SG_MODE_CTL to 0 for transition to FSYNC mode
 
@@ -813,12 +892,13 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 
   usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
 
- error_exit:
+error_exit:
 
   return err;
 }
 
 /*--------------------------------------------------------------------------*/
+
 static int tier4_isx021_set_response_mode(struct tier4_isx021 *priv)
 {
   int err = 0;
@@ -880,7 +960,7 @@ static int tier4_isx021_gmsl_serdes_setup(struct tier4_isx021 *priv)
 
   /* For now no separate power on required for serializer device */
 
-  if ((priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE) &&
+  if ((priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_XAVIER) &&
       (priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_ORIN))
   {
     tier4_max9296_power_on(priv->dser_dev);
@@ -925,7 +1005,7 @@ static void tier4_isx021_gmsl_serdes_reset(struct tier4_isx021 *priv)
 
   tier4_max9296_reset_control(priv->dser_dev, &priv->i2c_client->dev, false);
 
-  if ((priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE) &&
+  if ((priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_XAVIER) &&
       (priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_ORIN))
   {
     tier4_max9296_power_off(priv->dser_dev);
@@ -1469,12 +1549,14 @@ static int tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_
   }
 
   usleep_range(TIME_35_MS, PLUS_10(TIME_35_MS));
+  //msleep(35);
 
   if (is_enabled)
   {
     err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_74_ADDR, 0x01);
 
     usleep_range(TIME_35_MS, PLUS_10(TIME_35_MS));
+    //msleep(35);
 
     err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_75_ADDR, 0x01);
     if (err)
@@ -1489,6 +1571,7 @@ static int tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_
     err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_74_ADDR, 0x00);
 
     usleep_range(TIME_35_MS, PLUS_10(TIME_35_MS));
+    //msleep(35);
 
     err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_75_ADDR, 0x00);
     if (err)
@@ -1530,6 +1613,7 @@ static int tier4_isx021_setup_embedded_data(struct tegracam_device *tc_dev, int 
   }
 
   usleep_range(TIME_100_MS, PLUS_10(TIME_100_MS));
+  //msleep(100);
 
   err = tier4_isx021_transit_to_startup_state(tc_dev);
   if (err)
@@ -1539,6 +1623,7 @@ static int tier4_isx021_setup_embedded_data(struct tegracam_device *tc_dev, int 
   }
 
   usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
+  //msleep(120);
 
   err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_91_ADDR, 0x00);       // DCROP_ON_APL Regsiter
 
@@ -1819,21 +1904,25 @@ static int tier4_isx021_start_one_streaming(struct tegracam_device *tc_dev)
     dev_err(dev, "[%s] : Setting digital gain  to the default value failed.\n", __func__);
   }
 
-  if (trigger_mode == 1)
+  dev_info(dev, "[%s] : trigger_mode = %d.\n", __func__, trigger_mode);
+
+  priv->trigger_mode = trigger_mode;
+
+  if (priv->trigger_mode == 1)
   {
-    priv->fsync_mode = true;
+//    priv->fsync_mode = true;
     dev_info(dev, "[%s] : Enabled Slave(fsync triggered) mode.\n", __func__);
   }
 
-  dev_info(dev, "[%s] : fsync-mode in DTB = %d.\n", __func__, priv->fsync_mode);
 
-  if (priv->fsync_mode == true)
+//  if (priv->fsync_mode == true)
+  if (priv->trigger_mode == 1)
   {
     err = tier4_isx021_set_fsync_trigger_mode(priv);
     if (err)
     {
-      dev_err(dev, "[%s] :  Putting camera sensor into Slave(fsync triggered) mode failed.\n", __func__);
-      goto exit;
+      dev_err(dev, "[%s] :  Camera sensor is unable to work with Slave(fsync triggered) mode.\n", __func__);
+//      goto exit;
     }
   }
 
@@ -1850,7 +1939,6 @@ static int tier4_isx021_start_one_streaming(struct tegracam_device *tc_dev)
     dev_err(dev, "[%s] : Enabling Distortion Correction failed.\n", __func__);
     goto exit;
   }
-//  dev_info(dev, "[%s] : Started Camera streaming.\n", __func__);
 
   err = tier4_isx021_setup_embedded_data(tc_dev, priv->enable_embedded_data );
   if (err)
@@ -2070,6 +2158,7 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
           }
           tier4_isx021_set_running_flag(i + 1, true);
           usleep_range(TIME_200_MS, PLUS_10(TIME_200_MS));
+          //msleep(200);
           mutex_unlock(&tier4_isx021_lock);  // stop streaming on GMSL B port
           tier4_isx021_stop_streaming(wst_priv[i + 1].p_tc_dev);
           mutex_lock(&tier4_isx021_lock);
@@ -2151,7 +2240,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
   const char *str_model;
   char upper_str_model[64];
   char *str_err;
-  char *sub_str_err;
+  //char *sub_str_err;
 
   root_node = of_find_node_opts_by_path("/", &of_stdout_options);
   err = of_property_read_string(root_node, "model", &str_model);
@@ -2177,21 +2266,20 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     priv->g_ctx.hardware_model = HW_MODEL_NVIDIA_XAVIER_DEVKIT;
   }
 
-  str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE);
+  str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE_XAVIER);
   if (str_err)
   {
-    sub_str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE_ORIN);
-    if (sub_str_err)
-    {
-      priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE_ORIN;
-    }
-    else
-    {
-      priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE;
-    }
+      priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE_XAVIER;
   }
 
-  dev_info(dev, "[%s] : model=%s\n", __func__, str_model);
+  str_err = strstr(upper_str_model, STR_DTB_MODEL_NAME_ROSCUBE_ORIN);
+  if (str_err)
+  {
+    priv->g_ctx.hardware_model = HW_MODEL_ADLINK_ROSCUBE_ORIN;
+  }
+
+  dev_info(dev, "[%s] : hardware_model=%d\n", __func__,  priv->g_ctx.hardware_model);
+  dev_info(dev, "[%s] : model string=%s\n", __func__, str_model);
 
   //    priv->g_ctx.debug_i2c_write = debug_i2c_write;
 
@@ -2222,6 +2310,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     goto error;
   }
 
+#if 0
   err = of_property_read_string(node, "fsync-mode", &str_value);
   if (err < 0)
   {
@@ -2237,6 +2326,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
   {
     priv->fsync_mode = false;
   }
+#endif
 
   if (enable_distortion_correction == 0xCAFE)
   {
@@ -2257,12 +2347,10 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
       {
         enable_distortion_correction = 0;
       }
-
     }
-
   }
-  priv->distortion_correction = enable_distortion_correction != 0 ? true : false;
 
+  priv->distortion_correction = enable_distortion_correction != 0 ? true : false;
 
   if (enable_auto_exposure == 0xCAFE)
   {
@@ -2282,40 +2370,14 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
       {
         enable_auto_exposure = 0;
       }
-
     }
   }
 
-
   priv->auto_exposure = enable_auto_exposure != 0 ? true : false;
-
-#if 0
-    priv->g_ctx.fpga_generate_fsync = false;
-
-    if ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE ) {
-
-
-        err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
-        if ( err < 0) {
-            if ( err == -EINVAL ) {
-                dev_info(dev, "[%s] : fpga-generate-fsync does not exist.\n", __func__);
-            } else {
-                dev_err(dev, "[%s]  : fpga-generate-fsync  is invalid .\n", __func__);
-                goto error;
-            }
-        } else {
-            if (!strcmp(str_value, "true")) {
-                priv->g_ctx.fpga_generate_fsync = true;
-            }
-        }
-
-    }
-#endif
 
   mode_node = of_get_child_by_name(node, "mode0");
 
   dev_dbg(dev, "[%s] : node->full_name = %s, mode_node->full_name = %s.\n", __func__, node->full_name, mode_node->full_name );
-
 
 #ifdef USE_EMBEDDED_METADAT_HEIGHT_IN_DTB
   /* check embedded_metadata_height */
@@ -2367,9 +2429,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     goto error;
   }
 
-
   err = of_property_read_u32(ser_node, "reg", &priv->g_ctx.ser_reg);
-
 
   if (err < 0)
   {
@@ -2380,7 +2440,6 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
   ser_i2c = of_find_i2c_device_by_node(ser_node);
 
   of_node_put(ser_node);
-
 
   if (ser_i2c == NULL)
   {
@@ -2394,9 +2453,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     goto error;
   }
 
-
   priv->ser_dev = &ser_i2c->dev;
-
 
   // for Dser node
 
@@ -2406,7 +2463,6 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     dev_err(dev, "[%s] : Missing %s handle\n", __func__, "nvidia,gmsl-dser-device");
     goto error;
   }
-
 
   dser_i2c = of_find_i2c_device_by_node(dser_node);
   of_node_put(dser_node);
@@ -2424,8 +2480,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 
   priv->dser_dev = &dser_i2c->dev;
 
-
-  if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE) ||
+  if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER) ||
       (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN))
   {
     // for FPGA node
@@ -2468,9 +2523,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 
   /* populate g_ctx from DT */
 
-
   gmsl = of_get_child_by_name(node, "gmsl-link");
-
 
   if (gmsl == NULL)
   {
@@ -2479,7 +2532,6 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     goto error;
   }
 
-
   err = of_property_read_string(gmsl, "dst-csi-port", &str_value);
   if (err < 0)
   {
@@ -2487,9 +2539,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     goto error;
   }
 
-
   priv->g_ctx.dst_csi_port = (!strcmp(str_value, "a")) ? GMSL_CSI_PORT_A : GMSL_CSI_PORT_B;
-
 
   err = of_property_read_string(gmsl, "src-csi-port", &str_value);
   if (err < 0)
@@ -2506,7 +2556,6 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     dev_err(dev, "[%s] : No csi-mode found\n", __func__);
     goto error;
   }
-
 
   if (!strcmp(str_value, "1x4"))
   {
@@ -2530,7 +2579,6 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     goto error;
   }
 
-
   err = of_property_read_string(gmsl, "serdes-csi-link", &str_value);
   if (err < 0)
   {
@@ -2538,9 +2586,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     goto error;
   }
 
-
   priv->g_ctx.serdes_csi_link = (!strcmp(str_value, "a")) ? GMSL_SERDES_CSI_LINK_A : GMSL_SERDES_CSI_LINK_B;
-
 
   err = of_property_read_u32(gmsl, "st-vc", &value);
   if (err < 0)
@@ -2558,7 +2604,6 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     goto error;
   }
 
-
   priv->g_ctx.dst_vc = value;
 
   err = of_property_read_u32(gmsl, "num-lanes", &value);
@@ -2567,7 +2612,6 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     dev_err(dev, "[%s] : No num-lanes info\n", __func__);
     goto error;
   }
-
 
   priv->g_ctx.num_csi_lanes = value;
 
@@ -2579,10 +2623,8 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     goto error;
   }
 
-
   for (i = 0; i < priv->g_ctx.num_streams; i++)
   {
-
     of_property_read_string_index(gmsl, "streams", i, &str_value1[i]);
     if (!str_value1[i])
     {
@@ -2613,9 +2655,7 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
     }
   }
 
-
   priv->g_ctx.s_dev = dev;
-
 
   return NO_ERROR;
 
@@ -2641,7 +2681,6 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
 
   tier4_isx021_sensor_mutex_lock();
 
-
 //  dev_info(dev, "[%s] : Probing V4L2 Sensor.\n", __func__);
 
   if (!IS_ENABLED(CONFIG_OF) || !node)
@@ -2666,7 +2705,6 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
     goto errret;
   }
 
-
   tc_dev = devm_kzalloc(dev, sizeof(struct tegracam_device), GFP_KERNEL);
 
   if (!tc_dev)
@@ -2687,7 +2725,6 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
   tc_dev->tcctrl_ops = &tier4_isx021_ctrl_ops;
 
   firmware_buffer = devm_kzalloc(dev, sizeof(u16) * MAX_NUM_OF_REG, GFP_KERNEL);
-
 
   if (!firmware_buffer)
   {
@@ -2742,6 +2779,8 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
     goto err_tegracam_unreg;
   }
 
+  priv->trigger_mode = trigger_mode;   // trigger_mode per camaera
+
   /* Pair sensor to serializer dev */
   err = tier4_max9295_sdev_pair(priv->ser_dev, &priv->g_ctx);
 
@@ -2752,15 +2791,18 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
   }
 
   /* Register sensor to deserializer dev */
+
+  //dev_info(dev, "[%s]: Before tier4_max9296_sdev_register() : priv->g_ctx.serdes_csi_link = %u\n" , __func__,  priv->g_ctx.serdes_csi_link );
+
+  //asm("dmb sy");
+
   err = tier4_max9296_sdev_register(priv->dser_dev, &priv->g_ctx);
 
   if (err)
   {
-    dev_err(&client->dev, "[%s] : GMSL Deserializer Register failed.\n", __func__);
+    dev_err(&client->dev, "[%s] : Failed to register GMSL Deserializer.\n", __func__);
     goto err_max9295_unpair;
   }
-
-  //    priv->g_ctx.debug_i2c_write = debug_i2c_write;
 
   /*
    * gmsl serdes setup
@@ -2790,7 +2832,6 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
     dev_err(dev, "[%s] : Tegra Camera Subdev Registration failed.\n", __func__);
     goto err_max9296_unreg;
   }
-
 
   tier4_isx021_sensor_mutex_unlock();
 
