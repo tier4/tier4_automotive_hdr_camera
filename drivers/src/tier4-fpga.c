@@ -42,7 +42,7 @@ struct tier4_fpga
 {
   struct i2c_client *i2c_client;
   struct regmap *regmap;
-  struct gmsl_link_ctx g_ctx;
+  struct tier4_gmsl_link_ctx g_ctx;
   struct mutex lock;
   /* FPGA slave address */
   __u32 reg_addr;
@@ -184,7 +184,7 @@ int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, in
 }
 EXPORT_SYMBOL(tier4_fpga_set_fsync_signal_frequency);
 
-int tier4_fpga_get_slave_addr(struct device *dev, struct gmsl_link_ctx *g_ctx)
+int tier4_fpga_get_slave_addr(struct device *dev, struct tier4_gmsl_link_ctx *g_ctx)
 {
   struct tier4_fpga *priv = dev_get_drvdata(dev);
 
