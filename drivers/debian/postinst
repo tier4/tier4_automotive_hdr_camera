@@ -39,7 +39,7 @@ esac
 
 # Preserve the udev rules for the running hardware platform, and delete the others
 RQX59G_DT=RQX590
-RESULT_CNT=$(cat /proc/device-tree/model | tr -d "\0" | grep -c $RQX59G_DT)
+RESULT_CNT=$(cat /proc/device-tree/model | tr -d "\0" | grep -c $RQX59G_DT) || true
 if [ $RESULT_CNT -eq 1 ]; then
 	# Preserve udev rules for RQX59G, delete the others
 	rm -f /etc/udev/rules.d/99-tier4-isx021-imx490-gmsl.rules
