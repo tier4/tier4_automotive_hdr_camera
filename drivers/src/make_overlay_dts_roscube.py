@@ -1700,6 +1700,8 @@ str_fragment_i2c_3 = str_fragment_i2c_n.replace("@91", "@94").replace("c@0", "c@
 
 # ==================   DSER   ====================
 
+#  ---------- for R32.5 ----------------------------
+
 str_fragment_dser_n = """
 
   fragment@95{
@@ -1717,16 +1719,45 @@ str_fragment_dser_n = """
 
 """
 
-str_fragment_dser_0 = str_fragment_dser_n
-str_fragment_dser_1 = str_fragment_dser_n \
+str_fragment_dser_0_r325 = str_fragment_dser_n
+str_fragment_dser_1_r325 = str_fragment_dser_n \
     .replace("fragment@95", "fragment@96") \
     .replace("&dser", "&dsera")
-str_fragment_dser_2 = str_fragment_dser_n \
+str_fragment_dser_2_r325 = str_fragment_dser_n \
     .replace("fragment@95", "fragment@97") \
     .replace("&dser", "&dserb")
-str_fragment_dser_3 = str_fragment_dser_n \
+str_fragment_dser_3_r325 = str_fragment_dser_n \
     .replace("fragment@95", "fragment@98") \
     .replace("&dser", "&dserc")
+
+str_fragment_dser_0 = {"325x": str_fragment_dser_0_r325, "351": ""}
+str_fragment_dser_1 = {"325x": str_fragment_dser_1_r325, "351": ""}
+str_fragment_dser_2 = {"325x": str_fragment_dser_2_r325, "351": ""}
+str_fragment_dser_3 = {"325x": str_fragment_dser_3_r325, "351": ""}
+
+
+#  ---------- for R35.1 ----------------------------
+
+str_i2c_dser_n = """
+      dser_0: max9296@48 {
+        compatible = \"nvidia,tier4_max9296\";
+        reg = <0x48>;
+        status = \"okay\";
+        csi-mode = \"2x4\";
+        max-src = <2>;
+        //reset-gpios = <&tegra_main_gpio CAM0_PWDN GPIO_ACTIVE_HIGH>;
+        //reset-gpios = <&tegra_main_gpio 0x3E 0x0>;
+      };
+"""
+str_i2c_dser_0_r351 = str_i2c_dser_n
+str_i2c_dser_1_r351 = str_i2c_dser_n.replace("dser_0:", "dser_1:")
+str_i2c_dser_2_r351 = str_i2c_dser_n.replace("dser_0:", "dser_2:")
+str_i2c_dser_3_r351 = str_i2c_dser_n.replace("dser_0:", "dser_3:")
+
+str_i2c_dser_0 = {"325x": "", "351": str_i2c_dser_0_r351}
+str_i2c_dser_1 = {"325x": "", "351": str_i2c_dser_1_r351}
+str_i2c_dser_2 = {"325x": "", "351": str_i2c_dser_2_r351}
+str_i2c_dser_3 = {"325x": "", "351": str_i2c_dser_3_r351}
 
 # ==================   SER   ====================
 
@@ -2140,6 +2171,18 @@ str_i2c_isx021_6_p2 = str_i2c_isx021_n_p2.replace("serial_a", "serial_g")
 str_i2c_isx021_7_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
     "serial_a", "serial_g"
 )
+
+dict_min_gain_val = {
+    "354": 'min_gain_val = "1"',
+    "351": 'min_gain_val = "0"',
+}
+
+def get_min_gain_val(rev_r354_exception):
+  if rev_r354_exception == True:
+    str_rc = dict_min_gain_val["354"]
+  else:
+    str_rc = dict_min_gain_val["351"]
+  return str_rc
 
 # -----------------------------------------------
 
@@ -2577,7 +2620,17 @@ str_i2c_imx490_7_p4 = str_i2c_imx490_n_p4.replace(
 
 # =============  DSER in Base DTB  ==============
 
-str_fragment_dser_in_base_dtb_r351 = ""
+str_fragment_dser_in_base_dtb_r351 = """
+      dser_0: max9296@48 {
+        compatible = \"nvidia,tier4_max9296\";
+        reg = <0x48>;
+        status = \"okay\";
+        csi-mode = \"2x4\";
+        max-src = <2>;
+        //reset-gpios = <&tegra_main_gpio CAM0_PWDN GPIO_ACTIVE_HIGH>;
+        //reset-gpios = <&tegra_main_gpio 0x3E 0x0>;
+      };
+"""
 
 str_fragment_dser_in_base_dtb_r325 = """
 
@@ -2971,10 +3024,14 @@ total_num_args = len(args)
 
 l4t_revision = args[1].upper()
 
+rev_r354_exception = False
 if l4t_revision == "R32.5.1" or l4t_revision == "R32.5.2" or l4t_revision == "R32.6.1":
     str_rev_num = "325x"
 elif l4t_revision == "R35.1":
     str_rev_num = "351"
+elif l4t_revision == "R35.4":
+    str_rev_num = "351"
+    rev_r354_exception = True
 else:
     print(" Error!! : The first argument should be R32.5.1, R32.5.2, R32.6.1 or R35.1.")
     usage()
@@ -3043,6 +3100,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_0_p2 = str_i2c_isx021_0_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera1 = (
                 str_i2c_isx021_0_p1[str_rev_num]
@@ -3057,6 +3117,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_0_p2 = str_i2c_imx490_0_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera1 = (
                 str_i2c_imx490_0_p1[str_rev_num]
@@ -3088,6 +3151,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_1_p2 = str_i2c_isx021_1_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera2 = (
                 str_i2c_isx021_1_p1[str_rev_num]
@@ -3102,6 +3168,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_1_p2 = str_i2c_imx490_1_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera2 = (
                 str_i2c_imx490_1_p1[str_rev_num]
@@ -3133,6 +3202,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_2_p2 = str_i2c_isx021_2_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera3 = (
                 str_i2c_isx021_2_p1[str_rev_num]
@@ -3147,6 +3219,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_2_p2 = str_i2c_imx490_2_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera3 = (
                 str_i2c_imx490_2_p1[str_rev_num]
@@ -3178,6 +3253,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_3_p2 = str_i2c_isx021_3_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera4 = (
                 str_i2c_isx021_3_p1[str_rev_num]
@@ -3192,6 +3270,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_3_p2 = str_i2c_imx490_3_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera4 = (
                 str_i2c_imx490_3_p1[str_rev_num]
@@ -3223,6 +3304,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_4_p2 = str_i2c_isx021_4_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera5 = (
                 str_i2c_isx021_4_p1[str_rev_num]
@@ -3237,6 +3321,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_4_p2 = str_i2c_imx490_4_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera5 = (
                 str_i2c_imx490_4_p1[str_rev_num]
@@ -3268,6 +3355,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_5_p2 = str_i2c_isx021_5_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera6 = (
                 str_i2c_isx021_5_p1[str_rev_num]
@@ -3282,6 +3372,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_5_p2 = str_i2c_imx490_5_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera6 = (
                 str_i2c_imx490_5_p1[str_rev_num]
@@ -3313,6 +3406,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_6_p2 = str_i2c_isx021_6_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera7 = (
                 str_i2c_isx021_6_p1[str_rev_num]
@@ -3327,6 +3423,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_6_p2 = str_i2c_imx490_6_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera7 = (
                 str_i2c_imx490_6_p1[str_rev_num]
@@ -3358,6 +3457,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_7_p2 = str_i2c_isx021_7_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera8 = (
                 str_i2c_isx021_7_p1[str_rev_num]
@@ -3372,6 +3474,9 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_7_p2 = str_i2c_imx490_7_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
+            ).replace(
+              dict_min_gain_val["351"],
+              get_min_gain_val(rev_r354_exception)
             )
             str_camera8 = (
                 str_i2c_imx490_7_p1[str_rev_num]
@@ -3401,6 +3506,7 @@ str_fragment_dser_in_dtb = dict_fragment_dser_in_base_dtb[str_rev_num]
 
 str_i2c0 = (
     str_fragment_i2c_0
+    + str_i2c_dser_0[str_rev_num]
     + str_i2c_ser_0[str_rev_num]
     + str_i2c_0_isp
     + str_camera2
@@ -3410,6 +3516,7 @@ str_i2c0 = (
 
 str_i2c1 = (
     str_fragment_i2c_1
+    + str_i2c_dser_1[str_rev_num]
     + str_i2c_ser_1[str_rev_num]
     + str_i2c_1_isp
     + str_camera4
@@ -3419,6 +3526,7 @@ str_i2c1 = (
 
 str_i2c2 = (
     str_fragment_i2c_2
+    + str_i2c_dser_2[str_rev_num]
     + str_i2c_ser_2[str_rev_num]
     + str_i2c_2_isp
     + str_camera6
@@ -3428,6 +3536,7 @@ str_i2c2 = (
 
 str_i2c3 = (
     str_fragment_i2c_3
+    + str_i2c_dser_3[str_rev_num]
     + str_i2c_ser_3[str_rev_num]
     + str_i2c_3_isp
     + str_camera8
@@ -3494,23 +3603,32 @@ str_whole_dts = (
     + str_camera_module5
     + str_camera_module6
     + str_camera_module7
+    + str_fragment_i2c
     + str_i2c0
     + str_i2c1
     + str_i2c2
     + str_i2c3
-    + str_fragment_dser_0
-    + str_fragment_dser_1
-    + str_fragment_dser_2
-    + str_fragment_dser_3
+    + str_fragment_dser_0[str_rev_num]
+    + str_fragment_dser_1[str_rev_num]
+    + str_fragment_dser_2[str_rev_num]
+    + str_fragment_dser_3[str_rev_num]
     + str_fpga
     + str_overlay_end
 )
+
+if str_rev_num == "351":
+  if rev_r354_exception == True:
+    str_fname_rev_num = "354"
+  else:
+    str_fname_rev_num = "351"
+else:
+    str_fname_rev_num = str_rev_num
 
 overlay_dts_file_name = (
     "tier4"
     + str_w_camera_type
     + "-gmsl-device-tree-overlay-roscube-r"
-    + str_rev_num
+    + str_fname_rev_num
     + ".dts"
 )
 
