@@ -129,7 +129,7 @@
 
 struct tier4_max9295_client_ctx
 {
-  struct gmsl_link_ctx *g_ctx;
+  struct tier4_gmsl_link_ctx *g_ctx;
   bool st_done;
 };
 
@@ -242,7 +242,7 @@ int tier4_max9295_setup_streaming(struct device *dev)
   u32 st_pipe;
   u32 pipe_en;
   u32 port_sel = 0;
-  struct gmsl_link_ctx *g_ctx;
+  struct tier4_gmsl_link_ctx *g_ctx;
   u32 i;
   u32 j;
   u32 st_en;
@@ -307,7 +307,7 @@ int tier4_max9295_setup_streaming(struct device *dev)
 
   for (i = 0; i < g_ctx->num_streams; i++)
   {
-    struct gmsl_stream *g_stream = &g_ctx->streams[i];
+    struct tier4_gmsl_stream *g_stream = &g_ctx->streams[i];
 
     g_stream->st_id_sel = GMSL_ST_ID_UNUSED;
 
@@ -371,7 +371,7 @@ EXPORT_SYMBOL(tier4_max9295_setup_streaming);
 int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, bool power_on)
 {
   struct tier4_max9295 *priv = dev_get_drvdata(dev);
-  struct gmsl_link_ctx *g_ctx;
+  struct tier4_gmsl_link_ctx *g_ctx;
   int err = 0;
 
   g_ctx = priv->g_client.g_ctx;
@@ -433,7 +433,7 @@ int tier4_max9295_setup_control(struct device *dev)
 {
   struct tier4_max9295 *priv = dev_get_drvdata(dev);
   int err = 0;
-  struct gmsl_link_ctx *g_ctx;
+  struct tier4_gmsl_link_ctx *g_ctx;
   u32 offset1 = 0;
   u32 offset2 = 0;
   u32 i;
@@ -557,7 +557,7 @@ error:
 }
 EXPORT_SYMBOL(tier4_max9295_reset_control);
 
-int tier4_max9295_sdev_pair(struct device *dev, struct gmsl_link_ctx *g_ctx)
+int tier4_max9295_sdev_pair(struct device *dev, struct tier4_gmsl_link_ctx *g_ctx)
 {
   struct tier4_max9295 *priv;
   int err = 0;

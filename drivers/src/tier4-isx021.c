@@ -315,7 +315,7 @@ struct tier4_isx021
   struct v4l2_subdev *subdev;
   struct device *ser_dev;
   struct device *dser_dev;
-  struct gmsl_link_ctx g_ctx;
+  struct tier4_gmsl_link_ctx g_ctx;
   u32 frame_length;
   struct camera_common_data *s_data;
   struct tegracam_device *tc_dev;

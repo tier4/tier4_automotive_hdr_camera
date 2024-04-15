@@ -62,15 +62,15 @@
 #define SENSOR_ID_IMX490 490
 
 /**
- * Maximum number of data streams (\ref gmsl_stream elements) in a GMSL link
- * (\ref gmsl_link_ctx).
+ * Maximum number of data streams (\ref tier4_gmsl_stream elements) in a GMSL link
+ * (\ref tier4_gmsl_link_ctx).
  */
 #define GMSL_DEV_MAX_NUM_DATA_STREAMS 4
 
 /**
- * Holds information about a data stream in a GMSL link (\ref gmsl_link_ctx).
+ * Holds information about a data stream in a GMSL link (\ref tier4_gmsl_link_ctx).
  */
-struct gmsl_stream
+struct tier4_gmsl_stream
 {
   __u32 st_id_sel;
   __u32 st_data_type;
@@ -81,7 +81,7 @@ struct gmsl_stream
  * Holds the configuration of the GMSL links from a sensor to its serializer to
  * its deserializer.
  */
-struct gmsl_link_ctx
+struct tier4_gmsl_link_ctx
 {
   __u32 st_vc;           /**< Default sensor virtual channel. */
   __u32 dst_vc;          /**< Destination virtual channel (user-defined). */
@@ -102,7 +102,7 @@ struct gmsl_link_ctx
                   the serializer driver during setup; used by
                   the deserializer driver to choose certain
                   configuration settings during setup. */
-  struct gmsl_stream streams[GMSL_DEV_MAX_NUM_DATA_STREAMS];
+  struct tier4_gmsl_stream streams[GMSL_DEV_MAX_NUM_DATA_STREAMS];
   /*< An array of information about the data streams in the link. */
   __u32 sensor_id;          /**< Sensor ID  21:isx021 or 490:imx490 */
   __u32 sdev_isp_reg;       /**< Sensor or ISP proxy slave address. */

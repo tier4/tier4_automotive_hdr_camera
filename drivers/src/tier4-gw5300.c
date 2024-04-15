@@ -27,7 +27,7 @@
 struct tier4_gw5300
 {
   struct i2c_client *i2c_client;
-  struct gmsl_link_ctx g_client;
+  struct tier4_gmsl_link_ctx g_client;
   struct mutex lock;
   /* primary ISP properties */
   __u32 def_addr;
@@ -240,7 +240,7 @@ int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size )
 }
 EXPORT_SYMBOL(tier4_gw5300_check_device);
 
-int tier4_gw5300_prim_slave_addr(struct gmsl_link_ctx *g_ctx)
+int tier4_gw5300_prim_slave_addr(struct tier4_gmsl_link_ctx *g_ctx)
 {
   if (!g_ctx)
   {

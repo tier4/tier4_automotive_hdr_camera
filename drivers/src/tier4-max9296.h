@@ -85,15 +85,15 @@ int tier4_max9296_reset_control(struct device *dev, struct device *s_dev, bool f
  *
  * The deserializer driver internally checks all perquisites and compatibility
  * factors. If it finds that the registration request is valid,
- * it stores the source's @ref gmsl_link_ctx context handle in the source list
+ * it stores the source's @ref tier4_gmsl_link_ctx context handle in the source list
  * maintained by the deserializer driver instance.
  *
  * @param [in]  dev             The deserializer device handle.
- * @param [in]  g_ctx           A @c gmsl_link_ctx structure handle.
+ * @param [in]  g_ctx           A @c tier4_gmsl_link_ctx structure handle.
  *
  * @return  0 for success, or -1 otherwise.
  */
-int tier4_max9296_sdev_register(struct device *dev, struct gmsl_link_ctx *g_ctx);
+int tier4_max9296_sdev_register(struct device *dev, struct tier4_gmsl_link_ctx *g_ctx);
 
 /**
  * Unregisters a source sensor device from its deserializer device.
