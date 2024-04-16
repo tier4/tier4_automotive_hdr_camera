@@ -2149,7 +2149,7 @@ str_i2c_imx490_n_p4 = """
         };
       };"""
 if IO_BOARD_TYPE == "LEOPARD":
-  str_i2c_imx490_n_p4.replace("num-lanes = <4>", "num-lanes = <2>")
+  str_i2c_imx490_n_p4 = str_i2c_imx490_n_p4.replace("num-lanes = <4>", "num-lanes = <2>")
 
 str_i2c_imx490_0_p4 = str_i2c_imx490_n_p4
 str_i2c_imx490_1_p4 = str_i2c_imx490_n_p4.replace(
@@ -2706,7 +2706,6 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_1_p3
                 + str_i2c_isx021_1_p4
             )
-            str_i2c_1_isp = ""
             str_fragment_nvcsi1 = str_w_fragment_nvcsi1
             str_camera_module1 = str_w_camera_module1
         elif camera[i] == "C2":
@@ -2723,7 +2722,6 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_1_p3
                 + str_i2c_imx490_1_p4
             )
-            str_i2c_1_isp = str_i2c_isp_1
             str_fragment_nvcsi1 = str_w_fragment_nvcsi1.replace(
                 "isx021_out1", "imx490_out1"
             )
@@ -2757,7 +2755,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_2_p3
                 + str_i2c_isx021_2_p4
             )
-            str_i2c_2_isp = ""
+            str_i2c_1_isp = ""
             str_fragment_nvcsi2 = str_w_fragment_nvcsi2
             str_camera_module2 = str_w_camera_module2
         elif camera[i] == "C2":
@@ -2774,7 +2772,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_2_p3
                 + str_i2c_imx490_2_p4
             )
-            str_i2c_2_isp = str_i2c_isp_2
+            str_i2c_1_isp = str_i2c_isp_1
             str_fragment_nvcsi2 = str_w_fragment_nvcsi2.replace(
                 "isx021_out2", "imx490_out2"
             )
@@ -2808,7 +2806,6 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_3_p3
                 + str_i2c_isx021_3_p4
             )
-            str_i2c_3_isp = ""
             str_fragment_nvcsi3 = str_w_fragment_nvcsi3
             str_camera_module3 = str_w_camera_module3
         elif camera[i] == "C2":
@@ -2825,7 +2822,6 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_3_p3
                 + str_i2c_imx490_3_p4
             )
-            str_i2c_3_isp = str_i2c_isp_3
             str_fragment_nvcsi3 = str_w_fragment_nvcsi3.replace(
                 "isx021_out3", "imx490_out3"
             )
@@ -2859,7 +2855,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_4_p3
                 + str_i2c_isx021_4_p4
             )
-            str_i2c_4_isp = ""
+            str_i2c_2_isp = ""
             str_fragment_nvcsi4 = str_w_fragment_nvcsi4
             str_camera_module4 = str_w_camera_module4
         elif camera[i] == "C2":
@@ -2876,7 +2872,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_4_p3
                 + str_i2c_imx490_4_p4
             )
-            str_i2c_4_isp = str_i2c_isp_2
+            str_i2c_2_isp = str_i2c_isp_2
             str_fragment_nvcsi4 = str_w_fragment_nvcsi4.replace(
                 "isx021_out4", "imx490_out4"
             )
@@ -2910,7 +2906,6 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_5_p3
                 + str_i2c_isx021_5_p4
             )
-            str_i2c_5_isp = ""
             str_fragment_nvcsi5 = str_w_fragment_nvcsi5
             str_camera_module5 = str_w_camera_module5
         elif camera[i] == "C2":
@@ -2927,7 +2922,6 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_5_p3
                 + str_i2c_imx490_5_p4
             )
-            str_i2c_5_isp = str_i2c_isp_2
             str_fragment_nvcsi5 = str_w_fragment_nvcsi5.replace(
                 "isx021_out5", "imx490_out5"
             )
@@ -2961,7 +2955,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_6_p3
                 + str_i2c_isx021_6_p4
             )
-            str_i2c_6_isp = ""
+            str_i2c_3_isp = ""
             str_fragment_nvcsi6 = str_w_fragment_nvcsi6
             str_camera_module6 = str_w_camera_module6
         elif camera[i] == "C2":
@@ -2978,7 +2972,7 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_6_p3
                 + str_i2c_imx490_6_p4
             )
-            str_i2c_6_isp = str_i2c_isp_3
+            str_i2c_3_isp = str_i2c_isp_3
             str_fragment_nvcsi6 = str_w_fragment_nvcsi6.replace(
                 "isx021_out6", "imx490_out6"
             )
@@ -3012,7 +3006,6 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_isx021_7_p3
                 + str_i2c_isx021_7_p4
             )
-            str_i2c_7_isp = ""
             str_fragment_nvcsi7 = str_w_fragment_nvcsi7
             str_camera_module7 = str_w_camera_module7
         elif camera[i] == "C2":
@@ -3029,7 +3022,6 @@ for i in range(MAX_NUM_CAMERAS):
                 + str_i2c_imx490_7_p3
                 + str_i2c_imx490_7_p4
             )
-            str_i2c_7_isp = str_i2c_isp_3
             str_fragment_nvcsi7 = str_w_fragment_nvcsi7.replace(
                 "isx021_out7", "imx490_out7"
             )

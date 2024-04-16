@@ -233,7 +233,7 @@ str_fragment_vi_0_r351 = """
     target-path = \"/tegra-capture-vi\";
     __overlay__ {
       status = \"okay\";
-      num-channels = <0x08>;
+      num-channels = <8>;
     };
   };
 
@@ -249,8 +249,8 @@ str_fragment_vi_0_r351 = """
     target-path = \"/tegra-capture-vi/ports/port@0/endpoint\";
     __overlay__ {
       status = \"okay\";
-      port-index = <0>;
       vc-id = <0>;
+      port-index = <0>;
       bus-width = <2>;
     };
   };
@@ -841,7 +841,7 @@ str_fragment_nvcsi_ch0_r351 = """
     target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
-      bus-width = <0x02>;
+      bus-width = <2>;
       remote-endpoint = <&isx021_out0>;
     };
   };
@@ -887,8 +887,8 @@ str_fragment_nvcsi_ch1_r351 = """
     target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
-      port-index = <0x00>;
-      bus-width = <0x02>;
+      port-index = <0>;
+      bus-width = <2>;
       remote-endpoint = <&isx021_out1>;
     };
   };
@@ -1227,7 +1227,7 @@ str_fragment_camera_module_r325 = """
    target-path = \"/tegra-camera-platform\";
    __overlay__ {
      status = \"okay\";
-     num_csi_lanes = <0x02>;
+     num_csi_lanes = <2>;
      max_lane_speed = <4000000>;
    };
  };
@@ -1434,7 +1434,7 @@ str_fragment_camera_module_r351 = """
     target-path = "/tegra-camera-platform\";
     __overlay__ {
       status = \"okay\";
-      num_csi_lanes = <0x02>;
+      num_csi_lanes = <2>;
       max_lane_speed = <4000000>;
     };
   };
@@ -2355,7 +2355,7 @@ str_i2c_imx490_4_p1_r325 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
     .replace("&max9295_ser_a", "&max9295_ser_c_0")
     .replace("isp_a", "isp_e")
-    .replace("dser_a", "&dserb")
+    .replace("&dser", "&dserb")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1_r325 = (
@@ -2411,8 +2411,8 @@ str_i2c_imx490_3_p1_r351 = (
 str_i2c_imx490_4_p1_r351 = (
     str_i2c_imx490_n_p1.replace("imx490_a@2b", "imx490_e@2b")
     .replace("&max9295_ser_a", "&max9295_ser_c_0")
-    .replace("isp_a", "isp_r")
-    .replace("dser_a", "&dser_2")
+    .replace("isp_a", "isp_e")
+    .replace("&dser", "&dser_2")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1_r351 = (
@@ -2602,19 +2602,19 @@ str_i2c_imx490_n_p4 = """
 
 str_i2c_imx490_0_p4 = str_i2c_imx490_n_p4
 str_i2c_imx490_1_p4 = str_i2c_imx490_n_p4.replace(
-    'serdes-csi-link = "a"', ' serdes-csi-link = "b"'
+    'serdes-csi-link = "a"', 'serdes-csi-link = "b"'
 ).replace("vc-id = <0>", "vc-id = <1>")
 str_i2c_imx490_2_p4 = str_i2c_imx490_n_p4
 str_i2c_imx490_3_p4 = str_i2c_imx490_n_p4.replace(
-    'serdes-csi-link = "a"', ' serdes-csi-link = "b"'
+    'serdes-csi-link = "a"', 'serdes-csi-link = "b"'
 ).replace("vc-id = <0>", "vc-id = <1>")
 str_i2c_imx490_4_p4 = str_i2c_imx490_n_p4
 str_i2c_imx490_5_p4 = str_i2c_imx490_n_p4.replace(
-    'serdes-csi-link = "a"', ' serdes-csi-link = "b"'
+    'serdes-csi-link = "a"', 'serdes-csi-link = "b"'
 ).replace("vc-id = <0>", "vc-id = <1>")
 str_i2c_imx490_6_p4 = str_i2c_imx490_n_p4
 str_i2c_imx490_7_p4 = str_i2c_imx490_n_p4.replace(
-    'serdes-csi-link = "a"', ' serdes-csi-link = "b"'
+    'serdes-csi-link = "a"', 'serdes-csi-link = "b"'
 ).replace("vc-id = <0>", "vc-id = <1>")
 
 
@@ -2988,11 +2988,11 @@ def deploy_n_options(str_n_options):
 
 dict_isx021_serdes_pix_clk = {
     "325x": 'serdes_pix_clk_hz = "833333333"',
-    "351": 'serdes_pix_clk_hz  = "180000000"',
+    "351": 'serdes_pix_clk_hz  = "187500000"',
 }
 dict_imx490_serdes_pix_clk = {
     "325x": 'serdes_pix_clk_hz = "1200000000"',
-    "351": 'serdes_pix_clk_hz  = "180000000"',
+    "351": 'serdes_pix_clk_hz  = "187500000"',
 }
 
 
