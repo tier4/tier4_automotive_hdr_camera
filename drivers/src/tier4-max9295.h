@@ -69,11 +69,11 @@ int tier4_max9295_reset_control(struct device *dev);
  * To be called by sensor client driver.
  *
  * @param  [in]  dev            The deserializer device handle.
- * @param  [in]  g_ctx          The @ref gmsl_link_ctx structure handle.
+ * @param  [in]  g_ctx          The @ref tier4_gmsl_link_ctx structure handle.
  *
  * @return  0 for success, or -1 otherwise.
  */
-int tier4_max9295_sdev_pair(struct device *dev, struct gmsl_link_ctx *g_ctx);
+int tier4_max9295_sdev_pair(struct device *dev, struct tier4_gmsl_link_ctx *g_ctx);
 
 /**
  * @brief Unpairs a sensor device from a serializer device.

@@ -77,6 +77,6 @@ int tier4_fpga_check_access(struct device *dev);
  * @return  0 for success, or -1 otherwise.
  */
 
-int tier4_fpga_get_slave_addr(struct device *dev, struct gmsl_link_ctx *g_ctx);
+int tier4_fpga_get_slave_addr(struct device *dev, struct tier4_gmsl_link_ctx *g_ctx);
 
 #endif /* __TIER4_FPGA_H__ */

@@ -110,7 +110,7 @@ struct tier4_imx490
   struct device *ser_dev;
   struct device *dser_dev;
   struct device *isp_dev;
-  struct gmsl_link_ctx g_ctx;
+  struct tier4_gmsl_link_ctx g_ctx;
   u32 frame_length;
   struct camera_common_data *s_data;
   struct tegracam_device *tc_dev;
