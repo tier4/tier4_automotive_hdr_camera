@@ -145,8 +145,9 @@ static int camera_channel_count = 0;
 
 // --- module parameter ---
 
-static int trigger_mode;
+static int trigger_mode = 0;
 static int fsync_mfp = 0;
+static int enable_auto_exposure = 0xCAFE;
 static int enable_distortion_correction = 1;
 
 
@@ -157,6 +158,7 @@ static int shutter_time_min = IMX490_MIN_EXPOSURE_TIME;
 static int shutter_time_max = IMX490_MAX_EXPOSURE_TIME;
 
 module_param(trigger_mode, int,  S_IRUGO | S_IWUSR);
+module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
 module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
 module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
 
@@ -611,30 +613,32 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
   /* enable serdes streaming */
 
   err = tier4_max9295_setup_streaming(priv->ser_dev);
-
   if (err)
   {
     goto exit;
   }
 
   err = tier4_max9296_setup_streaming(priv->dser_dev, dev);
-
   if (err)
   {
     dev_err(dev, "[%s] : Setup Streaming failed\n", __func__);
     goto exit;
   }
 
+  if (enable_auto_exposure == 1)
+  {
+    priv->auto_exposure = true;
+    dev_info(dev, "[%s] : Parameter[enable_auto_exposure] = 1.\n", __func__);
+  }
+
   if (priv->auto_exposure == true)
   {
     err = tier4_imx490_set_auto_exposure(tc_dev);
-  }
-
-
-  if (err)
-  {
-    dev_err(dev, "[%s] : Setting Digital Gain to default value failed\n", __func__);
-    goto exit;
+    if (err)
+    {
+      dev_err(dev, "[%s] : Enabling Auto Exposure failed.\n", __func__);
+      goto exit;
+    }
   }
 
   dev_info(dev, "[%s] : trigger_mode = %d\n", __func__, trigger_mode);
@@ -1183,22 +1187,27 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
     priv->distortion_correction = false;
   }
 
-  err = of_property_read_string(node, "auto-exposure", &str_value);
+  if (enable_auto_exposure == 0xCAFE)
+  {
+    err = of_property_read_string(node, "auto-exposure", &str_value);
 
-  if (err < 0)
-  {
-    dev_err(dev, "[%s] : Inavlid Exposure mode.\n", __func__);
-    goto error;
+    if (err < 0)
+    {
+      dev_err(dev, "[%s] : Inavlid Exposure mode.\n", __func__);
+      goto error;
+    }
+
+    if (!strcmp(str_value, "true"))
+    {
+      priv->auto_exposure = true;
+    }
+    else
+    {
+      priv->auto_exposure = false;
+    }
   }
 
-  if (!strcmp(str_value, "true"))
-  {
-    priv->auto_exposure = true;
-  }
-  else
-  {
-    priv->auto_exposure = false;
-  }
+  priv->auto_exposure = enable_auto_exposure != 0 ? true : false;
 
   // For Ser node
   ser_node = of_parse_phandle(node, "nvidia,gmsl-ser-device", 0);
