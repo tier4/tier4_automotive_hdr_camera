@@ -31,7 +31,7 @@
 
 struct tier4_max9296_source_ctx
 {
-  struct gmsl_link_ctx *g_ctx;
+  struct tier4_gmsl_link_ctx *g_ctx;
   bool st_enabled;
 };
 
@@ -602,7 +602,7 @@ ret:
 }
 EXPORT_SYMBOL(tier4_max9296_reset_control);
 
-int tier4_max9296_sdev_register(struct device *dev, struct gmsl_link_ctx *g_ctx)
+int tier4_max9296_sdev_register(struct device *dev, struct tier4_gmsl_link_ctx *g_ctx)
 {
   struct tier4_max9296 *priv = NULL;
   int i;
@@ -765,10 +765,10 @@ struct reg_pair
   u8 val;
 };
 
-static int tier4_max9296_setup_pipeline(struct device *dev, struct gmsl_link_ctx *g_ctx)
+static int tier4_max9296_setup_pipeline(struct device *dev, struct tier4_gmsl_link_ctx *g_ctx)
 {
   struct tier4_max9296 *priv = dev_get_drvdata(dev);
-  struct gmsl_stream *g_stream;
+  struct tier4_gmsl_stream *g_stream;
   struct reg_pair *map_list;
   u32 arr_sz = 0;
   int pipe_id = 0;
@@ -858,8 +858,8 @@ static int tier4_max9296_setup_pipeline(struct device *dev, struct gmsl_link_ctx
 int tier4_max9296_start_streaming(struct device *dev, struct device *s_dev)
 {
   struct tier4_max9296 *priv = dev_get_drvdata(dev);
-  struct gmsl_link_ctx *g_ctx;
-  struct gmsl_stream *g_stream;
+  struct tier4_gmsl_link_ctx *g_ctx;
+  struct tier4_gmsl_stream *g_stream;
   int err = 0;
   int i = 0;
 
@@ -894,8 +894,8 @@ EXPORT_SYMBOL(tier4_max9296_start_streaming);
 int tier4_max9296_stop_streaming(struct device *dev, struct device *s_dev)
 {
   struct tier4_max9296 *priv = dev_get_drvdata(dev);
-  struct gmsl_link_ctx *g_ctx;
-  struct gmsl_stream *g_stream;
+  struct tier4_gmsl_link_ctx *g_ctx;
+  struct tier4_gmsl_stream *g_stream;
   int err = 0;
   int i = 0;
 
@@ -925,7 +925,7 @@ EXPORT_SYMBOL(tier4_max9296_stop_streaming);
 int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 {
   struct tier4_max9296 *priv = dev_get_drvdata(dev);
-  struct gmsl_link_ctx *g_ctx;
+  struct tier4_gmsl_link_ctx *g_ctx;
   int err = 0;
   int i = 0;
   u16 lane_ctrl_addr;

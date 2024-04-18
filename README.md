@@ -10,9 +10,16 @@ For the simple image parameter tuning tool(t4cam-ctrl), please refer to the docu
 ## Installation and Usage
 
 1. Download the latest release of the driver from the [releases page](https://github.com/tier4/tier4_automotive_hdr_camera/releases).
-2. Follow the installation instructions provided in the quickstart guide.
+2. Follow the installation instructions provided in the [quickstart guide](https://tier4.github.io/edge-auto-docs/getting_started/index.html).
 
-### Note for ADLINK ROSCube-X RQX-58G users:
+### Note for Vecow EAC-5000 / Connect Tech Anvil users:
+
+We provide a pre-build kernel module (.ko files) for these ECUs. Please download the pre-build binary from [release page](https://github.com/tier4/tier4_automotive_hdr_camera/releases) and follow the instructions.
+
+### Note for ADLINK ROSCube-X RQX-58G / RQX 59G / Nvidia Jetson AGX Orin / Xavier users:
+
+You can download the deb package and build kernel module on the target ECU.
+
 The device type (i.e., C1 or C2) assignment is fixed at every GMSL2 port.
 The following table shows the default assignment:
 

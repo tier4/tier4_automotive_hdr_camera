@@ -38,7 +38,7 @@
  * @return  0 for success, or -1 otherwise.
  */
 
-int tier4_gw5300_prim_slave_addr(struct gmsl_link_ctx *g_ctx);
+int tier4_gw5300_prim_slave_addr(struct tier4_gmsl_link_ctx *g_ctx);
 
 /**
  * Sets up the ISP device for a specified sensor mode.
