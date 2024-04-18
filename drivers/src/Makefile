@@ -15,6 +15,7 @@ EAC_5000_word         := EAC-5000
 Anvil_word            := CTI Forge + Orin AGX
 Anvil_Model_word      := Anvil
 
+
 INST_PACKAGE_NAME     ?=  $(shell cat dkms.conf | grep 'PACKAGE_NAME' | cut -d '=' -f 2 | cut -d '"' -f 2 )
 INST_PACKAGE_VERSION  ?=  $(shell cat dkms.conf | grep 'PACKAGE_VERSION' | cut -d '=' -f 2 | cut -d '"' -f 2 )
 
@@ -51,6 +52,7 @@ else ifeq ($(Orin_word), $(filter $(Orin_word),$(dt_model)))
         MODEL := EAC-5000
     else ifeq ($(Anvil_word), $(findstring $(Anvil_word),$(dt_model)))
         MODEL := $(Anvil_Model_word)
+
     else ifeq ($(Orin_Compatible_word), $(findstring $(Orin_Compatible_word),$(dt_compatible)))
         MODEL := Orin
     else
@@ -190,6 +192,7 @@ else ifeq ($(L4T_RELEASE_MAIN), R35)
             TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-anvil-r35
             TARGET_ISX021_IMX490_IMX728_DTS := tier4-isx021-imx490-imx728-gmsl-device-tree-overlay-anvil-r35
             MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_anvil.py r35
+
         else
             KERNELRELEASE            := 5.1.104-unknown
             TARGET_ISX021_DTS        := Unknown
