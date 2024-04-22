@@ -29,6 +29,34 @@
 #define GW5300_SLAVE_MODE_30FPS  5
 #define GW5300_SLAVE_MODE_10FPS_SLOW  6
 #define GW5300_MASTER_MODE_10FPS_SLOW 7
+#define GW5300_MASTER_MODE_5FPS 8
+#define GW5300_SLAVE_MODE_5FPS 9
+#define GW5300_MASTER_MODE_10FPS_EBD 10
+#define GW5300_SLAVE_MODE_10FPS_EBD  11
+#define GW5300_MASTER_MODE_20FPS_EBD 12
+#define GW5300_SLAVE_MODE_20FPS_EBD  13
+#define GW5300_MASTER_MODE_30FPS_EBD 14
+#define GW5300_SLAVE_MODE_30FPS_EBD  15
+#define GW5300_MODE_MAX 16
+
+const char * const gw5300_mode_name[] = {
+    [GW5300_MASTER_MODE_10FPS] = "Master mode 10FPS",
+    [GW5300_SLAVE_MODE_10FPS] = "Slave mode 10FPS",
+    [GW5300_MASTER_MODE_20FPS] = "Master mode 20FPS",
+    [GW5300_SLAVE_MODE_20FPS] = "Slave mode 20FPS",
+    [GW5300_MASTER_MODE_30FPS] = "Master mode 30FPS",
+    [GW5300_SLAVE_MODE_30FPS] = "Slave mode 30FPS",
+    [GW5300_MASTER_MODE_10FPS_SLOW] = "Master mode 10FPS Slow",
+    [GW5300_SLAVE_MODE_10FPS_SLOW] = "Slave mode 10FPS Slow",
+    [GW5300_MASTER_MODE_5FPS] = "Master mode 5FPS",
+    [GW5300_SLAVE_MODE_5FPS] = "Slave mode 5FPS",
+    [GW5300_MASTER_MODE_10FPS_EBD] = "Master mode 10FPS with EBD",
+    [GW5300_SLAVE_MODE_10FPS_EBD] = "Slave mode 10FPS with EBD",
+    [GW5300_MASTER_MODE_20FPS_EBD] = "Master mode 20FPS with EBD",
+    [GW5300_SLAVE_MODE_20FPS_EBD] = "Slave mode 20FPS with EBD",
+    [GW5300_MASTER_MODE_30FPS_EBD] = "Master mode 30FPS with EBD",
+    [GW5300_SLAVE_MODE_30FPS_EBD] = "Slave mode 30FPS with EBD",
+};
 
 /**
  * get gw5300 prim slave address.

@@ -90,6 +90,259 @@ static u8 slave_10fps_slow[] = {
                           , 0x00, 0x65
 };
 
+
+/*
+ * C3 camera mode support
+ */
+struct mode_command {
+    u8 *command;
+    size_t len;
+    unsigned int delay_ms;
+};
+
+#define MODE_CMD(cmd, delay) \
+    { \
+        .command = (cmd), \
+        .len = sizeof (cmd), \
+        .delay_ms = delay, \
+    }
+
+#define NUM_VA_ARGS(type, ...)  (sizeof ((type[]) {__VA_ARGS__}) / sizeof (type))
+
+#define MODE_SEQ(...) \
+    { \
+        .commands = (struct mode_command[]){ \
+            __VA_ARGS__ \
+        }, \
+        .len = NUM_VA_ARGS(struct mode_command, __VA_ARGS__), \
+    }
+
+struct mode_sequence {
+    struct mode_command *commands;
+    size_t len;
+};
+
+/*
+ * C3 preset modes
+ */
+
+static u8 c3_master_5fps_cmd[] = {
+    0x33, 0x47, 0xb, 0x0, 0x0, 0x0, 0x12, 0x0, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x17
+};
+
+/* mode 0 */
+static struct mode_sequence c3_master_5fps_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_5fps_cmd, 0),
+    );
+
+/* mode 4 */
+static u8 c3_master_20fps_cmd[] = {
+    0x33, 0x47, 0xb, 0x0, 0x0, 0x0, 0x12, 0x0, 0x80, 0x3, 0x0, 0x0, 0x0, 0x4b, 0x0, 0x0, 0x0, 0x65
+};
+static struct mode_sequence c3_master_20fps_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_20fps_cmd, 0)
+    );
+
+static u8 c3_master_20fps_ebd_cmd[] = {
+    0x33, 0x47, 0xb, 0x0, 0x0, 0x0, 0x12, 0x0, 0x80, 0x3, 0x0, 0x0, 0x0, 0x50, 0x0, 0x0, 0x0, 0x6a
+};
+
+/* mode 10 */
+static struct mode_sequence c3_master_20fps_ebd_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_20fps_ebd_cmd, 0)
+    );
+
+static u8 c3_master_30fps_cmd[] = {
+    0x33, 0x47, 0xb, 0x0, 0x0, 0x0, 0x12, 0x0, 0x80, 0x3, 0x0, 0x0, 0x0, 0x1e, 0x0, 0x0, 0x0, 0x38
+};
+
+/* mode 6 */
+static struct mode_sequence c3_master_30fps_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_30fps_cmd, 0)
+    );
+
+static u8 c3_master_30fps_ebd_cmd[] = {
+    0x33, 0x47, 0xb, 0x0, 0x0, 0x0, 0x12, 0x0, 0x80, 0x3, 0x0, 0x0, 0x0, 0x28, 0x0, 0x0, 0x0, 0x42
+};
+
+/* mode 12 */
+static struct mode_sequence c3_master_30fps_ebd_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_30fps_ebd_cmd, 0)
+    );
+
+
+/*
+ * C3 derived modes
+ */
+static u8 c3_regmap_ffff[] = {
+    0x33, 0x47, 0x15, 0x0, 0x0, 0x0, 0xe0, 0x0, 0x80, 0x1, 0x0, 0x0, 0x0, 0x34, 0x0, 0x0,
+    0x0, 0xff, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2, 0x1, 0x25
+};
+
+static u8 c3_standby_mode[] = {
+    0x33, 0x47, 0x15, 0x0, 0x0, 0x0, 0xe0, 0x0, 0x80, 0x1, 0x0, 0x0, 0x0, 0x34, 0x0, 0x0,
+    0x0, 0x4, 0x1b, 0x0, 0x0, 0xff, 0x0, 0x0, 0x0, 0x2, 0x1, 0x45
+};
+
+static u8 c3_drive_mode_sel[] = {
+    0x33, 0x47, 0x15, 0x0, 0x0, 0x0, 0xe0, 0x0, 0x80, 0x1, 0x0, 0x0, 0x0, 0x34, 0x0, 0x0,
+    0x0, 0x40, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x2, 0x1, 0x68
+};
+
+static u8 c3_master_sync_mode[] = {
+    0x33, 0x47, 0x15, 0x0, 0x0, 0x0, 0xe0, 0x0, 0x80, 0x1, 0x0, 0x0, 0x0, 0x34, 0x0, 0x0,
+    0x0, 0x41, 0x0, 0x0, 0x0, 0x5, 0x0, 0x0, 0x0, 0x2, 0x1, 0x6d
+};
+
+static u8 c3_sensor_streaming[] = {
+    0x33, 0x47, 0x15, 0x0, 0x0, 0x0, 0xe0, 0x0, 0x80, 0x1, 0x0, 0x0, 0x0, 0x34, 0x0, 0x0,
+    0x0, 0x4, 0x1b, 0x0, 0x0, 0x5c, 0x0, 0x0, 0x0, 0x2, 0x1, 0xa2
+};
+
+static u8 c3_master_sync_mode_2[] = {
+    0x33, 0x47, 0x15, 0x0, 0x0, 0x0, 0xe0, 0x0, 0x80, 0x1, 0x0, 0x0, 0x0, 0x34, 0x0, 0x0,
+    0x0, 0x4, 0x1b, 0x0, 0x0, 0xa3, 0x0, 0x0, 0x0, 0x2, 0x1, 0xe9
+};
+
+/* mode 1 */
+static struct mode_sequence c3_slave_5fps_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_5fps_cmd, 5000),
+
+        MODE_CMD(c3_regmap_ffff, 500),
+        MODE_CMD(c3_standby_mode, 500),
+        MODE_CMD(c3_drive_mode_sel, 500),
+        MODE_CMD(c3_master_sync_mode, 500),
+        MODE_CMD(c3_sensor_streaming, 500),
+        MODE_CMD(c3_master_sync_mode_2, 500),
+    );
+
+static u8 c3_20_to_10fps_cmd_1[] = {
+    0x33, 0x47, 0x15, 0x0, 0x0, 0x0, 0xe0, 0x0, 0x80, 0x1, 0x0, 0x0, 0x0, 0x34, 0x0, 0x0,
+    0x0, 0x50, 0x97, 0x0, 0x0, 0xc4, 0x0, 0x0, 0x0, 0x2, 0x1, 0xd2,
+};
+
+static u8 c3_20_to_10fps_cmd_2[] = {
+    0x33, 0x47, 0x15, 0x0, 0x0, 0x0, 0xe0, 0x0, 0x80, 0x1, 0x0, 0x0, 0x0, 0x34, 0x0, 0x0,
+    0x0, 0x51, 0x97, 0x0, 0x0, 0x09, 0x0, 0x0, 0x0, 0x2, 0x1, 0x18,
+};
+
+/* mode 2 */
+static struct mode_sequence c3_master_10fps_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_20fps_cmd, 5000),
+
+        MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
+        MODE_CMD(c3_20_to_10fps_cmd_2, 500),
+    );
+
+/* mode 3 */
+static struct mode_sequence c3_slave_10fps_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_20fps_cmd, 5000),
+
+        MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
+        MODE_CMD(c3_20_to_10fps_cmd_2, 500),
+
+        MODE_CMD(c3_regmap_ffff, 500),
+        MODE_CMD(c3_standby_mode, 500),
+        MODE_CMD(c3_drive_mode_sel, 500),
+        MODE_CMD(c3_master_sync_mode, 500),
+        MODE_CMD(c3_sensor_streaming, 500),
+        MODE_CMD(c3_master_sync_mode_2, 500),
+    );
+
+/* mode 5 */
+static struct mode_sequence c3_slave_20fps_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_20fps_cmd, 5000),
+
+        MODE_CMD(c3_regmap_ffff, 500),
+        MODE_CMD(c3_standby_mode, 500),
+        MODE_CMD(c3_drive_mode_sel, 500),
+        MODE_CMD(c3_master_sync_mode, 500),
+        MODE_CMD(c3_sensor_streaming, 500),
+        MODE_CMD(c3_master_sync_mode_2, 500),
+    );
+
+/* mode 7 */
+static struct mode_sequence c3_slave_30fps_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_30fps_cmd, 5000),
+
+        MODE_CMD(c3_regmap_ffff, 500),
+        MODE_CMD(c3_standby_mode, 500),
+        MODE_CMD(c3_drive_mode_sel, 500),
+        MODE_CMD(c3_master_sync_mode, 500),
+        MODE_CMD(c3_sensor_streaming, 500),
+        MODE_CMD(c3_master_sync_mode_2, 500),
+    );
+
+/* mode 8 */
+static struct mode_sequence c3_master_10fps_ebd_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_20fps_ebd_cmd, 5000),
+
+        MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
+        MODE_CMD(c3_20_to_10fps_cmd_2, 500),
+    );
+
+/* mode 9 */
+static struct mode_sequence c3_slave_10fps_ebd_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_20fps_ebd_cmd, 5000),
+
+        MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
+        MODE_CMD(c3_20_to_10fps_cmd_2, 500),
+
+        MODE_CMD(c3_regmap_ffff, 500),
+        MODE_CMD(c3_standby_mode, 500),
+        MODE_CMD(c3_drive_mode_sel, 500),
+        MODE_CMD(c3_master_sync_mode, 500),
+        MODE_CMD(c3_sensor_streaming, 500),
+        MODE_CMD(c3_master_sync_mode_2, 500),
+    );
+
+/* mode 11 */
+static struct mode_sequence c3_slave_20fps_ebd_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_20fps_ebd_cmd, 5000),
+
+        MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
+        MODE_CMD(c3_20_to_10fps_cmd_2, 500),
+
+        MODE_CMD(c3_regmap_ffff, 500),
+        MODE_CMD(c3_standby_mode, 500),
+        MODE_CMD(c3_drive_mode_sel, 500),
+        MODE_CMD(c3_master_sync_mode, 500),
+        MODE_CMD(c3_sensor_streaming, 500),
+        MODE_CMD(c3_master_sync_mode_2, 500),
+    );
+
+/* mode 13 */
+static struct mode_sequence c3_slave_30fps_ebd_seq =
+    MODE_SEQ(
+        MODE_CMD(c3_master_30fps_ebd_cmd, 5000),
+
+        MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
+        MODE_CMD(c3_20_to_10fps_cmd_2, 500),
+
+        MODE_CMD(c3_regmap_ffff, 500),
+        MODE_CMD(c3_standby_mode, 500),
+        MODE_CMD(c3_drive_mode_sel, 500),
+        MODE_CMD(c3_master_sync_mode, 500),
+        MODE_CMD(c3_sensor_streaming, 500),
+        MODE_CMD(c3_master_sync_mode_2, 500),
+    );
+
+static struct mode_sequence c3_mode_seqs[GW5300_MODE_MAX];
+
+
 struct map_ctx
 {
   u8 dt;
@@ -152,9 +405,25 @@ static int tier4_gw5300_send_and_recv_msg(struct device *dev, u8 *wdata, int wda
 
 static int tier4_gw5300_c3_send_and_recv_msg(struct device *dev, u8 *wdata, int wdata_size, u8 *rdata, int rdata_size)
 {
+  return tier4_gw5300_send_and_recv_msg(dev, wdata, wdata_size, rdata, rdata_size);
+}
+
+static int tier4_gw5300_mode_seq_send_and_recv_msg(struct device *dev, struct mode_sequence *mode_seq, u8 *rdata, int rdata_size)
+{
+  int i;
   int err = 0;
 
-  err =  tier4_gw5300_send_and_recv_msg(dev, wdata, wdata_size, rdata, rdata_size);
+  for (i = 0; i < mode_seq->len; ++i) {
+    struct mode_command *cmd = &mode_seq->commands[i];
+
+    err = tier4_gw5300_send_and_recv_msg(dev, cmd->command, cmd->len, rdata, rdata_size);
+    msleep(cmd->delay_ms);
+    if (err < 0) {
+        dev_err(dev, "%s: Failed to send a command[%d]: %d\n", __func__, i, err);
+        break;
+    }
+  }
+
 
   return err;
 }
@@ -493,58 +762,31 @@ int tier4_gw5300_c3_setup_sensor_mode(struct device *dev, int sensor_mode)
 
   switch (sensor_mode)
   {
-//    case GW5300_MASTER_MODE_10FPS:
-//      err = tier4_gw5300_send_and_recv_msg(dev, master_10fps, sizeof(master_10fps), buf, sizeof(buf));
-//      if (err < 0)
-//      {
-//        dev_err(dev, "[%s] : Setting up Master mode 10fps failed. %d message has been sent to gw5300.\n", __func__,
-//                err);
-//        goto error;
-//      }
-//      else if (err == 0)
-//      {  // it means that 0 message has been sent.
-//        dev_err(dev, "[%s] : Setting up Master mode 10fps failed. %d message has been sent to gw5300.\n", __func__,
-//                err);
-//        err = -999;
-//        goto error;
-//      }
-//      else
-//      {
-//        err = 0;
-//      }
-//      break;
-//
-//    case GW5300_SLAVE_MODE_10FPS:
-//      err = tier4_gw5300_send_and_recv_msg(dev, slave_10fps, sizeof(slave_10fps), buf, sizeof(buf));
-//      if (err < 0)
-//      {
-//        dev_err(dev, "[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n", __func__, err);
-//        goto error;
-//      }
-//      else if (err == 0)
-//      {  // it means that 0 message has been sent.
-//        dev_err(dev, "[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n", __func__, err);
-//        err = -999;
-//        goto error;
-//      }
-//      else
-//      {
-//        err = 0;
-//      }
-//      break;
+    case GW5300_MASTER_MODE_10FPS:
+    case GW5300_SLAVE_MODE_10FPS:
     case GW5300_MASTER_MODE_20FPS:
-#if 1
-//      err = tier4_gw5300_c3_send_and_recv_msg(dev, master_20fps, sizeof(master_20fps), buf, sizeof(buf));
+    case GW5300_SLAVE_MODE_20FPS:
+    case GW5300_MASTER_MODE_30FPS:
+    case GW5300_SLAVE_MODE_30FPS:
+    case GW5300_MASTER_MODE_5FPS:
+    case GW5300_SLAVE_MODE_5FPS:
+    case GW5300_MASTER_MODE_10FPS_EBD:
+    case GW5300_SLAVE_MODE_10FPS_EBD:
+    case GW5300_MASTER_MODE_20FPS_EBD:
+    case GW5300_SLAVE_MODE_20FPS_EBD:
+    case GW5300_MASTER_MODE_30FPS_EBD:
+    case GW5300_SLAVE_MODE_30FPS_EBD:
+      err = tier4_gw5300_mode_seq_send_and_recv_msg(dev, &c3_mode_seqs[sensor_mode], buf, sizeof(buf));
       if (err < 0)
       {
-        dev_err(dev, "[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n", __func__,
-                err);
+        dev_err(dev, "[%s] : Setting up %s failed. %d message has been sent to gw5300.\n", __func__,
+                gw5300_mode_name[sensor_mode], err);
         goto error;
       }
       else if (err == 0)
       {  // it means that 0 message has been sent.
-        dev_err(dev, "[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n", __func__,
-                err);
+        dev_err(dev, "[%s] : Setting up %s failed. %d message has been sent to gw5300.\n", __func__,
+                gw5300_mode_name[sensor_mode], err);
         err = -999;
         goto error;
       }
@@ -552,103 +794,7 @@ int tier4_gw5300_c3_setup_sensor_mode(struct device *dev, int sensor_mode)
       {
         err = 0;
       }
-#endif
       break;
-//    case GW5300_SLAVE_MODE_20FPS:
-//      err = tier4_gw5300_send_and_recv_msg(dev, slave_20fps, sizeof(slave_20fps), buf, sizeof(buf));
-//      if (err < 0)
-//      {
-//        dev_err(dev, "[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n", __func__, err);
-//        goto error;
-//      }
-//      else if (err == 0)
-//      {  // it means that 0 message has been sent.
-//        dev_err(dev, "[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n", __func__, err);
-//        err = -999;
-//        goto error;
-//      }
-//      else
-//      {
-//        err = 0;
-//      }
-//      break;
-//    case GW5300_MASTER_MODE_30FPS:
-//      err = tier4_gw5300_send_and_recv_msg(dev, master_30fps, sizeof(master_30fps), buf, sizeof(buf));
-//      if (err < 0)
-//      {
-//        dev_err(dev, "[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n", __func__,
-//                err);
-//        goto error;
-//      }
-//      else if (err == 0)
-//      {  // it means that 0 message has been sent.
-//        dev_err(dev, "[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n", __func__,
-//                err);
-//        err = -999;
-//        goto error;
-//      }
-//      else
-//      {
-//        err = 0;
-//      }
-//      break;
-//
-//    case GW5300_SLAVE_MODE_30FPS:
-//      err = tier4_gw5300_send_and_recv_msg(dev, slave_30fps, sizeof(slave_30fps), buf, sizeof(buf));
-//      if (err < 0)
-//      {
-//        dev_err(dev, "[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n", __func__, err);
-//        goto error;
-//      }
-//      else if (err == 0)
-//      {  // it means that 0 message has been sent.
-//        dev_err(dev, "[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n", __func__, err);
-//        err = -999;
-//        goto error;
-//      }
-//      else
-//      {
-//        err = 0;
-//      }
-//      break;
-//    case GW5300_MASTER_MODE_10FPS_SLOW:
-//      err = tier4_gw5300_send_and_recv_msg(dev, master_10fps_slow, sizeof(master_10fps_slow), buf, sizeof(buf));
-//      if (err < 0)
-//      {
-//        dev_err(dev, "[%s] : Setting up Slow clock Master mode 10fps failed. %d message has been sent to gw5300.\n", __func__,
-//                err);
-//        goto error;
-//      }
-//      else if (err == 0)
-//      {  // it means that 0 message has been sent.
-//        dev_err(dev, "[%s] : Setting up Slow clock Master mode 10fps failed. %d message has been sent to gw5300.\n", __func__,
-//                err);
-//        err = -999;
-//        goto error;
-//      }
-//      else
-//      {
-//        err = 0;
-//      }
-//      break;
-//    case GW5300_SLAVE_MODE_10FPS_SLOW:
-//      err = tier4_gw5300_send_and_recv_msg(dev, slave_10fps_slow, sizeof(slave_10fps_slow), buf, sizeof(buf));
-//      if (err < 0)
-//      {
-//        dev_err(dev, "[%s] : Setting up Slow clock Slave mode 10fps failed. %d message has been sent to gw5300.\n", __func__, err);
-//        goto error;
-//      }
-//      else if (err == 0)
-//      {  // it means that 0 message has been sent.
-//        dev_err(dev, "[%s] : Setting up Slow clock Slave mode 10fps failed. %d message has been sent to gw5300.\n", __func__, err);
-//        err = -999;
-//        goto error;
-//      }
-//      else
-//      {
-//        err = 0;
-//      }
-//      break;
     default:
       break;
   }
@@ -744,6 +890,24 @@ static struct i2c_driver tier4_gw5300_i2c_driver = {
 static int __init tier4_gw5300_init(void)
 {
   printk(KERN_INFO "ISP Driver for TIERIV Camera.\n");
+
+  c3_mode_seqs[GW5300_MASTER_MODE_5FPS] = c3_master_5fps_seq;
+  c3_mode_seqs[GW5300_SLAVE_MODE_5FPS] = c3_slave_5fps_seq;
+
+  c3_mode_seqs[GW5300_MASTER_MODE_10FPS] = c3_master_10fps_seq;
+  c3_mode_seqs[GW5300_MASTER_MODE_10FPS_EBD] = c3_master_10fps_ebd_seq;
+  c3_mode_seqs[GW5300_SLAVE_MODE_10FPS] = c3_slave_10fps_seq;
+  c3_mode_seqs[GW5300_SLAVE_MODE_10FPS_EBD] = c3_slave_10fps_ebd_seq;
+
+  c3_mode_seqs[GW5300_MASTER_MODE_20FPS] = c3_master_20fps_seq;
+  c3_mode_seqs[GW5300_MASTER_MODE_20FPS_EBD] = c3_master_20fps_ebd_seq;
+  c3_mode_seqs[GW5300_SLAVE_MODE_20FPS] = c3_slave_20fps_seq;
+  c3_mode_seqs[GW5300_SLAVE_MODE_20FPS_EBD] = c3_slave_20fps_ebd_seq;
+
+  c3_mode_seqs[GW5300_MASTER_MODE_30FPS] = c3_master_30fps_seq;
+  c3_mode_seqs[GW5300_MASTER_MODE_30FPS_EBD] = c3_master_30fps_ebd_seq;
+  c3_mode_seqs[GW5300_SLAVE_MODE_30FPS] = c3_slave_30fps_seq;
+  c3_mode_seqs[GW5300_SLAVE_MODE_30FPS_EBD] = c3_slave_30fps_ebd_seq;
 
   return i2c_add_driver(&tier4_gw5300_i2c_driver);
 }

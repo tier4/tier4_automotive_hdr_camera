@@ -224,8 +224,6 @@ static int tier4_imx728_write_reg(struct camera_common_data *s_data, u16 addr, u
 
 // ------------------------------------------------
 
-#ifdef USE_SET_FSYNC_TRIGGER_MODE
-
 static int tier4_imx728_set_fsync_trigger_mode(struct tier4_imx728 *priv, int mode)
 {
   int err = 0;
@@ -345,8 +343,6 @@ static int tier4_imx728_set_fsync_trigger_mode(struct tier4_imx728 *priv, int mo
 
   return err;
 }
-
-#endif
 
 static struct mutex serdes_lock__;
 
@@ -682,130 +678,45 @@ static int tier4_imx728_start_one_streaming(struct tegracam_device *tc_dev)
 
   switch (priv->trigger_mode)
   {
-
+    case GW5300_MASTER_MODE_5FPS:
     case GW5300_MASTER_MODE_10FPS:
-      break;
-
-//    case GW5300_MASTER_MODE_10FPS:
-//
-//      dev_info(dev, "[%s] : Setting camera sensor to Master mode 10fps\n", __func__);
-//
-//      err = tier4_gw5300_c3_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS);
-//      if (err)
-//      {
-//        dev_err(dev, "[%s] : setting camera sensor to Master mode 10fps failed\n", __func__);
-//        return err;
-//      }
-//
-//     priv->last_distortion_correction = 1;
-//
-//      break;
-//
-//    case GW5300_SLAVE_MODE_10FPS:
-//
-//      dev_info(dev, "[%s] : Setting camera sensor to Slave mode 10fps\n", __func__);
-//
-//      err = tier4_imx728_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_10FPS);
-//      if (err)
-//      {
-//        dev_err(dev, "[%s] : setting camera sensor to Slave mode 10fps failed\n", __func__);
-//        goto exit;
-//      }
-//
-//     priv->last_distortion_correction = 1;
-//
-//      msleep(20);
-//
-//      break;
-
+    case GW5300_MASTER_MODE_10FPS_EBD:
     case GW5300_MASTER_MODE_20FPS:
+    case GW5300_MASTER_MODE_20FPS_EBD:
+    case GW5300_MASTER_MODE_30FPS:
+    case GW5300_MASTER_MODE_30FPS_EBD:
+      dev_info(dev, "[%s] : Setting camera sensor to %s\n", __func__, gw5300_mode_name[priv->trigger_mode]);
 
-      dev_info(dev, "[%s] : Setting camera sensor to Master mode 20fps\n", __func__);
-
-      err = tier4_gw5300_c3_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_20FPS);
+      err = tier4_gw5300_c3_setup_sensor_mode(priv->isp_dev, priv->trigger_mode);
       if (err)
       {
-        dev_err(dev, "[%s] : setting camera sensor to Master mode 20fps failed\n", __func__);
+        dev_err(dev, "[%s] : setting camera sensor to %s failed\n", __func__, gw5300_mode_name[priv->trigger_mode]);
         return err;
       }
 
       priv->last_distortion_correction = 1;
-
       break;
 
-//    case GW5300_SLAVE_MODE_20FPS:
-//
-//      dev_info(dev, "[%s] : Setting camera sensor to Slave mode 20fps\n", __func__);
-//
-//      err = tier4_imx728_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_20FPS);
-//      if (err)
-//      {
-//        dev_err(dev, "[%s] : setting camera sensor to Slave mode 20fps failed\n", __func__);
-//        return err;
-//      }
-//
-//      priv->last_distortion_correction = 1;
-//
-//      break;
-//
-//    case GW5300_MASTER_MODE_30FPS:
-//
-//      dev_info(dev, "[%s] : Setting camera sensor to Master mode 30fps\n", __func__);
-//
-//      err = tier4_gw5300_c3_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_30FPS);
-//      if (err)
-//      {
-//        dev_err(dev, "[%s] : setting camera sensor to Master mode 30fps failed\n", __func__);
-//        return err;
-//      }
-//
-//      break;
-//
-//    case GW5300_SLAVE_MODE_30FPS:
-//
-//      dev_info(dev, "[%s] : Setting camera sensor to slave  mode 30fps\n", __func__);
-//
-//      err = tier4_gw5300_c3_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_30FPS);
-//      if (err)
-//      {
-//        dev_err(dev, "[%s] : setting camera sensor to Slave mode 30fps failed\n", __func__);
-//        return err;
-//      }
-//
-//      priv->last_distortion_correction = 1;
-//
-//      break;
-//
-//    case GW5300_SLAVE_MODE_10FPS_SLOW:
-//
-//      err = tier4_gw5300_c3_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_10FPS_SLOW);
-//      if (err)
-//      {
-//        dev_err(dev, "[%s] : setting camera sensor to Slow clock Slave mode 10fps failed\n", __func__);
-//        goto exit;
-//      }
-//
-//      priv->last_distortion_correction = 1;
-//
-//      msleep(20);
-//
-//      break;
-//
-//    case GW5300_MASTER_MODE_10FPS_SLOW:
-//
-//      err = tier4_gw5300_c3_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS_SLOW);
-//      if (err)
-//      {
-//        dev_err(dev, "[%s] : setting camera sensor to Slow clock Master mode 10fps failed\n", __func__);
-//        return err;
-//      }
-//
-//      priv->last_distortion_correction = 1;
-//
-//      break;
+    case GW5300_SLAVE_MODE_5FPS:
+    case GW5300_SLAVE_MODE_10FPS:
+    case GW5300_SLAVE_MODE_10FPS_EBD:
+    case GW5300_SLAVE_MODE_20FPS:
+    case GW5300_SLAVE_MODE_20FPS_EBD:
+    case GW5300_SLAVE_MODE_30FPS:
+    case GW5300_SLAVE_MODE_30FPS_EBD:
+      dev_info(dev, "[%s] : Setting camera sensor to %s\n", __func__, gw5300_mode_name[priv->trigger_mode]);
+
+      err = tier4_imx728_set_fsync_trigger_mode(priv, priv->trigger_mode);
+      if (err)
+      {
+        dev_err(dev, "[%s] : setting camera sensor to %s failed\n", __func__, gw5300_mode_name[priv->trigger_mode]);
+        return err;
+      }
+
+      priv->last_distortion_correction = 1;
+      break;
 
     default:  //   case of  trigger_mode  < 0
-
       dev_err(dev, "[%s] : The camera sensor mode(trigger mode)=%d is invalid.\n", __func__, priv->trigger_mode);
 
       return err;
