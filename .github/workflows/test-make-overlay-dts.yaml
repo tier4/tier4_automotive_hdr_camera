@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install device-tree-compiler
-        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
       - name: Generate devicetree overlay
         run: |
           ./drivers/src/make_overlay_dts_roscube.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install device-tree-compiler
-        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
       - name: Generate devicetree overlay
         run: |
           ./drivers/src/make_overlay_dts_roscube-orin.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
@@ -78,7 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install device-tree-compiler
-        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
       - name: Generate devicetree overlay
         run: |
           ./drivers/src/make_overlay_dts_orin-devkit.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
@@ -105,7 +105,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install device-tree-compiler
-        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
       - name: Generate devicetree overlay
         run: |
           ./drivers/src/make_overlay_dts_xavier-devkit.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
@@ -132,7 +132,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install device-tree-compiler
-        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
       - name: Generate devicetree overlay
         run: |
           ./drivers/src/make_overlay_dts_eac-5000.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
@@ -159,7 +159,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install device-tree-compiler
-        run: sudo apt-get update && sudo apt-get install -y device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
       - name: Generate devicetree overlay
         run: |
           ./drivers/src/make_overlay_dts_anvil.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
