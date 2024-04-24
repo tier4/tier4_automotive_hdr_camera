@@ -8,7 +8,7 @@ on:
 
 jobs:
   test-make-overlay-dts-roscube:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 3
     strategy:
       matrix:
@@ -35,7 +35,7 @@ jobs:
           ls -l *.dtbo
 
   test-make-overlay-dts-roscube-orin:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 3
     strategy:
       matrix:
@@ -62,7 +62,7 @@ jobs:
           ls -l *.dtbo
 
   test-make-overlay-dts-orin-devkit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 3
     strategy:
       matrix:
@@ -89,7 +89,7 @@ jobs:
           ls -l *.dtbo
 
   test-make-overlay-dts-xavier-devkit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 3
     strategy:
       matrix:
@@ -116,7 +116,7 @@ jobs:
           ls -l *.dtbo
 
   test-make-overlay-dts-eac-5000:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 3
     strategy:
       matrix:
@@ -143,7 +143,7 @@ jobs:
           ls -l *.dtbo
 
   test-make-overlay-dts-anvil:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 3
     strategy:
       matrix:
