@@ -100,9 +100,9 @@ int tier4_gw5300_c3_setup_sensor_mode(struct device *dev, int sensor_mode);
  * @return  0 for success, or -1 otherwise.
  */
 
-int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16 min_integration_time);
+int tier4_gw5300_c2_set_integration_time_on_aemode(struct device *dev, int trigger_mode, u32 max_integration_time, u32 min_integration_time);
 
-int tier4_gw5300_c3_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16 min_integration_time);
+int tier4_gw5300_c3_set_integration_time_on_aemode(struct device *dev, int trigger_mode, u32 max_integration_time, u32 min_integration_time);
 
 int tier4_gw5300_set_distortion_correction(struct device *dev, bool val);
 

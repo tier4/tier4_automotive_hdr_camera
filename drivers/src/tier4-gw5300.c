@@ -109,17 +109,19 @@ struct mode_command {
 
 #define NUM_VA_ARGS(type, ...)  (sizeof ((type[]) {__VA_ARGS__}) / sizeof (type))
 
-#define MODE_SEQ(...) \
+#define MODE_SEQ(h_line_time_ns, ...) \
     { \
         .commands = (struct mode_command[]){ \
             __VA_ARGS__ \
         }, \
         .len = NUM_VA_ARGS(struct mode_command, __VA_ARGS__), \
+        .h_line_ns = (h_line_time_ns) \
     }
 
 struct mode_sequence {
     struct mode_command *commands;
     size_t len;
+    u32 h_line_ns;
 };
 
 /*
@@ -133,6 +135,7 @@ static u8 c3_master_5fps_cmd[] = {
 /* mode 0 */
 static struct mode_sequence c3_master_5fps_seq =
     MODE_SEQ(
+        40000,
         MODE_CMD(c3_master_5fps_cmd, 0),
     );
 
@@ -142,6 +145,7 @@ static u8 c3_master_20fps_cmd[] = {
 };
 static struct mode_sequence c3_master_20fps_seq =
     MODE_SEQ(
+        20000,
         MODE_CMD(c3_master_20fps_cmd, 0)
     );
 
@@ -152,6 +156,7 @@ static u8 c3_master_20fps_ebd_cmd[] = {
 /* mode 10 */
 static struct mode_sequence c3_master_20fps_ebd_seq =
     MODE_SEQ(
+        20000,
         MODE_CMD(c3_master_20fps_ebd_cmd, 0)
     );
 
@@ -162,6 +167,7 @@ static u8 c3_master_30fps_cmd[] = {
 /* mode 6 */
 static struct mode_sequence c3_master_30fps_seq =
     MODE_SEQ(
+        13890,
         MODE_CMD(c3_master_30fps_cmd, 0)
     );
 
@@ -172,6 +178,7 @@ static u8 c3_master_30fps_ebd_cmd[] = {
 /* mode 12 */
 static struct mode_sequence c3_master_30fps_ebd_seq =
     MODE_SEQ(
+        13890,
         MODE_CMD(c3_master_30fps_ebd_cmd, 0)
     );
 
@@ -212,6 +219,7 @@ static u8 c3_master_sync_mode_2[] = {
 /* mode 1 */
 static struct mode_sequence c3_slave_5fps_seq =
     MODE_SEQ(
+        40000,
         MODE_CMD(c3_master_5fps_cmd, 5000),
 
         MODE_CMD(c3_regmap_ffff, 500),
@@ -235,6 +243,7 @@ static u8 c3_20_to_10fps_cmd_2[] = {
 /* mode 2 */
 static struct mode_sequence c3_master_10fps_seq =
     MODE_SEQ(
+        40000,
         MODE_CMD(c3_master_20fps_cmd, 5000),
 
         MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
@@ -244,6 +253,7 @@ static struct mode_sequence c3_master_10fps_seq =
 /* mode 3 */
 static struct mode_sequence c3_slave_10fps_seq =
     MODE_SEQ(
+        40000,
         MODE_CMD(c3_master_20fps_cmd, 5000),
 
         MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
@@ -260,6 +270,7 @@ static struct mode_sequence c3_slave_10fps_seq =
 /* mode 5 */
 static struct mode_sequence c3_slave_20fps_seq =
     MODE_SEQ(
+        20000,
         MODE_CMD(c3_master_20fps_cmd, 5000),
 
         MODE_CMD(c3_regmap_ffff, 500),
@@ -273,6 +284,7 @@ static struct mode_sequence c3_slave_20fps_seq =
 /* mode 7 */
 static struct mode_sequence c3_slave_30fps_seq =
     MODE_SEQ(
+        13890,
         MODE_CMD(c3_master_30fps_cmd, 5000),
 
         MODE_CMD(c3_regmap_ffff, 500),
@@ -286,6 +298,7 @@ static struct mode_sequence c3_slave_30fps_seq =
 /* mode 8 */
 static struct mode_sequence c3_master_10fps_ebd_seq =
     MODE_SEQ(
+        40000,
         MODE_CMD(c3_master_20fps_ebd_cmd, 5000),
 
         MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
@@ -295,6 +308,7 @@ static struct mode_sequence c3_master_10fps_ebd_seq =
 /* mode 9 */
 static struct mode_sequence c3_slave_10fps_ebd_seq =
     MODE_SEQ(
+        40000,
         MODE_CMD(c3_master_20fps_ebd_cmd, 5000),
 
         MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
@@ -311,6 +325,7 @@ static struct mode_sequence c3_slave_10fps_ebd_seq =
 /* mode 11 */
 static struct mode_sequence c3_slave_20fps_ebd_seq =
     MODE_SEQ(
+        20000,
         MODE_CMD(c3_master_20fps_ebd_cmd, 5000),
 
         MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
@@ -327,6 +342,7 @@ static struct mode_sequence c3_slave_20fps_ebd_seq =
 /* mode 13 */
 static struct mode_sequence c3_slave_30fps_ebd_seq =
     MODE_SEQ(
+        13890,
         MODE_CMD(c3_master_30fps_ebd_cmd, 5000),
 
         MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
@@ -439,8 +455,7 @@ uint8_t calcCheckSum(const uint8_t *data, size_t size){
       return result;
 }
 
-int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_integration_time, u16 min_integration_time){
-#define MS_TO_LINE_UNIT 80
+int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u32 h_line_ns, u32 max_integration_time, u32 min_integration_time){
   u8    buf[6];
   int ret = 0;
 
@@ -449,12 +464,15 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_inte
 
   const size_t max_val_pos = 17;
   const size_t min_val_pos = 17;
-  uint32_t min_line =  min_integration_time / 1000 * MS_TO_LINE_UNIT;
-  uint32_t max_line =  max_integration_time / 1000 * MS_TO_LINE_UNIT;
+  uint32_t min_line = DIV_ROUND_CLOSEST(min_integration_time * 1000, h_line_ns);
+  uint32_t max_line = DIV_ROUND_CLOSEST(max_integration_time * 1000, h_line_ns);
   uint8_t b1 = max_line &0xFF;
   uint8_t b2 = (max_line >> 8)&0xFF;
   uint8_t b3 = 0;
   uint8_t b4 = 0;
+
+  dev_info(dev, "%s: integration time(%u[ns/H line]): max=(%d[us], %d[line]) min=(%d[us], %d[line])\n",
+          __func__, h_line_ns, max_integration_time, max_line, min_integration_time, min_line);
 
   cmd_integration_max[max_val_pos] = b1;
   cmd_integration_max[max_val_pos+1] = b2;
@@ -480,7 +498,26 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev, u16 max_inte
   return ret;
 
 }
-EXPORT_SYMBOL(tier4_gw5300_set_integration_time_on_aemode);
+
+int tier4_gw5300_c2_set_integration_time_on_aemode(struct device *dev, int trigger_mode, u32 max_integration_time, u32 min_integration_time)
+{
+    size_t h_line_ns = 12500;
+
+    if (trigger_mode == GW5300_MASTER_MODE_10FPS_SLOW ||
+            trigger_mode == GW5300_SLAVE_MODE_10FPS_SLOW)
+        h_line_ns = 50000;
+
+    return tier4_gw5300_set_integration_time_on_aemode(dev, h_line_ns, max_integration_time, min_integration_time);
+}
+EXPORT_SYMBOL(tier4_gw5300_c2_set_integration_time_on_aemode);
+
+
+int tier4_gw5300_c3_set_integration_time_on_aemode(struct device *dev, int trigger_mode, u32 max_integration_time, u32 min_integration_time)
+{
+    return tier4_gw5300_set_integration_time_on_aemode(dev, c3_mode_seqs[trigger_mode].h_line_ns,
+            max_integration_time, min_integration_time);
+}
+EXPORT_SYMBOL(tier4_gw5300_c3_set_integration_time_on_aemode);
 
 // ------------------------------------------------------------------
 

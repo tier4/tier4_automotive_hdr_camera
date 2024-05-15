@@ -533,7 +533,7 @@ static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
   int err = 0;
 
   struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
-  tier4_gw5300_set_integration_time_on_aemode(priv->isp_dev, val, val);
+  tier4_gw5300_c2_set_integration_time_on_aemode(priv->isp_dev, priv->trigger_mode, val, val);
 
   return err;
 }
@@ -838,10 +838,10 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
   msleep(200);
 
-#if 0
+//#if 0
   msleep(1000);
-  tier4_gw5300_set_integration_time_on_aemode(priv->isp_dev, shutter_time_max, shutter_time_min);
-#endif
+  tier4_gw5300_c2_set_integration_time_on_aemode(priv->isp_dev, priv->trigger_mode, shutter_time_max, shutter_time_min);
+//#endif
 
   dev_info(dev, "[%s] :  Camera has started streaming\n", __func__);
 

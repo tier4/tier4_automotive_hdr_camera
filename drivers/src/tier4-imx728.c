@@ -535,7 +535,7 @@ static int tier4_imx728_set_exposure(struct tegracam_device *tc_dev, s64 val)
   int err = 0;
 
   struct tier4_imx728 *priv = (struct tier4_imx728 *)tegracam_get_privdata(tc_dev);
-  tier4_gw5300_set_integration_time_on_aemode(priv->isp_dev, val, val);
+  tier4_gw5300_c3_set_integration_time_on_aemode(priv->isp_dev, priv->trigger_mode, val, val);
 
   return err;
 }
@@ -766,10 +766,8 @@ static int tier4_imx728_start_one_streaming(struct tegracam_device *tc_dev)
     return err;
   }
 
-#if 0
   msleep(1000);
-  tier4_gw5300_c3_set_integration_time_on_aemode(priv->isp_dev, shutter_time_max, shutter_time_min);
-#endif
+  tier4_gw5300_c3_set_integration_time_on_aemode(priv->isp_dev, priv->trigger_mode, shutter_time_max, shutter_time_min);
 
 //  Reset GW5300 via Max9295 in C3 camera
 //  err = tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX728, POWER_ON );
