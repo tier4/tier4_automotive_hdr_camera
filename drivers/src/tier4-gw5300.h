@@ -108,6 +108,7 @@ int tier4_gw5300_set_distortion_correction(struct device *dev, bool val);
 
 int tier4_gw5300_c3_set_distortion_correction(struct device *dev, bool val);
 
+int tier4_gw5300_c3_set_auto_exposure(struct device *dev, bool val);
 
 int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size);
 

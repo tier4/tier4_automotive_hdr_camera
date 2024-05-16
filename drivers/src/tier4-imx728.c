@@ -120,7 +120,6 @@ struct tier4_imx728
   int trigger_mode;
   bool distortion_correction;
   bool last_distortion_correction;
-  bool auto_exposure;
   bool inhibit_fpga_access;
   struct device *fpga_dev;
 };
@@ -152,6 +151,7 @@ static int camera_channel_count = 0;
 static int trigger_mode;
 static int fsync_mfp = 0;
 static int enable_distortion_correction = 1;
+static int enable_auto_exposure = 0xCAFE;
 
 
 #define IMX728_MIN_EXPOSURE_TIME 11000  // 11 milisecond
@@ -167,6 +167,7 @@ module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
 
 module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
 module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
+module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
 
 // ------------------------
 static char upper(char c)
@@ -529,16 +530,6 @@ static int tier4_imx728_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
 
 /* ------------------------------------------------------------------------- */
 
-static int tier4_imx728_set_auto_exposure(struct tegracam_device *tc_dev)
-{
-  int err = 0;
-  //struct tier4_imx728 *priv = (struct tier4_imx728 *)tegracam_get_privdata(tc_dev);
-
-  return err;
-}
-
-/* ------------------------------------------------------------------------- */
-
 static int tier4_imx728_set_exposure(struct tegracam_device *tc_dev, s64 val)
 {
   int err = 0;
@@ -660,18 +651,6 @@ static int tier4_imx728_start_one_streaming(struct tegracam_device *tc_dev)
     goto exit;
   }
 
-  if (priv->auto_exposure == true)
-  {
-    err = tier4_imx728_set_auto_exposure(tc_dev);
-  }
-
-
-  if (err)
-  {
-    dev_err(dev, "[%s] : Setting Digital Gain to default value failed\n", __func__);
-    goto exit;
-  }
-
   dev_info(dev, "[%s] : trigger_mode = %d\n", __func__, trigger_mode);
 
   priv->trigger_mode = trigger_mode;
@@ -722,6 +701,17 @@ static int tier4_imx728_start_one_streaming(struct tegracam_device *tc_dev)
       return err;
   }
 
+  usleep_range(500000, 510000);
+  err = tier4_gw5300_c3_set_auto_exposure(priv->isp_dev, enable_auto_exposure);
+  if (err <= 0)
+  {
+    dev_err(dev, "[%s] : Setting Digital Gain to default value failed\n", __func__);
+    goto exit;
+  }
+  else
+  {
+    err = 0;
+  }
 
 #if USE_DISTORTION_CORRECTION
 
@@ -1179,21 +1169,19 @@ static int tier4_imx728_board_setup(struct tier4_imx728 *priv)
     priv->distortion_correction = false;
   }
 
-  err = of_property_read_string(node, "auto-exposure", &str_value);
+  if (enable_auto_exposure == 0xCAFE)
+  {
+    err = of_property_read_string(node, "auto-exposure", &str_value);
 
-  if (err < 0)
-  {
-    dev_err(dev, "[%s] : Inavlid Exposure mode.\n", __func__);
-    goto error;
-  }
+    if (err < 0)
+    {
+      dev_err(dev, "[%s] : Inavlid Exposure mode.\n", __func__);
+      goto error;
+    }
 
-  if (!strcmp(str_value, "true"))
-  {
-    priv->auto_exposure = true;
-  }
-  else
-  {
-    priv->auto_exposure = false;
+    enable_auto_exposure = !strcmp(str_value, "true");
+  } else {
+    dev_info(dev, "[%s] : Parameter[enable_auto_exposure] = %d.\n", __func__, enable_auto_exposure);
   }
 
 #if 0

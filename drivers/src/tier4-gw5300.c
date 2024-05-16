@@ -522,14 +522,16 @@ EXPORT_SYMBOL(tier4_gw5300_c3_set_distortion_correction);
 
 int tier4_gw5300_c3_set_auto_exposure(struct device *dev, bool val)
 {
-int ret = 0;
+  int ret = 0;
   u8  buf[6];
   u8 cmd_auto_exp_on[]  ={ 0x33, 0x47, 0x0C, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05, 0x00, 0x07, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x69 };
   u8 cmd_auto_exp_off[] ={ 0x33, 0x47, 0x0C, 0x00, 0x00, 0x00, 0x55, 0x00, 0x80, 0x05, 0x00, 0x07, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x6A };
 
-  if(val){
+  dev_info(dev, "%s: auto exposure is %s\n", __func__, val ? "on" : "off");
+
+  if (val) {
     ret += tier4_gw5300_c3_send_and_recv_msg(dev, cmd_auto_exp_on, sizeof(cmd_auto_exp_on), buf, sizeof(buf));
-  }else{
+  } else {
     ret += tier4_gw5300_c3_send_and_recv_msg(dev, cmd_auto_exp_off, sizeof(cmd_auto_exp_off), buf, sizeof(buf));
   }
   return ret;
