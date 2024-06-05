@@ -243,7 +243,7 @@ static u8 c3_20_to_10fps_cmd_2[] = {
 /* mode 2 */
 static struct mode_sequence c3_master_10fps_seq =
     MODE_SEQ(
-        40000,
+        20000,
         MODE_CMD(c3_master_20fps_cmd, 5000),
 
         MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
@@ -253,7 +253,7 @@ static struct mode_sequence c3_master_10fps_seq =
 /* mode 3 */
 static struct mode_sequence c3_slave_10fps_seq =
     MODE_SEQ(
-        40000,
+        20000,
         MODE_CMD(c3_master_20fps_cmd, 5000),
 
         MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
@@ -298,7 +298,7 @@ static struct mode_sequence c3_slave_30fps_seq =
 /* mode 8 */
 static struct mode_sequence c3_master_10fps_ebd_seq =
     MODE_SEQ(
-        40000,
+        20000,
         MODE_CMD(c3_master_20fps_ebd_cmd, 5000),
 
         MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
@@ -308,7 +308,7 @@ static struct mode_sequence c3_master_10fps_ebd_seq =
 /* mode 9 */
 static struct mode_sequence c3_slave_10fps_ebd_seq =
     MODE_SEQ(
-        40000,
+        20000,
         MODE_CMD(c3_master_20fps_ebd_cmd, 5000),
 
         MODE_CMD(c3_20_to_10fps_cmd_1, 2000),
