@@ -31,6 +31,7 @@
 
 #define MAX9295_DEV_ADDR 0x0000
 #define MAX9295_PIPE_EN_ADDR 0x0002
+#define MAX9295_CLK_OUTPUT_ADDR 0x0003
 #define MAX9295_CTRL0_ADDR 0x0010
 
 #define MAX9295_I2C4_ADDR 0x0044
@@ -479,6 +480,17 @@ int tier4_max9295_setup_control(struct device *dev)
   /* delay to settle link */
   msleep(100);
 
+  /* Set RCLKOUT soruce to the reference PLL clock*/
+  err = tier4_max9295_write_reg(dev, MAX9295_CLK_OUTPUT_ADDR, 0x03);
+
+  /* No need?*/
+  usleep_range(10000, 11000);
+
+  /* PLL setting & Reset PLL */
+  err = tier4_max9295_write_reg(dev, MAX9295_REF_VTG0_ADDR, 0x5A);
+  usleep_range(10000, 11000);
+//  err = tier4_max9295_write_reg(dev, MAX9295_REG570_ADDR, 0x0C);
+
   for (i = 0; i < ARRAY_SIZE(addr_offset); i += 3)
   {
     if ((g_ctx->ser_reg << 1) == addr_offset[i])
@@ -518,6 +530,10 @@ int tier4_max9295_setup_control(struct device *dev)
   tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR, MAX9295_PWDN_GPIO);
   tier4_max9295_write_reg(dev, MAX9295_SRC_CTRL_ADDR, MAX9295_RESET_SRC);
   tier4_max9295_write_reg(dev, MAX9295_SRC_OUT_RCLK_ADDR, MAX9295_SRC_RCLK);
+
+  /* PLL setting & Enable PLL */
+  tier4_max9295_write_reg(dev, MAX9295_REF_VTG0_ADDR, 0x59);
+
 
   g_ctx->serdev_found = true;
 
