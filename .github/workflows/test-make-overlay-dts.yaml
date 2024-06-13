@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 3
     strategy:
       matrix:
-        revision: [R32.5.1, R32.5.2, R32.6.1, R35.1]
+        revision: [R32.5.1, R32.5.2, R32.6.1, R35.4.1]
         camera-combination: [
           "-8 C1", "-8 C2",
           "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
