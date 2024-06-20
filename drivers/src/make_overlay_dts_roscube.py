@@ -3037,6 +3037,27 @@ if total_num_args > 10:
     usage()
     sys.exit()
 
+# Replacing for R35.4.1.
+# This is due to the implementation of `min_gain_val` being -1 in L4T R35.4.1. 
+if l4t_revision == "R35.4.1":
+    str_i2c_isx021_0_p2 = str_i2c_isx021_0_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_1_p2 = str_i2c_isx021_1_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_2_p2 = str_i2c_isx021_2_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_3_p2 = str_i2c_isx021_3_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_4_p2 = str_i2c_isx021_4_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_5_p2 = str_i2c_isx021_5_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_6_p2 = str_i2c_isx021_6_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_7_p2 = str_i2c_isx021_7_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+
+    str_i2c_imx490_0_p2 = str_i2c_imx490_0_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_1_p2 = str_i2c_imx490_1_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_2_p2 = str_i2c_imx490_2_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_3_p2 = str_i2c_imx490_3_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_4_p2 = str_i2c_imx490_4_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_5_p2 = str_i2c_imx490_5_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_6_p2 = str_i2c_imx490_6_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_7_p2 = str_i2c_imx490_7_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+
 for i in range(MAX_NUM_CAMERAS):
     if i & 0x0 == 0:
         err = check_and_set_next_port(i, temp_cam)
