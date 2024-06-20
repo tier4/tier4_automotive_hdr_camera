@@ -2006,7 +2006,7 @@ str_i2c_isx021_n_p2 = """
           serdes_pix_clk_hz = \"833333333\";
 
           gain_factor = \"10\";
-          min_gain_val = \"1\";                   /* dB */
+          min_gain_val = \"0\";                   /* dB */
           max_gain_val = \"300\";                 /* dB */
           step_gain_val = \"3\";                  /* 0.3 */
           default_gain = \"0\";
@@ -2049,7 +2049,7 @@ str_i2c_isx021_n_p2 = """
           serdes_pix_clk_hz = \"833333333\";
 
           gain_factor = \"10\";
-          min_gain_val = \"1\";                   /* dB */
+          min_gain_val = \"0\";                   /* dB */
           max_gain_val = \"300\";                 /* dB */
           step_gain_val = \"3\";                  /* 0.3 */
           default_gain = \"0\";
@@ -2092,7 +2092,7 @@ str_i2c_isx021_n_p2 = """
           serdes_pix_clk_hz = \"833333333\";
 
           gain_factor = \"10\";
-          min_gain_val = \"1\";                   /* dB */
+          min_gain_val = \"0\";                   /* dB */
           max_gain_val = \"300\";                 /* dB */
           step_gain_val = \"3\";                  /* 0.3 */
           default_gain = \"0\";
@@ -2135,7 +2135,7 @@ str_i2c_isx021_n_p2 = """
           serdes_pix_clk_hz = \"833333333\";
 
           gain_factor = \"10\";
-          min_gain_val = \"1\";                   /* dB */
+          min_gain_val = \"0\";                   /* dB */
           max_gain_val = \"300\";                 /* dB */
           step_gain_val = \"3\";                  /* 0.3 */
           default_gain = \"0\";
@@ -2170,6 +2170,16 @@ str_i2c_isx021_6_p2 = str_i2c_isx021_n_p2.replace("serial_a", "serial_g")
 str_i2c_isx021_7_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
     "serial_a", "serial_g"
 )
+
+def replace_str_i2c_isx021_n_p2_for_r3541() -> None:
+    str_i2c_isx021_0_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_1_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_2_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_3_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_4_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_5_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_6_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_isx021_7_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
 
 # -----------------------------------------------
 
@@ -2480,7 +2490,7 @@ str_i2c_imx490_n_p2 = """
           serdes_pix_clk_hz = \"1200000000\";
         
           gain_factor = \"5\";
-          min_gain_val = \"1\";                         /* dB */
+          min_gain_val = \"0\";                         /* dB */
           max_gain_val = \"300\";                       /* dB */
           step_gain_val = \"1\";                        /* 0.3 */
           default_gain = \"0\";
@@ -2514,6 +2524,16 @@ str_i2c_imx490_6_p2 = str_i2c_imx490_n_p2.replace("serial_a", "serial_g")
 str_i2c_imx490_7_p2 = str_i2c_imx490_n_p2.replace('vc_id = "0"', 'vc_id = "1"').replace(
     "serial_a", "serial_g"
 )
+
+def replace_str_i2c_imx490_n_p2_for_r3541() -> None:
+    str_i2c_imx490_0_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_1_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_2_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_3_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_4_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_5_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_6_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx490_7_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
 
 # -----------------------------------------------
 
@@ -3065,6 +3085,11 @@ for i in range(MAX_NUM_CAMERAS):
         sys.exit()
     else:
         camera[i] = temp_cam[i]
+      
+    # Replace for R35.4.1
+    if l4t_revision == "R35.4.1":
+        replace_str_i2c_imx490_n_p2_for_r3541()
+        replace_str_i2c_isx021_n_p2_for_r3541()
 
     if i == 0:
         str_fragment_vi0 = dict_fragment_vi_0[str_rev_num]
