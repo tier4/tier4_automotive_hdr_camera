@@ -480,10 +480,10 @@ int tier4_max9295_setup_control(struct device *dev)
   /* delay to settle link */
   msleep(100);
 
-  /* Set RCLKOUT soruce to the reference PLL clock*/
+  /* Set RCLKOUT source to the reference PLL clock */
   err = tier4_max9295_write_reg(dev, MAX9295_CLK_OUTPUT_ADDR, 0x03);
 
-  /* No need?*/
+  /* No need? */
   usleep_range(10000, 11000);
 
   /* PLL setting & Reset PLL */
