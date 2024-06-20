@@ -2006,7 +2006,7 @@ str_i2c_isx021_n_p2 = """
           serdes_pix_clk_hz = \"833333333\";
 
           gain_factor = \"10\";
-          min_gain_val = \"0\";                   /* dB */
+          min_gain_val = \"1\";                   /* dB */
           max_gain_val = \"300\";                 /* dB */
           step_gain_val = \"3\";                  /* 0.3 */
           default_gain = \"0\";
@@ -2049,7 +2049,7 @@ str_i2c_isx021_n_p2 = """
           serdes_pix_clk_hz = \"833333333\";
 
           gain_factor = \"10\";
-          min_gain_val = \"0\";                   /* dB */
+          min_gain_val = \"1\";                   /* dB */
           max_gain_val = \"300\";                 /* dB */
           step_gain_val = \"3\";                  /* 0.3 */
           default_gain = \"0\";
@@ -2092,7 +2092,7 @@ str_i2c_isx021_n_p2 = """
           serdes_pix_clk_hz = \"833333333\";
 
           gain_factor = \"10\";
-          min_gain_val = \"0\";                   /* dB */
+          min_gain_val = \"1\";                   /* dB */
           max_gain_val = \"300\";                 /* dB */
           step_gain_val = \"3\";                  /* 0.3 */
           default_gain = \"0\";
@@ -2135,7 +2135,7 @@ str_i2c_isx021_n_p2 = """
           serdes_pix_clk_hz = \"833333333\";
 
           gain_factor = \"10\";
-          min_gain_val = \"0\";                   /* dB */
+          min_gain_val = \"1\";                   /* dB */
           max_gain_val = \"300\";                 /* dB */
           step_gain_val = \"3\";                  /* 0.3 */
           default_gain = \"0\";
@@ -2480,7 +2480,7 @@ str_i2c_imx490_n_p2 = """
           serdes_pix_clk_hz = \"1200000000\";
         
           gain_factor = \"5\";
-          min_gain_val = \"0\";                         /* dB */
+          min_gain_val = \"1\";                         /* dB */
           max_gain_val = \"300\";                       /* dB */
           step_gain_val = \"1\";                        /* 0.3 */
           default_gain = \"0\";
