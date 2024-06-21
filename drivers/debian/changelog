@@ -1,3 +1,9 @@
+tier4-camera-gmsl (1.4.4) UNRELEASED; urgency=medium
+
+  * Fixed MAX9295 output clock frequency settings. This fixes the camera frame rate in the case of master mode. 
+
+ -- tier4 <tier4@RQX58G>  Thu, 20 Jun 2024 15:22:30 +0900
+
 tier4-camera-gmsl (1.4.3) focal; urgency=medium
 
   * Fixed cache coherency issue.
