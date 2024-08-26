@@ -2940,7 +2940,7 @@ if l4t_revision == "R35.1":
 elif l4t_revision == "R35.2.1" or "R35.4.1":
     str_rev_num = "3521"
 else:
-    print(" Error!! : 1st argument should be R35.1 or R35.2.1")
+    print(" Error!! : 1st argument should be R35.1 or R35.2.1 or R35.4.1")
     usage()
     str_rev_num = "000"
 
@@ -2968,8 +2968,6 @@ if total_num_args > 10:
     print(" ***** Error! : " + args[0] + " should be from 2 to 8 arguments. *****\n")
     usage()
     sys.exit()
-
-print(f"{l4t_revision=}")
 
 # Replacing for R35.4.1.
 # This is due to the implementation of `min_gain_val` being -1 in L4T R35.4.1. 
