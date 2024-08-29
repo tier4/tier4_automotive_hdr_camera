@@ -2937,7 +2937,7 @@ l4t_revision = args[1].upper()
 
 if l4t_revision == "R35.1":
     str_rev_num = "351"
-elif l4t_revision == "R35.2.1" or "R35.4.1":
+elif (l4t_revision == "R35.2.1") or (l4t_revision == "R35.4.1"):
     str_rev_num = "3521"
 else:
     print(" Error!! : 1st argument should be R35.1 or R35.2.1 or R35.4.1")
