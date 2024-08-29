@@ -1,4 +1,10 @@
-tier4-camera-gmsl (1.4.4) UNRELEASED; urgency=medium
+tier4-camera-gmsl (1.4.5) focal; urgency=medium
+
+  * Added L4T 35.4.1 support for Nvidia Jetson AGX Orin development kit.
+
+ -- tier4 <camera@tier4.jp>  Mon, 26 Aug 2024 15:36:53 +0900
+
+tier4-camera-gmsl (1.4.4) focal; urgency=medium
 
   * Fixed MAX9295 output clock frequency settings. This fixes the camera frame rate in the case of master mode. 
 
