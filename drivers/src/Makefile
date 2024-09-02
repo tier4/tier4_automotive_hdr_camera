@@ -136,11 +136,11 @@ else ifeq ($(L4T_RELEASE_MAIN), R34)
     endif
 else ifeq ($(L4T_RELEASE_MAIN), R35)
         ifeq ($(MODEL),$(ROScube_word))
-            KERNELRELEASE            := 5.10.104-rqx58g
-            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-roscube-r351
-            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-roscube-r351
-           TARGET_ISX021_IMX490_DTS  := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r351
-            MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_roscube.py r35.1
+            KERNELRELEASE            := 5.10.120-rqx58g
+            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-roscube-r3541
+            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-roscube-r3541
+            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r3541
+            MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_roscube.py r35.4.1
         else ifeq ($(MODEL),$(Xavier_word))
             KERNELRELEASE            := 5.1.104-tegra
             TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-xavier-devkit-r351
@@ -199,8 +199,8 @@ else ifeq ($(L4T_RELEASE_MAIN), R35)
             TARGET_IMX728_DTS        := tier4-imx728-gmsl-device-tree-overlay-anvil-r35
             TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-anvil-r35
             TARGET_ISX021_IMX490_IMX728_DTS := tier4-isx021-imx490-imx728-gmsl-device-tree-overlay-anvil-r35
-            MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_anvil.py r35
-
+            MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_anvil.py r35 
+            
         else
             KERNELRELEASE            := 5.1.104-unknown
             TARGET_ISX021_DTS        := Unknown
