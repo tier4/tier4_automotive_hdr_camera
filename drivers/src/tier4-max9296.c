@@ -1001,9 +1001,10 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
     else if (g_ctx->hardware_model == HW_MODEL_ADLINK_ROSCUBE)
     {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 65)
-      //            tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1400MHZ);
-      tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1500MHZ);
+      // For ROSCube RQX-58G + L4T 35.4.1
+      tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_2000MHZ);
 #else
+      // For ROSCube RQX-58G + L4T 32.x
       tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR, MAX9296_PHY1_CLK_1800MHZ);
 #endif
     }
