@@ -1,3 +1,9 @@
+tier4-camera-gmsl (1.4.6) focal; urgency=medium
+
+  * Added L4T 35.4.1 support for ADLINK RQX-58G.
+
+ -- tier4 <camera@tier4.jp>  Mon, 02 Sep 2024 01:23:49 +0000
+
 tier4-camera-gmsl (1.4.5) focal; urgency=medium
 
   * Added L4T 35.4.1 support for Nvidia Jetson AGX Orin development kit.
