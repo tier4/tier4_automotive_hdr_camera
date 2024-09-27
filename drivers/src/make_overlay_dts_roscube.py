@@ -817,10 +817,8 @@ str_fragment_nvcsi_others_r325 = """
 
 # ================= NVCSI R35.4.1 =================
 
-# ================= NVCSI R35.4.1 =================
 
-
-str_fragment_nvcsi_ch0_r351 = """
+str_fragment_nvcsi_ch0_r3541 = """
 // -----   NVCSI  ------
 
 // channel@0
@@ -2800,20 +2798,21 @@ str_i2c_imx728_1_p1_r3541 = (
     str_i2c_imx728_n_p1.replace("imx728_a@3b", "imx728_b@3c")
     .replace("&max9295_ser_a", "&max9295_ser_b")
     .replace("reg = <0x3b>", "reg = <0x3c>")
+    .replace("&dser", "&dser_0")
     .replace("isp_a1", "isp_b1")
 )
 str_i2c_imx728_2_p1_r3541 = (
     str_i2c_imx728_n_p1.replace("imx728_a@3b", "imx728_c@3b")
     .replace("&max9295_ser_a", "&max9295_ser_b_0")
     .replace("isp_a1", "isp_c1")
-    .replace("&dser", "&dsera")
+    .replace("&dser", "&dser_1")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_imx728_3_p1_r3541 = (
     str_i2c_imx728_n_p1.replace("imx728_a@3b", "imx728_d@3c")
     .replace("&max9295_ser_a", "&max9295_ser_b_1")
     .replace("isp_a1", "isp_d1")
-    .replace("&dser", "&dsera")
+    .replace("&dser", "&dser_1")
     .replace("reg = <0x3b>", "reg = <0x3c>")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
@@ -2821,14 +2820,14 @@ str_i2c_imx728_4_p1_r3541 = (
     str_i2c_imx728_n_p1.replace("imx728_a@3b", "imx728_e@3b")
     .replace("&max9295_ser_a", "&max9295_ser_c_0")
     .replace("isp_a1", "isp_e1")
-    .replace("&dser", "&dserb")
+    .replace("&dser", "&dser_2")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx728_5_p1_r3541 = (
     str_i2c_imx728_n_p1.replace("imx728_a@3b", "imx728_f@3c")
     .replace("&max9295_ser_a", "&max9295_ser_c_1")
     .replace("isp_a1", "isp_f1")
-    .replace("&dser", "&dserb")
+    .replace("&dser", "&dser_2")
     .replace("reg = <0x3b>", "reg = <0x3c>")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
@@ -2836,14 +2835,14 @@ str_i2c_imx728_6_p1_r3541 = (
     str_i2c_imx728_n_p1.replace("imx728_a@3b", "imx728_g@3b")
     .replace("&max9295_ser_a", "&max9295_ser_d_0")
     .replace("isp_a1", "isp_g1")
-    .replace("&dser", "&dserc")
+    .replace("&dser", "&dser_3")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 str_i2c_imx728_7_p1_r3541 = (
     str_i2c_imx728_n_p1.replace("imx728_a@3b", "imx728_h@3c")
     .replace("&max9295_ser_a", "&max9295_ser_d_1")
     .replace("isp_a1", "isp_h1")
-    .replace("&dser", "&dserc")
+    .replace("&dser", "&dser_3")
     .replace("reg = <0x3b>", "reg = <0x3c>")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
@@ -2894,13 +2893,10 @@ str_i2c_imx728_n_p2 = """
 
           active_w = "3840";
           active_h = "2160";
-          //active_h = "2163";
           readout_orientation = "0";
           line_length = "4050";
           inherent_gain = "1";
           pix_clk_hz = "23328000";
-          //serdes_pix_clk_hz = "1000000000";
-          //serdes_pix_clk_hz = "350000000";
           serdes_pix_clk_hz = "250000000";
 
           gain_factor = "10";
@@ -2921,7 +2917,6 @@ str_i2c_imx728_n_p2 = """
           step_exp_time = "1";
           default_exp_time = "33333";/* us */
           embedded_metadata_height = "0";
-          //embedded_metadata_height = "3";
         };
 """
 
@@ -3423,19 +3418,27 @@ dict_isx021_serdes_pix_clk = {
     "3541": 'serdes_pix_clk_hz = "187500000"',
 }
 dict_imx490_serdes_pix_clk = {
-    "325x": 'serdes_pix_clk_hz  = "250000000"',
-    "3541" : 'serdes_pix_clk_hz = "187500000"',
+    "325x": 'serdes_pix_clk_hz = "1200000000"',
+    "3541": 'serdes_pix_clk_hz = "187500000"',
+}
+dict_imx728_serdes_pix_clk = {
+    "325x":  'serdes_pix_clk_hz = "250000000"',
+    "3541" : 'serdes_pix_clk_hz  = "175000000"',
 }
 
+# -----------------------------------------------
 
 def get_serdes_pix_clk(str_revision, str_camera_type):
     if str_camera_type == "C1":
         str_rc = dict_isx021_serdes_pix_clk[str_revision]
 
     elif str_camera_type == "C2":
-        str_rc = dict_imx490_serdes_pix_clk[str_revision]
+        if str_revision == "3541":
+            str_rc = dict_imx490_serdes_pix_clk[str_revision]
+        else:
+            str_rc = dict_imx490_serdes_pix_clk["325x"]
     elif str_camera_type == "C3":
-        if str_revision == "351":
+        if str_revision == "3541":
             str_rc = dict_imx728_serdes_pix_clk[str_revision]
         else:
             str_rc = dict_imx728_serdes_pix_clk["325x"]
@@ -3531,6 +3534,15 @@ if l4t_revision == "R35.4.1":
     str_i2c_imx490_5_p2 = str_i2c_imx490_5_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
     str_i2c_imx490_6_p2 = str_i2c_imx490_6_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
     str_i2c_imx490_7_p2 = str_i2c_imx490_7_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+
+    str_i2c_imx728_0_p2 = str_i2c_imx728_0_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx728_1_p2 = str_i2c_imx728_1_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx728_2_p2 = str_i2c_imx728_2_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx728_3_p2 = str_i2c_imx728_3_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx728_4_p2 = str_i2c_imx728_4_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx728_5_p2 = str_i2c_imx728_5_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx728_6_p2 = str_i2c_imx728_6_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
+    str_i2c_imx728_7_p2 = str_i2c_imx728_7_p2.replace('min_gain_val = "0"', 'min_gain_val = "1"')
 
 for i in range(MAX_NUM_CAMERAS):
     if i & 0x0 == 0:
