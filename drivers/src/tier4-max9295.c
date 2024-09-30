@@ -25,7 +25,7 @@
 #include "tier4-max9295.h"
 #include "tier4-gmsl-link.h"
 
-#define MAX9295_SHOW_I2C_WRITE_MSG  0
+#define MAX9295_SHOW_I2C_WRITE_MSG  1
 
 /* register specifics */
 
@@ -225,8 +225,10 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
   /* delay before next i2c command as required for SERDES link */
 
   usleep_range(100, 110);
+  //msleep(100);
   //    tier4_max9295_read_reg(dev, addr, &e);
   usleep_range(100, 110);
+  //msleep(100);
 
   return err;
 }
@@ -369,6 +371,8 @@ error:
 }
 EXPORT_SYMBOL(tier4_max9295_setup_streaming);
 
+// ------------------------------------------------------------------
+
 int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, bool power_on)
 {
   struct tier4_max9295 *priv = dev_get_drvdata(dev);
@@ -378,17 +382,27 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, 
   g_ctx = priv->g_client.g_ctx;
 
 #if 1
-  msleep(50);
+
+  msleep(200);
+
   if (power_on == true)
   {  // power up camera sensor
+
     err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
+
     msleep(100);
+
     if (sensor_id == SENSOR_ID_ISX021)
     {
       err += tier4_max9295_write_reg(dev, MAX9295_GPIO_5_ADDR, 0x04);
-      msleep(50);
+      msleep(100);
       err += tier4_max9295_write_reg(dev, MAX9295_GPIO_4_ADDR, 0x10);
-      msleep(50);
+      msleep(100);
+    }
+    else if (sensor_id == SENSOR_ID_IMX728)
+    {
+      err += tier4_max9295_write_reg(dev, MAX9295_GPIO_4_ADDR, 0x10);
+      msleep(100);
     }
     err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x10);
   }
@@ -399,15 +413,20 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, 
     if (sensor_id == SENSOR_ID_ISX021)
     {
       err += tier4_max9295_write_reg(dev, MAX9295_GPIO_5_ADDR, 0x04);
-      msleep(50);
+      msleep(100);
       err += tier4_max9295_write_reg(dev, MAX9295_GPIO_4_ADDR, 0x00);
-      msleep(50);
+      msleep(100);
+    }
+    else if (sensor_id == SENSOR_ID_IMX728)
+    {
+      err += tier4_max9295_write_reg(dev, MAX9295_GPIO_4_ADDR, 0x00);
+      msleep(100);
     }
   }
 
   if (err)
   {
-    dev_err(dev, "[%s] : Can not power up camera sensor\n", __func__);
+    dev_err(dev, "[%s] : Ppower on/off Camera Sensor or ISP failed.\n", __func__);
   }
 
   msleep(50);
@@ -476,14 +495,13 @@ int tier4_max9295_setup_control(struct device *dev)
     dev_err(dev, "[%s]: Ser device not found\n", __func__);
     goto error;
   }
-
   /* delay to settle link */
   msleep(100);
 
-  /* Set RCLKOUT source to the reference PLL clock */
+  /* Set RCLKOUT soruce to the reference PLL clock*/
   err = tier4_max9295_write_reg(dev, MAX9295_CLK_OUTPUT_ADDR, 0x03);
 
-  /* No need? */
+  /* No need?*/
   usleep_range(10000, 11000);
 
   /* PLL setting & Reset PLL */
