@@ -155,12 +155,43 @@ else ifeq ($(L4T_RELEASE_MAIN), R34)
         endif
     endif
 else ifeq ($(L4T_RELEASE_MAIN), R35)
-        ifeq ($(MODEL),$(ROScube_word))
-            KERNELRELEASE            := 5.10.120-rqx58g
-            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-roscube-r3541
-            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-roscube-r3541
-            TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r3541
-            MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_roscube.py r35.4.1
+        ifeq ($(MODEL),$(ROScube_Xavier_Model_word))
+            # RQX-58G R35.4.1
+            KERNELRELEASE                       := 5.10.120-rqx58g
+            TARGET_ISX021_DTS                   := tier4-isx021-gmsl-device-tree-overlay-roscube-r3541
+            TARGET_IMX490_DTS                   := tier4-imx490-gmsl-device-tree-overlay-roscube-r3541
+             TARGET_IMX728_DTS                   := tier4-imx728-gmsl-device-tree-overlay-roscube-r3541
+            TARGET_ISX021_IMX490_DTS           := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r3541
+            TARGET_ISX021_IMX490_IMX728_DTS     := tier4-isx021-imx490-imx728-gmsl-device-tree-overlay-roscube-r3541
+            MAKE_OVERLAY_DTS_CMD                := make_overlay_dts_roscube.py r35.4.1
+        else ifeq ($(MODEL),$(ROScube_Orin_Model_word))
+            # RQX-59G
+            ifeq ($(L4T_RELEASE_MAJOR), 4)
+                # R35.4
+                KERNELRELEASE                   := $(shell uname -r)
+                TARGET_ISX021_DTS               := tier4-isx021-gmsl-device-tree-overlay-roscube-orin-r354
+                TARGET_IMX490_DTS               := tier4-imx490-gmsl-device-tree-overlay-roscube-orin-r354
+                TARGET_IMX728_DTS               := tier4-imx728-gmsl-device-tree-overlay-roscube-orin-r354
+                TARGET_ISX021_IMX490_DTS        := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-orin-r354
+                TARGET_ISX021_IMX490_IMX728_DTS := tier4-isx021-imx490-imx728-gmsl-device-tree-overlay-roscube-orin-r354
+                MAKE_OVERLAY_DTS_CMD            := make_overlay_dts_roscube-orin.py r35.4
+            else ifeq ($(L4T_RELEASE_MAJOR), 1)
+                # R35.1
+                KERNELRELEASE                   := $(shell uname -r)
+                TARGET_ISX021_DTS               := tier4-isx021-gmsl-device-tree-overlay-roscube-orin-r351
+                TARGET_IMX490_DTS               := tier4-imx490-gmsl-device-tree-overlay-roscube-orin-r351
+                TARGET_IMX728_DTS               := tier4-imx728-gmsl-device-tree-overlay-roscube-orin-r351
+                TARGET_ISX021_IMX490_DTS        := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-orin-r351
+                TARGET_ISX021_IMX490_IMX728_DTS := tier4-isx021-imx490-imx728-gmsl-device-tree-overlay-roscube-orin-r351
+                MAKE_OVERLAY_DTS_CMD            := make_overlay_dts_roscube-orin.py r35.1
+            else
+                KERNELRELEASE                   := Unknown
+                TARGET_ISX021_DTS               := Unknown
+                TARGET_IMX490_DTS               := Unknown
+                TARGET_IMX728_DTS               := Unknown
+                TARGET_ISX021_IMX490_DTS        := Unknown
+                TARGET_ISX021_IMX490_IMX728_DTS := Unknown
+            endif
         else ifeq ($(MODEL),$(Xavier_word))
             KERNELRELEASE                       := 5.1.104-tegra
             TARGET_ISX021_DTS                   := tier4-isx021-gmsl-device-tree-overlay-xavier-devkit-r351
@@ -202,7 +233,7 @@ else ifeq ($(L4T_RELEASE_MAIN), R35)
                 TARGET_ISX021_IMX490_DTS        := tier4-isx021-imx490-gmsl-device-tree-overlay-orin-devkit-r3521
                 TARGET_ISX021_IMX490_IMX728_DTS := tier4-isx021-imx490-imx728-gmsl-device-tree-overlay-orin-devkit-r3521
                 MAKE_OVERLAY_DTS_CMD            := make_overlay_dts_orin-devkit.py  r35.4.1
-	    else
+            else
                 KERNELRELEASE                   := Unknown
                 TARGET_ISX021_DTS               := Unknown
                 TARGET_IMX490_DTS               := Unknown
