@@ -1,5 +1,5 @@
 /*
- * tier4_imsx490.c - imx490 sensor driver
+ * tier4_imx728.c - imx728 sensor driver
  *
  * Copyright (c) 2022-2023, TIER IV Inc. All rights reserved.
  * Copyright (c) 2018-2021, NVIDIA CORPORATION.  All rights reserved.
@@ -41,12 +41,13 @@ MODULE_SOFTDEP("pre: tier4_max9295");
 MODULE_SOFTDEP("pre: tier4_gw5300");
 MODULE_SOFTDEP("pre: tier4_fpga");
 MODULE_SOFTDEP("pre: tier4_isx021");
+MODULE_SOFTDEP("pre: tier4_imx490");
 
 #define USE_DISTORTION_CORRECTION  1
 
 // Register Address
 
-#define IMX490_DEFAULT_FRAME_LENGTH (2000)
+#define IMX728_DEFAULT_FRAME_LENGTH (2350)
 
 #define BIT_SHIFT_8 8
 #define BIT_SHIFT_16 16
@@ -54,44 +55,46 @@ MODULE_SOFTDEP("pre: tier4_isx021");
 #define MASK_4_BIT 0xF
 #define MASK_8_BIT 0xFF
 
-#define NO_ERROR 0
-#define NO_C2_CAMERA (-490)
+#define POWER_ON 1
+#define POWER_OFF 0
 
-#define TIME_120_MILISEC 120000
-#define TIME_121_MILISEC 121000
+#define NO_ERROR 0
+//#define NO_C3_CAMERA (-728)
+
+//#define TIME_120_MILISEC 120000
+//#define TIME_121_MILISEC 121000
 
 #define ISP_PRIM_SLAVE_ADDR 0x6D
 
-#define TIER4_C2_CAMERA 1
-
-#define SENSOR_ID_IMX490 490
+//#define TIER4_C3_CAMERA 1
 
 #define MAX_NUM_CAMERA 8
 
-#define FSYNC_FREQ_HZ 10
+//#define FSYNC_FREQ_HZ 10
 
 enum
 {
-  IMX490_MODE_2880x1860_CROP_30FPS,
-  IMX490_MODE_START_STREAM,
-  IMX490_MODE_STOP_STREAM,
+  IMX728_MODE_3840x2160_CROP_20FPS,
+  IMX728_MODE_START_STREAM,
+  IMX728_MODE_STOP_STREAM,
 };
 
-static const int tier4_imx490_30fps[] = {
-  30,
+static const int tier4_imx728_20fps[] = {
+  20,
 };
-static const struct camera_common_frmfmt tier4_imx490_frmfmt[] = {
-  { { 2880, 1860 }, tier4_imx490_30fps, 1, 0, IMX490_MODE_2880x1860_CROP_30FPS },
+static const struct camera_common_frmfmt tier4_imx728_frmfmt[] = {
+  { { 3840, 2160 }, tier4_imx728_20fps, 1, 0, IMX728_MODE_3840x2160_CROP_20FPS },
+// { { 3840, 2163 }, tier4_imx728_20fps, 1, 0, IMX728_MODE_3840x2160_CROP_20FPS },
 };
 
-const struct of_device_id tier4_imx490_of_match[] = {
+const struct of_device_id tier4_imx728_of_match[] = {
   {
-      .compatible = "nvidia,tier4_imx490",
+      .compatible = "nvidia,tier4_imx728",
   },
   {},
 };
 
-MODULE_DEVICE_TABLE(of, tier4_imx490_of_match);
+MODULE_DEVICE_TABLE(of, tier4_imx728_of_match);
 
 // If you add new ioctl VIDIOC_S_EXT_CTRLS function, please add new CID to the following table.
 // and define the CID number in  nvidia/include/media/tegra-v4l2-camera.h
@@ -102,7 +105,7 @@ static const u32 ctrl_cid_list[] = {
   //  TEGRA_CAMERA_CID_DISTORTION_CORRECTION,
 };
 
-struct tier4_imx490
+struct tier4_imx728
 {
   struct i2c_client *i2c_client;
   const struct i2c_device_id *id;
@@ -117,7 +120,6 @@ struct tier4_imx490
   int trigger_mode;
   bool distortion_correction;
   bool last_distortion_correction;
-  bool auto_exposure;
   bool inhibit_fpga_access;
   struct device *fpga_dev;
 };
@@ -131,7 +133,7 @@ static const struct regmap_config tier4_sensor_regmap_config = {
 struct st_priv
 {
   struct i2c_client *p_client;
-  struct tier4_imx490 *p_priv;
+  struct tier4_imx728 *p_priv;
   struct tegracam_device *p_tc_dev;
   bool isp_ser_shutdown;
   bool des_shutdown;
@@ -140,7 +142,7 @@ struct st_priv
 
 static struct st_priv wst_priv[MAX_NUM_CAMERA];
 
-static struct mutex tier4_imx490_lock;
+static struct mutex tier4_imx728_lock;
 
 static int camera_channel_count = 0;
 
@@ -149,13 +151,14 @@ static int camera_channel_count = 0;
 static int trigger_mode;
 static int fsync_mfp = 0;
 static int enable_distortion_correction = 1;
+static int enable_auto_exposure = 0xCAFE;
 
 
-#define IMX490_MIN_EXPOSURE_TIME 11000  // 11 milisecond
-#define IMX490_MAX_EXPOSURE_TIME 33000  // 33 milisecond
+#define IMX728_MIN_EXPOSURE_TIME 11000  // 11 milisecond
+#define IMX728_MAX_EXPOSURE_TIME 33000  // 33 milisecond
 
-static int shutter_time_min = IMX490_MIN_EXPOSURE_TIME;
-static int shutter_time_max = IMX490_MAX_EXPOSURE_TIME;
+static int shutter_time_min = IMX728_MIN_EXPOSURE_TIME;
+static int shutter_time_max = IMX728_MAX_EXPOSURE_TIME;
 
 module_param(trigger_mode, int, 0644);
 module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
@@ -164,6 +167,7 @@ module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
 
 module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
 module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
+module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
 
 // ------------------------
 static char upper(char c)
@@ -187,7 +191,7 @@ static void to_upper_string(char *out, const char *in)
   }
 }
 
-static inline int tier4_imx490_read_reg(struct camera_common_data *s_data, u16 addr, u8 *val)
+static inline int tier4_imx728_read_reg(struct camera_common_data *s_data, u16 addr, u8 *val)
 {
   int err = 0;
   u32 reg_val = 0;
@@ -205,7 +209,7 @@ static inline int tier4_imx490_read_reg(struct camera_common_data *s_data, u16 a
   return err;
 }
 
-static int tier4_imx490_write_reg(struct camera_common_data *s_data, u16 addr, u8 val)
+static int tier4_imx728_write_reg(struct camera_common_data *s_data, u16 addr, u8 val)
 {
   int err = 0;
 
@@ -221,7 +225,7 @@ static int tier4_imx490_write_reg(struct camera_common_data *s_data, u16 addr, u
 
 // ------------------------------------------------
 
-static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv, int mode)
+static int tier4_imx728_set_fsync_trigger_mode(struct tier4_imx728 *priv, int mode)
 {
   int err = 0;
   struct device *dev = priv->s_data->dev;
@@ -323,10 +327,18 @@ static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv, int mo
     return err;
   }
 
-  err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, mode);
+  //  Power on GW5300 via Max9295 in C3 camera
+//  err = tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX728, POWER_ON );
+//  if (err)
+//  {
+//    dev_err(dev, "[%s] : Power on gw5300 in C3 camaera failed.\n", __func__);
+//    return err;
+//  }
+
+  err = tier4_gw5300_c3_setup_sensor_mode(priv->isp_dev, mode);
   if (err)
   {
-    dev_err(dev, "[%s] : tier4_gw5300_setup_sensor_mode() failed\n", __func__);
+    dev_err(dev, "[%s] : tier4_gw5300_c3_setup_sensor_mode() failed\n", __func__);
     return err;
   }
 
@@ -335,7 +347,7 @@ static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv, int mo
 
 static struct mutex serdes_lock__;
 
-static int tier4_imx490_gmsl_serdes_setup(struct tier4_imx490 *priv)
+static int tier4_imx728_gmsl_serdes_setup(struct tier4_imx728 *priv)
 {
   int err = 0;
   int des_err = 0;
@@ -390,7 +402,7 @@ error:
   return err;
 }
 
-static void tier4_imx490_gmsl_serdes_reset(struct tier4_imx490 *priv)
+static void tier4_imx728_gmsl_serdes_reset(struct tier4_imx728 *priv)
 {
   mutex_lock(&serdes_lock__);
 
@@ -408,7 +420,7 @@ static void tier4_imx490_gmsl_serdes_reset(struct tier4_imx490 *priv)
   mutex_unlock(&serdes_lock__);
 }
 
-static int tier4_imx490_power_on(struct camera_common_data *s_data)
+static int tier4_imx728_power_on(struct camera_common_data *s_data)
 {
   int err = 0;
   struct camera_common_power_rail *pw = s_data->power;
@@ -435,7 +447,7 @@ static int tier4_imx490_power_on(struct camera_common_data *s_data)
   return err;
 }
 
-static int tier4_imx490_power_off(struct camera_common_data *s_data)
+static int tier4_imx728_power_off(struct camera_common_data *s_data)
 {
   int err = 0;
   struct camera_common_power_rail *pw = s_data->power;
@@ -463,7 +475,7 @@ power_off_done:
   return err;
 }
 
-static int tier4_imx490_power_get(struct tegracam_device *tc_dev)
+static int tier4_imx728_power_get(struct tegracam_device *tc_dev)
 {
   struct camera_common_power_rail *pw = tc_dev->s_data->power;
   int err = 0;
@@ -473,7 +485,7 @@ static int tier4_imx490_power_get(struct tegracam_device *tc_dev)
   return err;
 }
 
-static int tier4_imx490_power_put(struct tegracam_device *tc_dev)
+static int tier4_imx728_power_put(struct tegracam_device *tc_dev)
 {
   if (unlikely(!tc_dev->s_data->power))
   {
@@ -483,14 +495,14 @@ static int tier4_imx490_power_put(struct tegracam_device *tc_dev)
   return NO_ERROR;
 }
 
-static int tier4_imx490_set_group_hold(struct tegracam_device *tc_dev, bool val)
+static int tier4_imx728_set_group_hold(struct tegracam_device *tc_dev, bool val)
 {
   volatile int err = 0;
 
   return err;
 }
 
-static int tier4_imx490_set_gain(struct tegracam_device *tc_dev, s64 val)
+static int tier4_imx728_set_gain(struct tegracam_device *tc_dev, s64 val)
 {
   int err = 0;
 
@@ -503,37 +515,27 @@ static int tier4_imx490_set_gain(struct tegracam_device *tc_dev, s64 val)
 
 /* ------------------------------------------------------------------------- */
 
-static int tier4_imx490_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
+static int tier4_imx728_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
 {
   int err = 0;
 
-  struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
+  struct tier4_imx728 *priv = (struct tier4_imx728 *)tegracam_get_privdata(tc_dev);
   //  struct device dev       = tc_dev->dev;
 
-  /* fixed 30fps */
-  priv->frame_length = IMX490_DEFAULT_FRAME_LENGTH;
+  /* fixed 20fps */
+  priv->frame_length = IMX728_DEFAULT_FRAME_LENGTH;
 
   return err;
 }
 
 /* ------------------------------------------------------------------------- */
 
-static int tier4_imx490_set_auto_exposure(struct tegracam_device *tc_dev)
-{
-  int err = 0;
-  //struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
-
-  return err;
-}
-
-/* ------------------------------------------------------------------------- */
-
-static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
+static int tier4_imx728_set_exposure(struct tegracam_device *tc_dev, s64 val)
 {
   int err = 0;
 
-  struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
-  tier4_gw5300_c2_set_integration_time_on_aemode(priv->isp_dev, priv->trigger_mode, val, val);
+  struct tier4_imx728 *priv = (struct tier4_imx728 *)tegracam_get_privdata(tc_dev);
+  tier4_gw5300_c3_set_integration_time_on_aemode(priv->isp_dev, priv->trigger_mode, val, val);
 
   return err;
 }
@@ -542,17 +544,17 @@ static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
 // --------------------------------------------------------------------------------------
 #if USE_DISTORTION_CORRECTION
 
-static int tier4_imx490_set_distortion_correction(struct tegracam_device *tc_dev, bool val)
+static int tier4_imx728_set_distortion_correction(struct tegracam_device *tc_dev, bool val)
 {
   int err = 0;
-  struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
+  struct tier4_imx728 *priv = (struct tier4_imx728 *)tegracam_get_privdata(tc_dev);
 
   if (priv->last_distortion_correction != val)
   {
     dev_info(&priv->i2c_client->dev, "[%s] : Setting distortion correction mode :%s.\n", __func__,val?"True":"False");
 
-    err = tier4_gw5300_set_distortion_correction(priv->isp_dev, val);
-    if (err <= 0)
+    err = tier4_gw5300_c3_set_distortion_correction(priv->isp_dev, val);
+    if ( err <= 0)
     {
       dev_info(&priv->i2c_client->dev, "[%s] : Setting distortion correction mode failed.\n", __func__ );
     }
@@ -571,20 +573,20 @@ static int tier4_imx490_set_distortion_correction(struct tegracam_device *tc_dev
 //  If you add new ioctl VIDIOC_S_EXT_CTRLS function,
 //  please add the new memeber and the function at the following table.
 
-static struct tegracam_ctrl_ops tier4_imx490_ctrl_ops = {
+static struct tegracam_ctrl_ops tier4_imx728_ctrl_ops = {
   .numctrls = ARRAY_SIZE(ctrl_cid_list),
   .ctrl_cid_list = ctrl_cid_list,
-  .set_gain = tier4_imx490_set_gain,
-  .set_exposure = tier4_imx490_set_exposure,
-  .set_exposure_short = tier4_imx490_set_exposure,
-  .set_frame_rate = tier4_imx490_set_frame_rate,
-  .set_group_hold = tier4_imx490_set_group_hold,
-  //  .set_distortion_correction  = tier4_imx490_set_distortion_correction,
+  .set_gain = tier4_imx728_set_gain,
+  .set_exposure = tier4_imx728_set_exposure,
+  .set_exposure_short = tier4_imx728_set_exposure,
+  .set_frame_rate = tier4_imx728_set_frame_rate,
+  .set_group_hold = tier4_imx728_set_group_hold,
+  //  .set_distortion_correction  = tier4_imx728_set_distortion_correction,
 };
 
 // --------------------------------------------------------------------------------------
 
-static struct camera_common_pdata *tier4_imx490_parse_dt(struct tegracam_device *tc_dev)
+static struct camera_common_pdata *tier4_imx728_parse_dt(struct tegracam_device *tc_dev)
 {
   struct device *dev = tc_dev->dev;
   struct device_node *node = dev->of_node;
@@ -597,7 +599,7 @@ static struct camera_common_pdata *tier4_imx490_parse_dt(struct tegracam_device 
     return NULL;
   }
 
-  match = of_match_device(tier4_imx490_of_match, dev);
+  match = of_match_device(tier4_imx728_of_match, dev);
 
   if (!match)
   {
@@ -617,18 +619,18 @@ static struct camera_common_pdata *tier4_imx490_parse_dt(struct tegracam_device 
   return board_priv_pdata;
 }
 
-/*   tier4_imx490_set_mode() can not be needed. But it remains for compatiblity */
+/*   tier4_imx728_set_mode() can not be needed. But it remains for compatiblity */
 
-static int tier4_imx490_set_mode(struct tegracam_device *tc_dev)
+static int tier4_imx728_set_mode(struct tegracam_device *tc_dev)
 {
   volatile int err = 0;
 
   return err;
 }
 
-static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
+static int tier4_imx728_start_one_streaming(struct tegracam_device *tc_dev)
 {
-  struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
+  struct tier4_imx728 *priv = (struct tier4_imx728 *)tegracam_get_privdata(tc_dev);
   struct device *dev = tc_dev->dev;
   int err;
 
@@ -649,156 +651,73 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
     goto exit;
   }
 
-  if (priv->auto_exposure == true)
-  {
-    err = tier4_imx490_set_auto_exposure(tc_dev);
-  }
-
-
-  if (err)
-  {
-    dev_err(dev, "[%s] : Setting Digital Gain to default value failed\n", __func__);
-    goto exit;
-  }
-
   dev_info(dev, "[%s] : trigger_mode = %d\n", __func__, trigger_mode);
 
   priv->trigger_mode = trigger_mode;
 
   switch (priv->trigger_mode)
   {
-
+    case GW5300_MASTER_MODE_5FPS:
     case GW5300_MASTER_MODE_10FPS:
-
-      dev_info(dev, "[%s] : Setting camera sensor to Master mode 10fps\n", __func__);
-
-      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS);
-      if (err)
-      {
-        dev_err(dev, "[%s] : setting camera sensor to Master mode 10fps failed\n", __func__);
-        return err;
-      }
-
-      priv->last_distortion_correction = 1;
-
-      break;
-
-    case GW5300_SLAVE_MODE_10FPS:
-
-      dev_info(dev, "[%s] : Setting camera sensor to Slave mode 10fps\n", __func__);
-
-      err = tier4_imx490_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_10FPS);
-      if (err)
-      {
-        dev_err(dev, "[%s] : setting camera sensor to Slave mode 10fps failed\n", __func__);
-        goto exit;
-      }
-
-      priv->last_distortion_correction = 1;
-
-      msleep(20);
-
-      break;
-
+    case GW5300_MASTER_MODE_10FPS_EBD:
     case GW5300_MASTER_MODE_20FPS:
-
-      dev_info(dev, "[%s] : Setting camera sensor to Master mode 20fps\n", __func__);
-
-      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_20FPS);
-      if (err)
-      {
-        dev_err(dev, "[%s] : setting camera sensor to Master mode 20fps failed\n", __func__);
-        return err;
-      }
-
-      priv->last_distortion_correction = 1;
-
-      break;
-
-    case GW5300_SLAVE_MODE_20FPS:
-
-      dev_info(dev, "[%s] : Setting camera sensor to Slave mode 20fps\n", __func__);
-
-      err = tier4_imx490_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_20FPS);
-      if (err)
-      {
-        dev_err(dev, "[%s] : setting camera sensor to Slave mode 20fps failed\n", __func__);
-        return err;
-      }
-
-      priv->last_distortion_correction = 1;
-
-      break;
-
+    case GW5300_MASTER_MODE_20FPS_EBD:
     case GW5300_MASTER_MODE_30FPS:
+    case GW5300_MASTER_MODE_30FPS_EBD:
+      dev_info(dev, "[%s] : Setting camera sensor to %s\n", __func__, gw5300_mode_name[priv->trigger_mode]);
 
-      dev_info(dev, "[%s] : Setting camera sensor to Master mode 30fps\n", __func__);
-
-      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_30FPS);
+      err = tier4_gw5300_c3_setup_sensor_mode(priv->isp_dev, priv->trigger_mode);
       if (err)
       {
-        dev_err(dev, "[%s] : setting camera sensor to Master mode 30fps failed\n", __func__);
+        dev_err(dev, "[%s] : setting camera sensor to %s failed\n", __func__, gw5300_mode_name[priv->trigger_mode]);
         return err;
       }
 
+      priv->last_distortion_correction = 1;
       break;
 
+    case GW5300_SLAVE_MODE_5FPS:
+    case GW5300_SLAVE_MODE_10FPS:
+    case GW5300_SLAVE_MODE_10FPS_EBD:
+    case GW5300_SLAVE_MODE_20FPS:
+    case GW5300_SLAVE_MODE_20FPS_EBD:
     case GW5300_SLAVE_MODE_30FPS:
+    case GW5300_SLAVE_MODE_30FPS_EBD:
+      dev_info(dev, "[%s] : Setting camera sensor to %s\n", __func__, gw5300_mode_name[priv->trigger_mode]);
 
-      dev_info(dev, "[%s] : Setting camera sensor to slave  mode 30fps\n", __func__);
-
-      err = tier4_imx490_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_30FPS);
+      err = tier4_imx728_set_fsync_trigger_mode(priv, priv->trigger_mode);
       if (err)
       {
-        dev_err(dev, "[%s] : setting camera sensor to Slave mode 30fps failed\n", __func__);
+        dev_err(dev, "[%s] : setting camera sensor to %s failed\n", __func__, gw5300_mode_name[priv->trigger_mode]);
         return err;
       }
 
       priv->last_distortion_correction = 1;
-
-      break;
-
-    case GW5300_SLAVE_MODE_10FPS_SLOW:
-
-      err = tier4_imx490_set_fsync_trigger_mode(priv, GW5300_SLAVE_MODE_10FPS_SLOW);
-      if (err)
-      {
-        dev_err(dev, "[%s] : setting camera sensor to Slow clock Slave mode 10fps failed\n", __func__);
-        goto exit;
-      }
-
-      priv->last_distortion_correction = 1;
-
-      msleep(20);
-
-      break;
-
-    case GW5300_MASTER_MODE_10FPS_SLOW:
-
-      err = tier4_gw5300_setup_sensor_mode(priv->isp_dev, GW5300_MASTER_MODE_10FPS_SLOW);
-      if (err)
-      {
-        dev_err(dev, "[%s] : setting camera sensor to Slow clock Master mode 10fps failed\n", __func__);
-        return err;
-      }
-
-      priv->last_distortion_correction = 1;
-
       break;
 
     default:  //   case of  trigger_mode  < 0
-
-      dev_err(dev, "[%s] : The camera sensor mode(fsync mode) is invalid.\n", __func__);
+      dev_err(dev, "[%s] : The camera sensor mode(trigger mode)=%d is invalid.\n", __func__, priv->trigger_mode);
 
       return err;
   }
 
+  usleep_range(500000, 510000);
+  err = tier4_gw5300_c3_set_auto_exposure(priv->isp_dev, enable_auto_exposure);
+  if (err <= 0)
+  {
+    dev_err(dev, "[%s] : Setting Digital Gain to default value failed\n", __func__);
+    goto exit;
+  }
+  else
+  {
+    err = 0;
+  }
 
 #if USE_DISTORTION_CORRECTION
 
-  if (priv->last_distortion_correction != enable_distortion_correction )
+  if (priv->last_distortion_correction != enable_distortion_correction)
   {
-    usleep_range(900000, 910000);
+    usleep_range(500000, 510000);
     //msleep(900);
   }
 
@@ -807,7 +726,7 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
     // if not set kernel param, read device tree param
     if (priv->distortion_correction == false)
     {
-      err = tier4_imx490_set_distortion_correction(tc_dev, priv->distortion_correction);
+      err = tier4_imx728_set_distortion_correction(tc_dev, priv->distortion_correction);
 
       if (err)
       {
@@ -816,17 +735,28 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
       }
       msleep(20);
     }
-  }else{
-    err = tier4_imx490_set_distortion_correction(tc_dev, enable_distortion_correction==1);
-    if (err)
-    {
-      dev_err(dev, "[%s] : Setup Distortion Correction  failed\n", __func__);
-      goto exit;
-    }
-    msleep(20);
-  }
+   }else{
+      err = tier4_imx728_set_distortion_correction(tc_dev, enable_distortion_correction==1);
+      if (err)
+      {
+        dev_err(dev, "[%s] : Setup Distortion Correction  failed\n", __func__);
+        goto exit;
+      }
+      msleep(20);
+   }
 
 #endif
+
+
+//  Reset GW5300 via Max9295 in C3 camera
+//  err = tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX728, POWER_ON );
+//  if (err)
+//  {
+//    dev_err(dev, "[%s] : Reset gw5300 in C3 camaera failed.\n", __func__);
+//    goto exit;
+//  }
+//
+//  usleep_range(500000, 510000);
 
   err = tier4_max9296_start_streaming(priv->dser_dev, dev);
 
@@ -836,12 +766,16 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
     return err;
   }
 
-  msleep(200);
-
-//#if 0
   msleep(1000);
-  tier4_gw5300_c2_set_integration_time_on_aemode(priv->isp_dev, priv->trigger_mode, shutter_time_max, shutter_time_min);
-//#endif
+  tier4_gw5300_c3_set_integration_time_on_aemode(priv->isp_dev, priv->trigger_mode, shutter_time_max, shutter_time_min);
+
+//  Reset GW5300 via Max9295 in C3 camera
+//  err = tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX728, POWER_ON );
+//  if (err)
+//  {
+//    dev_err(dev, "[%s] : Reset gw5300 in C3 camaera failed.\n", __func__);
+//    goto exit;
+//  }
 
   dev_info(dev, "[%s] :  Camera has started streaming\n", __func__);
 
@@ -854,7 +788,7 @@ exit:
   return err;
 }
 
-static bool tier4_imx490_is_camera_connected_to_port(int nport)
+static bool tier4_imx728_is_camera_connected_to_port(int nport)
 {
   if (wst_priv[nport].p_client)
   {
@@ -863,7 +797,7 @@ static bool tier4_imx490_is_camera_connected_to_port(int nport)
   return false;
 }
 
-static bool tier4_imx490_check_null_tc_dev_for_port(int nport)
+static bool tier4_imx728_check_null_tc_dev_for_port(int nport)
 {
   if (wst_priv[nport].p_tc_dev == NULL)
   {
@@ -872,7 +806,7 @@ static bool tier4_imx490_check_null_tc_dev_for_port(int nport)
   return false;
 }
 
-static bool tier4_imx490_is_camera_running_on_port(int nport)
+static bool tier4_imx728_is_camera_running_on_port(int nport)
 {
   if (wst_priv[nport].running)
   {
@@ -881,7 +815,7 @@ static bool tier4_imx490_is_camera_running_on_port(int nport)
   return false;
 }
 
-static bool tier4_imx490_is_current_port(struct tier4_imx490 *priv, int nport)
+static bool tier4_imx728_is_current_port(struct tier4_imx728 *priv, int nport)
 {
   if (priv->i2c_client == wst_priv[nport].p_client)
   {
@@ -890,24 +824,24 @@ static bool tier4_imx490_is_current_port(struct tier4_imx490 *priv, int nport)
   return false;
 }
 
-static void tier4_imx490_set_running_flag(int nport, bool flag)
+static void tier4_imx728_set_running_flag(int nport, bool flag)
 {
   wst_priv[nport].running = flag;
 }
 
-static int tier4_imx490_stop_streaming(struct tegracam_device *tc_dev)
+static int tier4_imx728_stop_streaming(struct tegracam_device *tc_dev)
 {
   struct device *dev = tc_dev->dev;
-  struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
+  struct tier4_imx728 *priv = (struct tier4_imx728 *)tegracam_get_privdata(tc_dev);
   int i, err = 0;
 
-  mutex_lock(&tier4_imx490_lock);
+  mutex_lock(&tier4_imx728_lock);
 
   for (i = 0; i < camera_channel_count; i++)
   {
-    if (tier4_imx490_is_camera_connected_to_port(i))
+    if (tier4_imx728_is_camera_connected_to_port(i))
     {
-      if (tier4_imx490_is_current_port(priv, i) && tier4_imx490_is_camera_running_on_port(i))
+      if (tier4_imx728_is_current_port(priv, i) && tier4_imx728_is_camera_running_on_port(i))
       {
         /* disable serdes streaming */
         err = tier4_max9296_stop_streaming(priv->dser_dev, dev);
@@ -915,13 +849,13 @@ static int tier4_imx490_stop_streaming(struct tegracam_device *tc_dev)
         {
           return err;
         }
-        tier4_imx490_set_running_flag(i, false);
+        tier4_imx728_set_running_flag(i, false);
         break;
       }
     }
   }
 
-  mutex_unlock(&tier4_imx490_lock);
+  mutex_unlock(&tier4_imx728_lock);
 
   return NO_ERROR;
 }
@@ -956,26 +890,26 @@ static int tier4_imx490_stop_streaming(struct tegracam_device *tc_dev)
 /*                         Start the camera on GMSL B port.                    */
 /* *************************************************************************** */
 
-static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
+static int tier4_imx728_start_streaming(struct tegracam_device *tc_dev)
 {
   int i, err = 0;
-  //  struct  tier4_imx490    *next_client_priv;
-  struct tier4_imx490 *priv = (struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
+  //  struct  tier4_imx728    *next_client_priv;
+  struct tier4_imx728 *priv = (struct tier4_imx728 *)tegracam_get_privdata(tc_dev);
   struct device *dev = tc_dev->dev;
 
-  mutex_lock(&tier4_imx490_lock);
+  mutex_lock(&tier4_imx728_lock);
 
   for (i = 0; i < camera_channel_count; i++)
   {
     if (i & 0x1)
     {  // if  i = 1,3,5,7 ( GMSL B port of a Des )
 
-      if (tier4_imx490_is_camera_connected_to_port(i))
+      if (tier4_imx728_is_camera_connected_to_port(i))
       {  //  a  camera is connected to GMSL B portL
 
-        if ((tier4_imx490_is_current_port(priv, i) == true) && (tier4_imx490_is_camera_running_on_port(i) == false))
+        if ((tier4_imx728_is_current_port(priv, i) == true) && (tier4_imx728_is_camera_running_on_port(i) == false))
         {
-          err = tier4_imx490_start_one_streaming(wst_priv[i].p_tc_dev);
+          err = tier4_imx728_start_one_streaming(wst_priv[i].p_tc_dev);
 
           if (err)
           {
@@ -983,7 +917,7 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
             goto error_exit;
           }
           //                  wst_priv[i].running  = true;
-          tier4_imx490_set_running_flag(i, true);
+          tier4_imx728_set_running_flag(i, true);
           break;
         }
       }
@@ -991,60 +925,60 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
     else
     {  // if  i = 0,2,4,6 ( GMSL A side port of a Des0,Des1,Des2 or Des3 )
 
-      if ((tier4_imx490_is_camera_connected_to_port(i) == true) && (tier4_imx490_is_current_port(priv, i) == true))
+      if ((tier4_imx728_is_camera_connected_to_port(i) == true) && (tier4_imx728_is_current_port(priv, i) == true))
       {
-        if (tier4_imx490_is_camera_connected_to_port(i + 1) == false)
+        if (tier4_imx728_is_camera_connected_to_port(i + 1) == false)
         {  // if another one camera( GMSL B port) is not
            // connected to Des.
-          if (tier4_imx490_is_camera_running_on_port(i) == false)
+          if (tier4_imx728_is_camera_running_on_port(i) == false)
           {  // and if the camera is not running.
 
-            err = tier4_imx490_start_one_streaming(wst_priv[i].p_tc_dev);
+            err = tier4_imx728_start_one_streaming(wst_priv[i].p_tc_dev);
             if (err)
             {
-              dev_err(dev, "[%s] : Failed to start one streaming for next imx490 client.\n", __func__);
+              dev_err(dev, "[%s] : Failed to start one streaming for next imx728 client.\n", __func__);
               goto error_exit;
             }
-            tier4_imx490_set_running_flag(i, true);
+            tier4_imx728_set_running_flag(i, true);
           }
           break;
         }
 
         //  two cameras are connected to one Des.
 
-        if (tier4_imx490_check_null_tc_dev_for_port(i + 1))
+        if (tier4_imx728_check_null_tc_dev_for_port(i + 1))
         {  // check if tc_dev is null
           dev_err(dev, "[%s] : wst_priv[%d].p_tc_dev is NULL.\n", __func__, i + 1);
           err = -EINVAL;
           goto error_exit;
         }
 
-        if (tier4_imx490_is_camera_running_on_port(i + 1) == false)
+        if (tier4_imx728_is_camera_running_on_port(i + 1) == false)
         {
-          err = tier4_imx490_start_one_streaming(wst_priv[i + 1].p_tc_dev);
+          err = tier4_imx728_start_one_streaming(wst_priv[i + 1].p_tc_dev);
           if (err)
           {
-            dev_err(dev, "[%s] : Failed to start one streaming for the next imx490 client.\n", __func__);
+            dev_err(dev, "[%s] : Failed to start one streaming for the next imx728 client.\n", __func__);
             goto error_exit;
           }
-          tier4_imx490_set_running_flag(i + 1, true);
+          tier4_imx728_set_running_flag(i + 1, true);
           usleep_range(200000, 220000);
           //msleep(200);
-          mutex_unlock(&tier4_imx490_lock);
-          tier4_imx490_stop_streaming(wst_priv[i + 1].p_tc_dev);
-          mutex_lock(&tier4_imx490_lock);
-          tier4_imx490_set_running_flag(i + 1, false);
+          mutex_unlock(&tier4_imx728_lock);
+          tier4_imx728_stop_streaming(wst_priv[i + 1].p_tc_dev);
+          mutex_lock(&tier4_imx728_lock);
+          tier4_imx728_set_running_flag(i + 1, false);
         }
 
-        if (tier4_imx490_is_camera_running_on_port(i) == false)
+        if (tier4_imx728_is_camera_running_on_port(i) == false)
         {
-          err = tier4_imx490_start_one_streaming(wst_priv[i].p_tc_dev);
+          err = tier4_imx728_start_one_streaming(wst_priv[i].p_tc_dev);
           if (err)
           {
-            dev_err(dev, "[%s] : Failed to start one streaming for current imx490 client.\n", __func__);
+            dev_err(dev, "[%s] : Failed to start one streaming for current imx728 client.\n", __func__);
             goto error_exit;
           }
-          tier4_imx490_set_running_flag(i, true);
+          tier4_imx728_set_running_flag(i, true);
         }
       }
     }
@@ -1054,42 +988,42 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
 
 error_exit:
 
-  mutex_unlock(&tier4_imx490_lock);
+  mutex_unlock(&tier4_imx728_lock);
 
-  //  tier4_imx490_sensor_mutex_unlock();
+  //  tier4_imx728_sensor_mutex_unlock();
 
   return err;
 }
 
-static struct camera_common_sensor_ops tier4_imx490_common_ops = {
-  .numfrmfmts = ARRAY_SIZE(tier4_imx490_frmfmt),
-  .frmfmt_table = tier4_imx490_frmfmt,
-  .power_on = tier4_imx490_power_on,
-  .power_off = tier4_imx490_power_off,
-  .write_reg = tier4_imx490_write_reg,
-  .read_reg = tier4_imx490_read_reg,
-  .parse_dt = tier4_imx490_parse_dt,
-  .power_get = tier4_imx490_power_get,
-  .power_put = tier4_imx490_power_put,
-  .set_mode = tier4_imx490_set_mode,
-  .start_streaming = tier4_imx490_start_streaming,
-  .stop_streaming = tier4_imx490_stop_streaming,
+static struct camera_common_sensor_ops tier4_imx728_common_ops = {
+  .numfrmfmts = ARRAY_SIZE(tier4_imx728_frmfmt),
+  .frmfmt_table = tier4_imx728_frmfmt,
+  .power_on = tier4_imx728_power_on,
+  .power_off = tier4_imx728_power_off,
+  .write_reg = tier4_imx728_write_reg,
+  .read_reg = tier4_imx728_read_reg,
+  .parse_dt = tier4_imx728_parse_dt,
+  .power_get = tier4_imx728_power_get,
+  .power_put = tier4_imx728_power_put,
+  .set_mode = tier4_imx728_set_mode,
+  .start_streaming = tier4_imx728_start_streaming,
+  .stop_streaming = tier4_imx728_stop_streaming,
 };
 
-static int tier4_imx490_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
+static int tier4_imx728_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
   //struct i2c_client *client = v4l2_get_subdevdata(sd);
 
   return NO_ERROR;
 }
 
-static const struct v4l2_subdev_internal_ops tier4_imx490_subdev_internal_ops = {
-  .open = tier4_imx490_open,
+static const struct v4l2_subdev_internal_ops tier4_imx728_subdev_internal_ops = {
+  .open = tier4_imx728_open,
 };
 
 static const char *of_stdout_options;
 
-static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
+static int tier4_imx728_board_setup(struct tier4_imx728 *priv)
 {
   struct tegracam_device *tc_dev = priv->tc_dev;
   struct device *dev = tc_dev->dev;
@@ -1233,21 +1167,19 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
     priv->distortion_correction = false;
   }
 
-  err = of_property_read_string(node, "auto-exposure", &str_value);
+  if (enable_auto_exposure == 0xCAFE)
+  {
+    err = of_property_read_string(node, "auto-exposure", &str_value);
 
-  if (err < 0)
-  {
-    dev_err(dev, "[%s] : Inavlid Exposure mode.\n", __func__);
-    goto error;
-  }
+    if (err < 0)
+    {
+      dev_err(dev, "[%s] : Inavlid Exposure mode.\n", __func__);
+      goto error;
+    }
 
-  if (!strcmp(str_value, "true"))
-  {
-    priv->auto_exposure = true;
-  }
-  else
-  {
-    priv->auto_exposure = false;
+    enable_auto_exposure = !strcmp(str_value, "true");
+  } else {
+    dev_info(dev, "[%s] : Parameter[enable_auto_exposure] = %d.\n", __func__, enable_auto_exposure);
   }
 
 #if 0
@@ -1571,12 +1503,12 @@ error:
   return err;
 }
 
-static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device_id *id)
+static int tier4_imx728_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
   struct device *dev = &client->dev;
   struct device_node *node = dev->of_node;
   struct tegracam_device *tc_dev;
-  struct tier4_imx490 *priv;
+  struct tier4_imx728 *priv;
   int err = 0;
 
   dev_info(dev, "[%s] : Probing V4L2 Sensor.\n", __func__);
@@ -1594,7 +1526,7 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
   wst_priv[camera_channel_count].des_shutdown = false;
   wst_priv[camera_channel_count].running = false;
 
-  priv = devm_kzalloc(dev, sizeof(struct tier4_imx490), GFP_KERNEL);
+  priv = devm_kzalloc(dev, sizeof(struct tier4_imx728), GFP_KERNEL);
 
   if (!priv)
   {
@@ -1613,12 +1545,12 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
 
   tc_dev->dev = dev;
 
-  strncpy(tc_dev->name, "imx490", sizeof(tc_dev->name));
+  strncpy(tc_dev->name, "imx728", sizeof(tc_dev->name));
 
   tc_dev->dev_regmap_config = &tier4_sensor_regmap_config;
-  tc_dev->sensor_ops = &tier4_imx490_common_ops;
-  tc_dev->v4l2sd_internal_ops = &tier4_imx490_subdev_internal_ops;
-  tc_dev->tcctrl_ops = &tier4_imx490_ctrl_ops;
+  tc_dev->sensor_ops = &tier4_imx728_common_ops;
+  tc_dev->v4l2sd_internal_ops = &tier4_imx728_subdev_internal_ops;
+  tc_dev->tcctrl_ops = &tier4_imx728_ctrl_ops;
 
   err = tegracam_device_register(tc_dev);
 
@@ -1634,11 +1566,11 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
 
   tegracam_set_privdata(tc_dev, (void *)priv);
 
-  priv->g_ctx.sensor_id = SENSOR_ID_IMX490;
+  priv->g_ctx.sensor_id = SENSOR_ID_IMX728;
 
   tier4_isx021_sensor_mutex_lock();
 
-  err = tier4_imx490_board_setup(priv);
+  err = tier4_imx728_board_setup(priv);
 
   if (err)
   {
@@ -1680,7 +1612,7 @@ static int tier4_imx490_probe(struct i2c_client *client, const struct i2c_device
    * to deserializer from CVB.
    */
 
-  err = tier4_imx490_gmsl_serdes_setup(priv);
+  err = tier4_imx728_gmsl_serdes_setup(priv);
 
   if (err)
   {
@@ -1727,19 +1659,12 @@ err_tegracam_unreg:
   //return NO_ERROR;  // err;
 }
 
-static void tier4_imx490_shutdown(struct i2c_client *client);
-
-static int tier4_imx490_remove(struct i2c_client *client)
+static int tier4_imx728_remove(struct i2c_client *client)
 {
   struct camera_common_data *s_data = to_camera_common_data(&client->dev);
-  struct tier4_imx490 *priv = (struct tier4_imx490 *)s_data->priv;
+  struct tier4_imx728 *priv = (struct tier4_imx728 *)s_data->priv;
 
-  tier4_imx490_shutdown(client);
-
-  tier4_imx490_gmsl_serdes_reset(priv);
-
-  tier4_max9296_sdev_unregister(priv->dser_dev, &client->dev);
-  tier4_max9295_sdev_unpair(priv->ser_dev, &client->dev);
+  tier4_imx728_gmsl_serdes_reset(priv);
 
   tegracam_v4l2subdev_unregister(priv->tc_dev);
 
@@ -1748,9 +1673,9 @@ static int tier4_imx490_remove(struct i2c_client *client)
   return NO_ERROR;
 }
 
-static struct mutex tier4_imx490_lock;
+static struct mutex tier4_imx728_lock;
 
-static bool tier4_imx490_is_isp_ser_shutdown(int nport)
+static bool tier4_imx728_is_isp_ser_shutdown(int nport)
 {
   if (wst_priv[nport].isp_ser_shutdown)
   {
@@ -1759,7 +1684,7 @@ static bool tier4_imx490_is_isp_ser_shutdown(int nport)
   return false;
 }
 
-static bool tier4_imx490_is_des_shutdown(int nport)
+static bool tier4_imx728_is_des_shutdown(int nport)
 {
   if (wst_priv[nport].des_shutdown)
   {
@@ -1768,17 +1693,17 @@ static bool tier4_imx490_is_des_shutdown(int nport)
   return false;
 }
 
-static void tier4_imx490_set_isp_ser_shutdown(int nport, bool val)
+static void tier4_imx728_set_isp_ser_shutdown(int nport, bool val)
 {
   wst_priv[nport].isp_ser_shutdown = val;
 }
 
-static void tier4_imx490_set_des_shutdown(int nport, bool val)
+static void tier4_imx728_set_des_shutdown(int nport, bool val)
 {
   wst_priv[nport].des_shutdown = val;
 }
 
-static bool tier4_imx490_is_current_i2c_client(struct i2c_client *client, int nport)
+static bool tier4_imx728_is_current_i2c_client(struct i2c_client *client, int nport)
 {
   if (client == wst_priv[nport].p_client)
   {
@@ -1789,14 +1714,14 @@ static bool tier4_imx490_is_current_i2c_client(struct i2c_client *client, int np
 
 // ----------------------------------------------------------------------------
 
-static void tier4_imx490_shutdown(struct i2c_client *client)
+static void tier4_imx728_shutdown(struct i2c_client *client)
 {
-  struct tier4_imx490 *priv = NULL;
+  struct tier4_imx728 *priv = NULL;
   int i;
 
   tier4_isx021_sensor_mutex_lock();
 
-  mutex_lock(&tier4_imx490_lock);
+  mutex_lock(&tier4_imx728_lock);
 
   if (!client)
   {
@@ -1805,102 +1730,102 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
 
   for (i = 0; i < camera_channel_count; i++)
   {
-    if (tier4_imx490_is_current_i2c_client(client, i))
+    if (tier4_imx728_is_current_i2c_client(client, i))
     {
       priv = wst_priv[i].p_priv;
 
       if (i & 0x1)
       {  // Even port number( GMSL B port on a Des : i = port_number -1 )
 
-        if (tier4_imx490_is_camera_connected_to_port(i - 1))
+        if (tier4_imx728_is_camera_connected_to_port(i - 1))
         {  // if a camera connected to another(GMSL A)port on a Des.
            // a camera is connected to each port of the Des.
-          if (tier4_imx490_is_isp_ser_shutdown(i - 1))
+          if (tier4_imx728_is_isp_ser_shutdown(i - 1))
           {  //  ISP and Ser on another(GMSL A) port have been already shut down ?
 
-            if (tier4_imx490_is_des_shutdown(i - 1) == false)
+            if (tier4_imx728_is_des_shutdown(i - 1) == false)
             {                                              // if Des on another(GMSL A)port is not shutdown yet
-              tier4_imx490_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
-              tier4_imx490_set_des_shutdown(i, true);      // Des will be shut down
+              tier4_imx728_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
+              tier4_imx728_set_des_shutdown(i, true);      // Des will be shut down
             }
             else
             {  //  if Des on the another port is already shut down. This is Error case.
-              tier4_imx490_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx490_set_des_shutdown(i, false);      //  Des will not be shutdown
+              tier4_imx728_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
+              tier4_imx728_set_des_shutdown(i, false);      //  Des will not be shutdown
             }
           }
           else
           {  // The camera ISP and Ser on another(GMSL A) port are not shut down yet.
 
-            if (tier4_imx490_is_des_shutdown(i - 1) == false)
+            if (tier4_imx728_is_des_shutdown(i - 1) == false)
             {                                              // if Des is not shut down yet.
-              tier4_imx490_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
-              tier4_imx490_set_des_shutdown(i, false);     //  The Des won't be shut down.
+              tier4_imx728_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
+              tier4_imx728_set_des_shutdown(i, false);     //  The Des won't be shut down.
             }
             else
             {  // Only Des on another port is already shut down. This is Error case.
-              tier4_imx490_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx490_set_des_shutdown(i, false);      //  Des will not be shut down.
+              tier4_imx728_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
+              tier4_imx728_set_des_shutdown(i, false);      //  Des will not be shut down.
             }
           }                                            // a camera is connected to only (GMSL B) port on Des.
-          tier4_imx490_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
-          tier4_imx490_set_des_shutdown(i, true);      // The Des won't be shut down.
+          tier4_imx728_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
+          tier4_imx728_set_des_shutdown(i, true);      // The Des won't be shut down.
         }
       }
       else
       {  // if (  i & 0x1 ) == 0
 
-        if (tier4_imx490_is_camera_connected_to_port(i + 1))
+        if (tier4_imx728_is_camera_connected_to_port(i + 1))
         {  // Another camera is connected to another(GMSL B) port on the Des
 
-          if (tier4_imx490_is_isp_ser_shutdown(i + 1))
+          if (tier4_imx728_is_isp_ser_shutdown(i + 1))
           {  // if the ISP and Ser on another port are already shut down
 
-            if (tier4_imx490_is_des_shutdown(i + 1) == false)
+            if (tier4_imx728_is_des_shutdown(i + 1) == false)
             {                                              // if Des is not shut down yet.
-              tier4_imx490_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
-              tier4_imx490_set_des_shutdown(i, false);     //  The Des will be shut down.
+              tier4_imx728_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
+              tier4_imx728_set_des_shutdown(i, false);     //  The Des will be shut down.
             }
             else
             {                                               // Des is already shut down. This is Error case.
-              tier4_imx490_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx490_set_des_shutdown(i, false);      //  The Des will not be shut down.
+              tier4_imx728_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
+              tier4_imx728_set_des_shutdown(i, false);      //  The Des will not be shut down.
             }
           }
           else
           {  // The ISP and Ser on another(GMSL B) port are not shut down yet.
 
-            if (tier4_imx490_is_des_shutdown(i + 1) == false)
+            if (tier4_imx728_is_des_shutdown(i + 1) == false)
             {  // if Des on another(GMSL B) port is not shut down yet.
 
-              tier4_imx490_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
-              tier4_imx490_set_des_shutdown(i, false);     //  The Des will not be shut down.
+              tier4_imx728_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
+              tier4_imx728_set_des_shutdown(i, false);     //  The Des will not be shut down.
             }
             else
             {                                               // Only Des on another(GMSL B) port is already shut down.
                                                             // This is Error case.
-              tier4_imx490_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx490_set_des_shutdown(i, false);      //  The Des will not be shut down.
+              tier4_imx728_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
+              tier4_imx728_set_des_shutdown(i, false);      //  The Des will not be shut down.
             }
           }
         }
         else
         {
-          tier4_imx490_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
-          tier4_imx490_set_des_shutdown(i, true);      //  The Des will be shut down.
+          tier4_imx728_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
+          tier4_imx728_set_des_shutdown(i, true);      //  The Des will be shut down.
         }
       }  //  if ( i & 0x1 )
          //            break;
 
-      if (tier4_imx490_is_isp_ser_shutdown(i))
+      if (tier4_imx728_is_isp_ser_shutdown(i))
       {
         // Reset camera sensor
-        tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX490, false);
+        tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX728, false);
         // S/W Reset max9295
         tier4_max9295_reset_control(priv->ser_dev);
       }
 
-      if (tier4_imx490_is_des_shutdown(i))
+      if (tier4_imx728_is_des_shutdown(i))
       {
         // S/W Reset max9296
         tier4_max9296_reset_control(priv->dser_dev, &client->dev, true);
@@ -1908,7 +1833,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
 
       if (priv == NULL || i >= camera_channel_count)
       {
-        mutex_unlock(&tier4_imx490_lock);
+        mutex_unlock(&tier4_imx728_lock);
         tier4_isx021_sensor_mutex_unlock();
         return;
       }
@@ -1918,46 +1843,46 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
 
 error_exit:
 
-  mutex_unlock(&tier4_imx490_lock);
+  mutex_unlock(&tier4_imx728_lock);
 
   tier4_isx021_sensor_mutex_unlock();
 }
-static const struct i2c_device_id tier4_imx490_id[] = { { "tier4_imx490", 0 }, {} };
+static const struct i2c_device_id tier4_imx728_id[] = { { "tier4_imx728", 0 }, {} };
 
-MODULE_DEVICE_TABLE(i2c, tier4_imx490_id);
+MODULE_DEVICE_TABLE(i2c, tier4_imx728_id);
 
-static struct i2c_driver tier4_imx490_i2c_driver = {
+static struct i2c_driver tier4_imx728_i2c_driver = {
   .driver = {
-    .name       = "tier4_imx490",
+    .name       = "tier4_imx728",
     .owner      = THIS_MODULE,
-    .of_match_table = of_match_ptr(tier4_imx490_of_match),
+    .of_match_table = of_match_ptr(tier4_imx728_of_match),
   },
-  .probe    = tier4_imx490_probe,
-  .remove   = tier4_imx490_remove,
-  .shutdown   = tier4_imx490_shutdown,
-  .id_table   = tier4_imx490_id,
+  .probe    = tier4_imx728_probe,
+  .remove   = tier4_imx728_remove,
+  .shutdown   = tier4_imx728_shutdown,
+  .id_table   = tier4_imx728_id,
 };
 
-static int __init tier4_imx490_init(void)
+static int __init tier4_imx728_init(void)
 {
   mutex_init(&serdes_lock__);
-  mutex_init(&tier4_imx490_lock);
+  mutex_init(&tier4_imx728_lock);
 
   printk(KERN_INFO "TIERIV Automotive HDR Camera driver.\n");
 
-  return i2c_add_driver(&tier4_imx490_i2c_driver);
+  return i2c_add_driver(&tier4_imx728_i2c_driver);
 }
 
-static void __exit tier4_imx490_exit(void)
+static void __exit tier4_imx728_exit(void)
 {
   mutex_destroy(&serdes_lock__);
-  mutex_destroy(&tier4_imx490_lock);
+  mutex_destroy(&tier4_imx728_lock);
 
-  i2c_del_driver(&tier4_imx490_i2c_driver);
+  i2c_del_driver(&tier4_imx728_i2c_driver);
 }
 
-module_init(tier4_imx490_init);
-module_exit(tier4_imx490_exit);
+module_init(tier4_imx728_init);
+module_exit(tier4_imx728_exit);
 
 MODULE_DESCRIPTION("TIERIV Automotive HDR Camera driver");
 MODULE_AUTHOR("Originaly NVIDIA Corporation");

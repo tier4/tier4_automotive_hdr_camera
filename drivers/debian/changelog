@@ -1,16 +1,28 @@
-tier4-camera-gmsl (1.4.2) focal; urgency=medium 
+tier4-camera-gmsl (1.4.4) focal; urgency=medium
+
+  * Support C3 camera
+
+ -- tier4 <tier4@tier4-desktop>  Wed, 06 Dec 2023 01:44:00 +0900
+
+tier4-camera-gmsl (1.4.3) focal; urgency=medium
+
+  * Support old FPGA and RQX-59G
+
+ -- tier4 <tier4@tier4-desktop>  Wed, 08 Nov 2023 01:43:00 +0900
+
+tier4-camera-gmsl (1.4.2) focal; urgency=medium
 
   * Support distortion correction for C2 camera
 
  -- tier4 <tier4@tier4-desktop>  Wed, 11 Oct 2023 01:42:00 +0900
 
-tier4-camera-gmsl (1.4.1) focal; urgency=medium 
+tier4-camera-gmsl (1.4.1) focal; urgency=medium
 
   * Support C2 slow clock mode
 
  -- tier4 <tier4@tier4-desktop>  Mon, 21 Aug 2023 01:41:00 +0900
 
-tier4-camera-gmsl (1.4.0) focal; urgency=medium 
+tier4-camera-gmsl (1.4.0) focal; urgency=medium
 
   *  Support Embedded data
 
@@ -64,7 +76,7 @@ tier4-isx021-gmsl (1.0.2) unstable; urgency=medium
 
 tier4-isx021-gmsl (1.0.1) unstable; urgency=low
 
-  * 
+  *
 
  -- yukke <yukke@yukke-ThinkPad-X1-Extreme>  Tue, 17 May 2022 18:20:08 +0900
 

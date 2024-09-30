@@ -1,10 +1,10 @@
 # tier4-camera-gmsl-dkms
 
-This driver has been developped on  ROScube RQX58G, it could  not be cross compiled at this moment. 
+This driver has been developped on  ROScube RQX58G, it could  not be cross compiled at this moment.
 
 ## Preparation
 
-In this directory  
+In this directory
 
 ```
 $> sudo apt update
@@ -45,13 +45,13 @@ $> ls /boot/tier4-isx021-gmsl-device-tree-overlay-roscube-r3411_r351.dtbo
 ## Combine /boot/tier4-isx021-gmsl-device-tree-overlay-roscube-r3411_r351.dtbo with  /boot/dtb/kernel_tegra194-rqx-58g.dtb
 
 
-``` 
+```
 $> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n 2="TIERIV ISX021 GMSL2 Camera Device Tree Overlay"
 ```
 
 if you use r32.5.1 BSP, you should use the command below
 
-``` 
+```
 $> sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "Tier4 ISX021 GMSL2 Camera Device Tree Overlay"
 ```
 

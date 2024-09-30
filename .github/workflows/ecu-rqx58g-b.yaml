@@ -38,4 +38,3 @@ jobs:
     uses: ./.github/workflows/unload-drivers-hosted.yaml
     with:
       platform: rqx58g-b
-      camera-module: C2
