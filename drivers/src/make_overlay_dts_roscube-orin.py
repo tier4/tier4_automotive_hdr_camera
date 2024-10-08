@@ -48,7 +48,7 @@ str_overlay_header_r351 = """
 /plugin/;
 
 / {
-    overlay-name = \"TIERIV ISX021 IMX490 GMSL2 Camera Device Tree Overlay\";
+    overlay-name = \"TIERIV ISX021 IMX490 IMX728 GMSL2 Camera Device Tree Overlay\";
     jetson-header-name = \"Jetson AGX CSI Connector\";
     compatible = \"nvidia,p3737-0000+p3701-0000\", \"nvidia,tegra234\", \"nvidia,tegra23x\";
 """
