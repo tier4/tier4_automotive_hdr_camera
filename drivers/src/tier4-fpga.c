@@ -189,7 +189,7 @@ int tier4_fpga_set_fsync_manual_trigger(struct device *dev)
   err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
   if ((val & 0xFF) == FPGA_FSYNC_MANUAL) {
     // skip writing the same value to reg in order to save the flash write cycles
-    dev_info(dev, "[%s] : Keep FSYNC Auto Trigger mode.\n", __func__);
+    dev_info(dev, "[%s] : Keep FSYNC Manual Trigger mode.\n", __func__);
     return err;
   }
 

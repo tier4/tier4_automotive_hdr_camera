@@ -127,11 +127,21 @@ else ifeq ($(L4T_RELEASE_MAIN), R34)
 else ifeq ($(L4T_RELEASE_MAIN), R35)
         ifeq ($(MODEL),$(ROScube_Xavier_Model_word))
             # RQX-58G
-            KERNELRELEASE            := 5.10.104-rqx58g
-            TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-roscube-r351
-            TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-roscube-r351
-           TARGET_ISX021_IMX490_DTS  := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r351
-            MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_roscube.py r35.1
+            ifeq ($(L4T_RELEASE_MAJOR), 4)
+                # R35.4
+                KERNELRELEASE            := $(shell uname -r)
+                TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-roscube-r354
+                TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-roscube-r354
+                TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r354
+                MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_roscube.py r35.4
+            else ifeq ($(L4T_RELEASE_MAJOR), 1)
+                # R35.1
+                KERNELRELEASE            := $(shell uname -r)
+                TARGET_ISX021_DTS        := tier4-isx021-gmsl-device-tree-overlay-roscube-r351
+                TARGET_IMX490_DTS        := tier4-imx490-gmsl-device-tree-overlay-roscube-r351
+                TARGET_ISX021_IMX490_DTS := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-r351
+                MAKE_OVERLAY_DTS_CMD     := make_overlay_dts_roscube.py r35.1
+            endif
         else ifeq ($(MODEL),$(ROScube_Orin_Model_word))
             # RQX-59G
             ifeq ($(L4T_RELEASE_MAJOR), 4)
