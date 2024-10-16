@@ -1,5 +1,5 @@
-# TIER IV Automotive HDR Camera C1/C2 Device Driver
-This repository contains the device driver for the [TIER IV Automotive HDR Camera C1/C2](https://sensor.tier4.jp/automotive-hdr-camera). 
+# TIER IV Automotive HDR Camera Device Driver
+This repository contains the device driver for the [TIER IV Automotive HDR Camera C1, C2, and C3](https://sensor.tier4.jp/automotive-hdr-camera). 
 
 If you want to use the official driver, please refer to the [Installation and Usage section](#installation-and-usage) and proceed with the installation.
 
@@ -23,11 +23,13 @@ You can download the deb package and build kernel module on the target ECU.
 The device type (i.e., C1 or C2) assignment is fixed at every GMSL2 port.
 The following table shows the default assignment:
 
-| overlay command \                                               | GMSL2 port No. | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  |
-|-----------------------------------------------------------------|----------------|----|----|----|----|----|----|----|----|
-| `TIERIV(Tier4) ISX021 GMSL2 Camera Device Tree Overlay`        |                | C1 | C1 | C1 | C1 | C1 | C1 | C1 | C1 |
-| `TIERIV(Tier4) IMX490 GMSL2 Camera Device Tree Overlay`        |                | C2 | C2 | C2 | C2 | C2 | C2 | C2 | C2 |
-| `TIERIV(Tier4) ISX021 IMX490 GMSL2 Camera Device Tree Overlay` |                | C1 | C1 | C2 | C2 | C1 | C1 | C2 | C2 |
+| overlay command \                                                     | GMSL2 port No. | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  |
+|-----------------------------------------------------------------------|----------------|----|----|----|----|----|----|----|----|
+| `TIERIV(Tier4) ISX021 GMSL2 Camera Device Tree Overlay`               |                | C1 | C1 | C1 | C1 | C1 | C1 | C1 | C1 |
+| `TIERIV(Tier4) IMX490 GMSL2 Camera Device Tree Overlay`               |                | C2 | C2 | C2 | C2 | C2 | C2 | C2 | C2 |
+| `TIERIV(Tier4) IMX728 GMSL2 Camera Device Tree Overlay`               |                | C3 | C3 | C3 | C3 | C3 | C3 | C3 | C3 |
+| `TIERIV(Tier4) ISX021 IMX490 GMSL2 Camera Device Tree Overlay`        |                | C1 | C1 | C2 | C2 | C1 | C1 | C2 | C2 |
+| `TIERIV(Tier4) ISX021 IMX490 IMX728 GMSL2 Camera Device Tree Overlay` |                | C1 | C1 | C2 | C2 | C3 | C3 | C3 | C3 |
 
 (e.g., If user executes `$ sudo /opt/nvidia/jetson-io/config-by-hardware.py -n 2="TIERIV ISX021 GMSL2 Camera Device Tree Overlay"`
 on the driver installation process, all ports are assigned for C1 cameras. Please see [drivers/README.md](drivers/README.md#combine-device-tree-overlaydtbo-with-original-dtb) for the detail of the overlay command.)

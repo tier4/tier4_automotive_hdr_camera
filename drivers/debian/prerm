@@ -2,8 +2,19 @@
 
 #!/bin/sh
 NAME=tier4-camera-gmsl
-VERSION=1.4.5
+VERSION=1.5.0
 KERNEL_REL=$(uname -r)
+
+ISX021_GMSL_DTBO=$(ls /boot/tier4-isx021-gmsl*)
+ISX021_GMSL_DTBO_EXIST=$?
+
+IMX490_GMSL_DTBO=$(ls /boot/tier4-imx490-gmsl-*)
+ISX490_GMSL_DTBO_EXIST=$?
+
+IMX728_GMSL_DTBO=$(ls /boot/tier4-imx728-gmsl-*)
+IMX728_GMSL_DTBO_EXIST=$?
+
+
 set -e
 case "$1" in
     remove|upgrade|deconfigure)
@@ -12,21 +23,28 @@ case "$1" in
          rm -rf /usr/src/$NAME-$VERSION
          rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-isx021.ko
          rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-imx490.ko
+         rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-imx728.ko
          rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-max9295.ko
          rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-max9296.ko
          rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-gw5300.ko
          rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-fpga.ko
          rm -f /lib/firmware/tier4-isx021.bin
-         rm -f /etc/modules-load.d/tier4-imx490-gmsl.conf
          rm -f /etc/modules-load.d/tier4-isx021-gmsl.conf
+         rm -f /etc/modules-load.d/tier4-imx490-gmsl.conf
+         rm -f /etc/modules-load.d/tier4-imx728-gmsl.conf
          rm -f /etc/modprobe.d/tier4-isx021.conf
          rm -f /etc/modprobe.d/tier4-imx490.conf
-         rm -rf /boot/tier4-isx021-gmsl-device-tree-overlay.dtbo
-         rm -rf /boot/tier4-isx021-gmsl-device-tree-overlay-orin.dtbo
-         rm -rf /boot/tier4-imx490-gmsl-device-tree-overlay.dtbo
-         rm -rf /boot/tier4-imx490-gmsl-device-tree-overlay-orin.dtbo
-         rm -rf /boot/tier4-isx021-imx490-gmsl-device-tree-overlay.dtbo
-         rm -rf /boot/tier4-isx021-imx490-gmsl-device-tree-overlay-orin.dtbo
+         rm -f /etc/modprobe.d/tier4-imx728.conf
+
+         if [ $ISX021_GMSL_DTBO_EXIST = 0 ]; then
+             rm -f $ISX021_GMSL_DTBO
+         fi
+         if [ $IMX490_GMSL_DTBO_EXIST = 0 ]; then
+             rm -f $IMX490_GMSL_DTBO
+         fi
+         if [ $IMX728_GMSL_DTBO_EXIST = 0 ]; then
+             rm -f $IMX728_GMSL_DTBO
+         fi
       fi
     ;;
 
