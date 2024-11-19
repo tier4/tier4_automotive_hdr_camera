@@ -552,6 +552,8 @@ int tier4_max9295_setup_control(struct device *dev)
   /* PLL setting & Enable PLL */
   tier4_max9295_write_reg(dev, MAX9295_REF_VTG0_ADDR, 0x59);
 
+  /* delay to settle link */
+  msleep(70);
 
   g_ctx->serdev_found = true;
 
