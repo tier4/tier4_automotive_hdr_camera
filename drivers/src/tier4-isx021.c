@@ -2833,9 +2833,6 @@ static int tier4_isx021_probe(struct i2c_client *client, const struct i2c_device
     goto err_max9296_unreg;
   }
 
-  tier4_isx021_sensor_mutex_unlock();
-
-  err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_90_ADDR, 0x06);
 
   err = tier4_isx021_set_response_mode(priv);
   if (err)
