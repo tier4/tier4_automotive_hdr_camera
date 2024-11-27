@@ -5,13 +5,13 @@ NAME=tier4-camera-gmsl
 VERSION=1.5.0
 KERNEL_REL=$(uname -r)
 
-ISX021_GMSL_DTBO=$(ls /boot/tier4-isx021-gmsl*)
+ISX021_GMSL_DTBO=$(ls /boot/tier4-isx021-*.dtbo)
 ISX021_GMSL_DTBO_EXIST=$?
 
-IMX490_GMSL_DTBO=$(ls /boot/tier4-imx490-gmsl-*)
-ISX490_GMSL_DTBO_EXIST=$?
+IMX490_GMSL_DTBO=$(ls /boot/tier4-imx490-*.dtbo)
+IMX490_GMSL_DTBO_EXIST=$?
 
-IMX728_GMSL_DTBO=$(ls /boot/tier4-imx728-gmsl-*)
+IMX728_GMSL_DTBO=$(ls /boot/tier4-imx728-*.dtbo)
 IMX728_GMSL_DTBO_EXIST=$?
 
 
