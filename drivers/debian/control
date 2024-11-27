@@ -9,5 +9,5 @@ Homepage: <https://sensor.tier4.jp/automotive-hdr-camera-jp>
 Package: tier4-camera-gmsl
 Architecture: arm64
 Provides: tier4-camera-gmsl
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, gpiod
 Description: Tier4 ISX021 GMSL2 Camera Kernel Module.
