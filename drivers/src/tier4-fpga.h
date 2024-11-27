@@ -126,11 +126,12 @@ int tier4_fpga_set_fsync_manual_trigger(struct device *dev);
  * @param  [in] dev         pointer to fpga device structure.
  * @param  [in] des_number  des number ( 0 to 3 )
  * @param  [in] trigger_mode sensor master/slave mode with fps (  C1: 0 to 1  C2: 0 to 5)
+ * @param  [in] sensor_id   which sensor (21, 490, 728) is chosen
  *
  * @return  0 for success, or -1 otherwise.
  */
 
-int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, int trigger_mode);
+int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, int trigger_mode, __u32 sensor_id);
 
 /**
  *  check access to FPGA.

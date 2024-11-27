@@ -283,7 +283,7 @@ static int tier4_imx728_set_fsync_trigger_mode(struct tier4_imx728 *priv, int mo
           }
         }
         des_num = priv->g_ctx.reg_mux;
-        err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num, priv->trigger_mode);
+        err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num, priv->trigger_mode, SENSOR_ID_IMX728);
         if (err)
         {
           dev_err(dev, "[%s] : Setting the frequency of fsync genrated by FPGA failed.\n", __func__);

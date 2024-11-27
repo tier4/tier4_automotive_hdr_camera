@@ -69,11 +69,7 @@ struct tier4_fpga
   struct mutex lock;
   /* FPGA slave address */
   __u32 reg_addr;
-//  bool generate_fsync;
 };
-
-//static int generate_fsync;
-//module_param(generate_fsync, int, S_IRUGO | S_IWUSR);
 
 static struct regmap_config tier4_fpga_regmap_config = {
   .reg_bits = 8,
@@ -134,14 +130,14 @@ EXPORT_SYMBOL(tier4_fpga_get_fsync_mode);
 int tier4_fpga_enable_fsync_mode(struct device *dev)
 {
   int err = 0;
-//  u8 val = 0;
+  u8 val = 0;
 
-//  err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &val);
-//  if ((val & 0xFF) == FPGA_MODE_FSYNC) {
-//    // skip writing the same value to reg in order to save the flash write cycles
-//    dev_info(dev, "[%s] : Keep FSYNC mode enabled.\n", __func__);
-//    return err;
-//  }
+  err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &val);
+  if ((val & 0xFF) == FPGA_MODE_FSYNC) {
+    // skip writing the same value to reg in order to save the flash write cycles
+    dev_info(dev, "[%s] : Keep FSYNC mode enabled.\n", __func__);
+    return err;
+  }
 
   err = tier4_fpga_write_reg(dev, FPGA_REG_MODE_ADDR, FPGA_MODE_FSYNC);
   if (err)
@@ -162,14 +158,14 @@ EXPORT_SYMBOL(tier4_fpga_enable_fsync_mode);
 int tier4_fpga_disable_fsync_mode(struct device *dev)
 {
   int err = 0;
-//  u8 val = 0;
+  u8 val = 0;
 
-//  err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &val);
-//  if ((val & 0xFF) == FPGA_MODE_FREE_RUN) {
-//    // skip writing the same value to reg in order to save the flash write cycles
-//    dev_info(dev, "[%s] : Keep FSYNC mode disabled.\n", __func__);
-//    return err;
-//  }
+  err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &val);
+  if ((val & 0xFF) == FPGA_MODE_FREE_RUN) {
+    // skip writing the same value to reg in order to save the flash write cycles
+    dev_info(dev, "[%s] : Keep FSYNC mode disabled.\n", __func__);
+    return err;
+ }
 
   err = tier4_fpga_write_reg(dev, FPGA_REG_MODE_ADDR, FPGA_MODE_FREE_RUN);
   if (err)
@@ -189,14 +185,14 @@ EXPORT_SYMBOL(tier4_fpga_disable_fsync_mode);
 int tier4_fpga_set_fsync_auto_trigger(struct device *dev)
 {
   int err = 0;
-//  u8 val = 0;
+  u8 val = 0;
 
-//  err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
-//  if ((val & 0xFF) == FPGA_FSYNC_AUTO) {
-//    // skip writing the same value to reg in order to save the flash write cycles
-//    dev_info(dev, "[%s] : Keep FSYNC Auto Trigger mode.\n", __func__);
-//    return err;
-//  }
+  err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
+  if ((val & 0xFF) == FPGA_FSYNC_AUTO) {
+    // skip writing the same value to reg in order to save the flash write cycles
+    dev_info(dev, "[%s] : Keep FSYNC Auto Trigger mode.\n", __func__);
+    return err;
+  }
 
   err = tier4_fpga_write_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, FPGA_FSYNC_AUTO);
   if (err)
@@ -216,14 +212,14 @@ EXPORT_SYMBOL(tier4_fpga_set_fsync_auto_trigger);
 int tier4_fpga_set_fsync_manual_trigger(struct device *dev)
 {
   int err = 0;
-//  u8 val = 0;
+  u8 val = 0;
 
-//  err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
-//  if ((val & 0xFF) == FPGA_FSYNC_MANUAL) {
-//    // skip writing the same value to reg in order to save the flash write cycles
-//    dev_info(dev, "[%s] : Keep FSYNC Auto Trigger mode.\n", __func__);
-//    return err;
-//  }
+  err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
+  if ((val & 0xFF) == FPGA_FSYNC_MANUAL) {
+    // skip writing the same value to reg in order to save the flash write cycles
+    dev_info(dev, "[%s] : Keep FSYNC Manual Trigger mode.\n", __func__);
+    return err;
+  }
 
   err = tier4_fpga_write_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, FPGA_FSYNC_MANUAL);
   if (err)
@@ -269,7 +265,7 @@ int tier4_fpga_check_access(struct device *dev)
 EXPORT_SYMBOL(tier4_fpga_check_access);
 
 
-static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number, int fps, int trigger_mode)
+static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number, int fps, int trigger_mode, __u32 sensor_id)
 {
   int freq;
   char str_fps_camx_camy[15] = "\0";
@@ -296,41 +292,53 @@ static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number, int 
       break;
   }
 
-  if (trigger_mode == 1)
+  if (sensor_id == 21) // for ISX021
   {
-    if ((fps > 5) && (fps <= 10))
-    {
       freq = fps;
-    }
-    else
-    {
-      freq = FREQ_10HZ;
-      dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.", __func__, str_fps_camx_camy, fps, str_fps_camx_camy, freq);
-
-    }
+      if (fps < 1 || fps > 30)
+      {
+        freq = FREQ_30HZ;
+        dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.", __func__, str_fps_camx_camy, fps, str_fps_camx_camy, freq);
+      }
   }
-  else if (trigger_mode == 3)
+  else // for IMX490 and IMX728
   {
-    if ((fps > 10) && (fps <= 20))
+    
+    if (trigger_mode == 1)
     {
-      freq = fps;
+      if ((fps > 5) && (fps <= 10))
+      {
+        freq = fps;
+      }
+      else
+      {
+        freq = FREQ_10HZ;
+        dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.", __func__, str_fps_camx_camy, fps, str_fps_camx_camy, freq);
+      }
     }
-    else
+    else if (trigger_mode == 3)
     {
-      freq = FREQ_20HZ;
-      dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.", __func__, str_fps_camx_camy, fps, str_fps_camx_camy, freq);
+      if ((fps > 10) && (fps <= 20))
+      {
+        freq = fps;
+      }
+      else
+      {
+        freq = FREQ_20HZ;
+        dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.", __func__, str_fps_camx_camy, fps, str_fps_camx_camy, freq);
+      }
     }
-  }
-  else if (trigger_mode == 5)
-  {
-    if ((fps > 20) && (fps <= 30))
+    else if (trigger_mode == 5)
     {
-      freq = fps;
-    }
-    else
-    {
-      freq = FREQ_30HZ;
-      dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.", __func__, str_fps_camx_camy, fps, str_fps_camx_camy, freq);
+      if ((fps > 20) && (fps <= 30))
+      {
+        freq = fps;
+      }
+      else
+      {
+        freq = FREQ_30HZ;
+        dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.", __func__, str_fps_camx_camy, fps, str_fps_camx_camy, freq);
+      }
     }
   }
 
@@ -343,27 +351,27 @@ static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number, int 
 
 // --------------------------------------------
 
-int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, int trigger_mode)
+int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, int trigger_mode, __u32 sensor_id)
 {
   int err = 0;
   u8 val8, addr8;
   int freq = 0;
- // u8 read_val = 0;
+  u8 read_val = 0;
   u8 freq_bitmask = 0x3F; // bit[0:5]
 
 
   switch (des_number){
     case 0:
-      freq = tier4_fpga_get_fps_camx_camy(dev, des_number, fps_cam1_cam2, trigger_mode);
+      freq = tier4_fpga_get_fps_camx_camy(dev, des_number, fps_cam1_cam2, trigger_mode, sensor_id);
       break;
     case 1:
-      freq = tier4_fpga_get_fps_camx_camy(dev, des_number, fps_cam3_cam4, trigger_mode);
+      freq = tier4_fpga_get_fps_camx_camy(dev, des_number, fps_cam3_cam4, trigger_mode, sensor_id);
       break;
     case 2:
-      freq = tier4_fpga_get_fps_camx_camy(dev, des_number, fps_cam5_cam6, trigger_mode);
+      freq = tier4_fpga_get_fps_camx_camy(dev, des_number, fps_cam5_cam6, trigger_mode, sensor_id);
       break;
     case 3:
-      freq = tier4_fpga_get_fps_camx_camy(dev, des_number, fps_cam7_cam8, trigger_mode);
+      freq = tier4_fpga_get_fps_camx_camy(dev, des_number, fps_cam7_cam8, trigger_mode, sensor_id);
       break;
     default:
       dev_err(dev, "[%s] Invalid des_number(%d)\n", __func__, des_number);
@@ -377,12 +385,12 @@ int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number, in
       dev_info(dev, "[%s] freq=%d.\n", __func__, freq);
 #endif
 
-//  err = tier4_fpga_read_reg(dev, addr8, &read_val);
-//  if ((read_val & freq_bitmask) == val8) {
-//    // skip writing the same value to reg in order to save the flash write cycles
-//    dev_info(dev, "[%s] : Keep the frequency of fsync trigger to %d\n", __func__, val8);
-//    return err;
-//  }
+  err = tier4_fpga_read_reg(dev, addr8, &read_val);
+  if ((read_val & freq_bitmask) == val8) {
+    // skip writing the same value to reg in order to save the flash write cycles
+    dev_info(dev, "[%s] : Keep the frequency of fsync trigger to %d\n", __func__, val8);
+    return err;
+  }
 
   err = tier4_fpga_write_reg(dev, addr8, val8);
 
@@ -547,7 +555,7 @@ static struct i2c_driver tier4_fpga_i2c_driver = {
 
 static int __init tier4_fpga_init(void)
 {
-  printk("FPGA Driver for Tier4 Cameras.\n");
+  printk(KERN_INFO "FPGA Driver for Tier4 Camera.\n");
 
   return i2c_add_driver(&tier4_fpga_i2c_driver);
 }
