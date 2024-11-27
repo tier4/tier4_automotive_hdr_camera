@@ -1736,7 +1736,7 @@ static int tier4_imx490_remove(struct i2c_client *client)
 
   tier4_imx490_shutdown(client);
 
-  tier4_imx490_gmsl_serdes_reset(priv);
+  // tier4_imx490_gmsl_serdes_reset(priv);
 
   tier4_max9296_sdev_unregister(priv->dser_dev, &client->dev);
   tier4_max9295_sdev_unpair(priv->ser_dev, &client->dev);
@@ -1809,7 +1809,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
     {
       priv = wst_priv[i].p_priv;
 
-      if (i & 0x1)
+      if (MAX9295_REG_PORT_B == priv->g_ctx.ser_reg) // Even port
       {  // Even port number( GMSL B port on a Des : i = port_number -1 )
 
         if (tier4_imx490_is_camera_connected_to_port(i - 1))
@@ -1824,9 +1824,8 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
               tier4_imx490_set_des_shutdown(i, true);      // Des will be shut down
             }
             else
-            {  //  if Des on the another port is already shut down. This is Error case.
-              tier4_imx490_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx490_set_des_shutdown(i, false);      //  Des will not be shutdown
+            {
+              // Des is already shut down. This is Error case.
             }
           }
           else
@@ -1838,17 +1837,19 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
               tier4_imx490_set_des_shutdown(i, false);     //  The Des won't be shut down.
             }
             else
-            {  // Only Des on another port is already shut down. This is Error case.
-              tier4_imx490_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx490_set_des_shutdown(i, false);      //  Des will not be shut down.
+            {
+              // Des is already shut down. This is Error case.
             }
-          }                                            // a camera is connected to only (GMSL B) port on Des.
+          }
+        }
+        else
+        {                                              // a camera is connected to only (GMSL B) port on Des.
           tier4_imx490_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
           tier4_imx490_set_des_shutdown(i, true);      // The Des won't be shut down.
         }
       }
-      else
-      {  // if (  i & 0x1 ) == 0
+      else // MAX9295_REG_PORT_A, odd port
+      {
 
         if (tier4_imx490_is_camera_connected_to_port(i + 1))
         {  // Another camera is connected to another(GMSL B) port on the Des
@@ -1859,12 +1860,11 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
             if (tier4_imx490_is_des_shutdown(i + 1) == false)
             {                                              // if Des is not shut down yet.
               tier4_imx490_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
-              tier4_imx490_set_des_shutdown(i, false);     //  The Des will be shut down.
+              tier4_imx490_set_des_shutdown(i, true);     //  The Des will be shut down.
             }
             else
-            {                                               // Des is already shut down. This is Error case.
-              tier4_imx490_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx490_set_des_shutdown(i, false);      //  The Des will not be shut down.
+            {
+              // Des is already shut down. This is Error case.
             }
           }
           else
@@ -1876,11 +1876,8 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
               tier4_imx490_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
               tier4_imx490_set_des_shutdown(i, false);     //  The Des will not be shut down.
             }
-            else
-            {                                               // Only Des on another(GMSL B) port is already shut down.
-                                                            // This is Error case.
-              tier4_imx490_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx490_set_des_shutdown(i, false);      //  The Des will not be shut down.
+            {
+              // Des is already shut down. This is Error case.
             }
           }
         }

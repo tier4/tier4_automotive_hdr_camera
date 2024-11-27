@@ -762,7 +762,7 @@ static struct i2c_driver tier4_max9295_i2c_driver = {
 
 static int __init tier4_max9295_init(void)
 {
-  printk(KERN_INFO "MAX9295 Driver for TIER4 C1 camera : %s\n", BUILD_STAMP);
+  printk(KERN_INFO "MAX9295 Driver for TIER4 camera : %s\n", BUILD_STAMP);
 
   return i2c_add_driver(&tier4_max9295_i2c_driver);
 }
