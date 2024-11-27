@@ -705,6 +705,7 @@ int tier4_max9296_sdev_unregister(struct device *dev, struct device *s_dev)
   struct tier4_max9296 *priv = NULL;
   int err = 0;
   int i = 0;
+  bool found = false;
 
   if (!dev || !s_dev)
   {
@@ -721,18 +722,20 @@ int tier4_max9296_sdev_unregister(struct device *dev, struct device *s_dev)
     err = -ENODATA;
     goto error;
   }
-
+  
+  found = false;
   for (i = 0; i < priv->num_src; i++)
   {
     if (s_dev == priv->sources[i].g_ctx->s_dev)
     {
       priv->sources[i].g_ctx = NULL;
       priv->num_src--;
+      found = true;
       break;
     }
   }
 
-  if (i == priv->num_src)
+  if (!found)
   {
     dev_err(dev, "[%s] : Requested device not found\n", __func__);
     err = -EINVAL;
