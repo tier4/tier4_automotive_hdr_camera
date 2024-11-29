@@ -407,7 +407,10 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, 
     err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x10);
   }
   else
-  {  // power down caemra sensor
+  {  
+    // TODO: Don't know why the even ports produce errors when system is shuting down.
+    
+    // power down caemra sensor
     err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
     msleep(100);
     if (sensor_id == SENSOR_ID_ISX021)
@@ -426,7 +429,7 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, 
 
   if (err)
   {
-    dev_err(dev, "[%s] : Ppower on/off Camera Sensor or ISP failed.\n", __func__);
+    dev_err(dev, "[%s] : Power on/off Camera Sensor or ISP failed.\n", __func__);
   }
 
   msleep(50);
