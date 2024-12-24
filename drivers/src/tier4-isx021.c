@@ -2992,7 +2992,7 @@ static void tier4_isx021_shutdown(struct i2c_client *client)
   struct tier4_isx021 *priv = NULL;
   int i;
 
-  tier4_isx021_sensor_mutex_unlock();
+  tier4_isx021_sensor_mutex_lock();
 
   mutex_lock(&tier4_isx021_lock);
 
