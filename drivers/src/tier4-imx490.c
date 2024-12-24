@@ -391,11 +391,16 @@ static int tier4_imx490_gmsl_serdes_setup(struct tier4_imx490 *priv)
 
   err = tier4_max9295_setup_control(priv->ser_dev);
 
-  /* proceed even if ser setup failed, to setup deser correctly */
   if (err)
   {
     dev_err(dev, "[%s] : GMSL serializer setup failed\n", __func__);
-    goto error;
+    
+    /* 
+      No "goto error" here, instead, go into tier4_max9296_setup_control()
+      proceed even if ser setup failed, to setup deser correctly
+      So that if MAX9296 Link B is not found, it will set back to Link A 
+    */ 
+    // goto error;
   }
 
   des_err = tier4_max9296_setup_control(priv->dser_dev, &priv->i2c_client->dev);
@@ -924,7 +929,7 @@ static int tier4_imx490_stop_streaming(struct tegracam_device *tc_dev)
 
   mutex_lock(&tier4_imx490_lock);
 
-  for (i = 0; i < camera_channel_count; i++)
+  for (i = 0; i < MAX_NUM_CAMERA; i++)
   {
     if (tier4_imx490_is_camera_connected_to_port(i))
     {
@@ -986,7 +991,7 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
 
   mutex_lock(&tier4_imx490_lock);
 
-  for (i = 0; i < camera_channel_count; i++)
+  for (i = 0; i < MAX_NUM_CAMERA; i++)
   {
     if (i & 0x1)
     {  // if  i = 1,3,5,7 ( GMSL B port of a Des )
@@ -1767,11 +1772,8 @@ err_max9295_unpair:
   tier4_max9295_sdev_unpair(priv->ser_dev, &client->dev);
 err_tegracam_unreg:
   tegracam_device_unregister(priv->tc_dev);
-
+  camera_channel_count++;
   tier4_isx021_sensor_mutex_unlock();
-
-//  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p \n", __func__, camera_channel_count,
-//           wst_priv[camera_channel_count].p_client);
 
 
   return err;
@@ -1854,7 +1856,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
     goto error_exit;
   }
 
-  for (i = 0; i < camera_channel_count; i++)
+  for (i = 0; i < MAX_NUM_CAMERA; i++)
   {
     if (tier4_imx490_is_current_i2c_client(client, i))
     {
@@ -1981,7 +1983,7 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
         tier4_max9296_reset_control(priv->dser_dev, &client->dev, true);
       }
 
-      if (priv == NULL || i >= camera_channel_count)
+      if (priv == NULL || i >= MAX_NUM_CAMERA)
       {
         mutex_unlock(&tier4_imx490_lock);
         tier4_isx021_sensor_mutex_unlock();

@@ -25,7 +25,7 @@
 #include "tier4-max9295.h"
 #include "tier4-gmsl-link.h"
 
-#define MAX9295_SHOW_I2C_WRITE_MSG  1
+#define MAX9295_SHOW_I2C_WRITE_MSG  0
 
 /* register specifics */
 
@@ -197,6 +197,7 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
   //    u8 e;
   char str_bus_num[4], str_sl_addr[4];
   int len;
+  int max_retry = 3;
 
   memset(str_bus_num, 0, 4);
   memset(str_sl_addr, 0, 4);
@@ -210,10 +211,13 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
   }
 
   err = regmap_write(priv->regmap, addr, val);
-
   if (err)
   {
-    dev_err(dev, "[%s] : Max9295 I2C write failed Reg at 0x%04X:[0x%02X].\n", __func__, addr, val);
+    while (max_retry-- && err) {
+      dev_err(dev, "[%s] : retry-%d: Max9295 I2C write failed Reg at 0x%04X:[0x%02X].\n", __func__, max_retry, addr, val);
+      msleep(100);
+      err = regmap_write(priv->regmap, addr, val);
+    }
   }
 #if MAX9295_SHOW_I2C_WRITE_MSG
   else
