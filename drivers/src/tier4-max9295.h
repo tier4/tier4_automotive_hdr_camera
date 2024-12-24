@@ -27,6 +27,10 @@
 #define __TIER4_MAX9295_H__
 
 #include "tier4-gmsl-link.h"
+
+#define MAX9295_REG_PORT_A 0x42
+#define MAX9295_REG_PORT_B 0x60
+
 /**
  * \defgroup tier4_max9295 MAX9295 serializer driver
  *

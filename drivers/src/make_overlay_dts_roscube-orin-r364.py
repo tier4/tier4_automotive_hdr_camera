@@ -43,7 +43,7 @@ if cache['gpiod'].is_installed:
       IO_BOARD_TYPE = "LEOPARD"
 
 
-str_overlay_header_r351 = """
+str_overlay_header_r364 = """
 /dts-v1/;
 /plugin/;
 
@@ -63,7 +63,7 @@ str_overlay_header_r325 = """
     compatible = \"nvidia,p3737-0000+p3701-0000\", \"nvidia,tegra234\", \"nvidia,tegra23x\";
 """
 
-dict_overlay_header = {"325x": str_overlay_header_r325, "351": str_overlay_header_r351}
+dict_overlay_header = {"325x": str_overlay_header_r325, "364": str_overlay_header_r364}
 
 # =============== VI R32.5 as dummy ===============
 
@@ -103,7 +103,7 @@ str_fragment_vi_others_r325 = ""
 
 # ================== VI R35.1 ===================
 
-str_fragment_vi_0_r351 = """
+str_fragment_vi_0_r364 = """
 // ----- for VI -----
 
   fragment@1{
@@ -198,7 +198,7 @@ str_fragment_vi_0_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_vi_1_r351 = """
+str_fragment_vi_1_r364 = """
   fragment@4{
     target-path = \"/tegra-capture-vi/ports/port@1\";
     __overlay__ {
@@ -221,7 +221,7 @@ str_fragment_vi_1_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_vi_2_r351 = """
+str_fragment_vi_2_r364 = """
   fragment@6{
     target-path = \"/tegra-capture-vi/ports/port@2\";
     __overlay__ {
@@ -244,7 +244,7 @@ str_fragment_vi_2_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_vi_3_r351 = """
+str_fragment_vi_3_r364 = """
   fragment@8 {
     target-path = \"/tegra-capture-vi/ports/port@3\";
     __overlay__ {
@@ -267,7 +267,7 @@ str_fragment_vi_3_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_vi_4_r351 = """
+str_fragment_vi_4_r364 = """
   fragment@10 {
     target-path = \"/tegra-capture-vi/ports/port@4\";
     __overlay__ {
@@ -290,7 +290,7 @@ str_fragment_vi_4_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_vi_5_r351 = """
+str_fragment_vi_5_r364 = """
   fragment@12 {
     target-path = \"/tegra-capture-vi/ports/port@5\";
     __overlay__ {
@@ -313,7 +313,7 @@ str_fragment_vi_5_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_vi_6_r351 = """
+str_fragment_vi_6_r364 = """
   fragment@14 {
     target-path = \"/tegra-capture-vi/ports/port@6\";
     __overlay__ {
@@ -334,7 +334,7 @@ str_fragment_vi_6_r351 = """
   };
 """
 
-str_fragment_vi_7_r351 = """
+str_fragment_vi_7_r364 = """
   fragment@16 {
     target-path = \"/tegra-capture-vi/ports/port@7\";
     __overlay__ {
@@ -355,18 +355,18 @@ str_fragment_vi_7_r351 = """
   };
 """
 if IO_BOARD_TYPE == "LEOPARD":
-  str_fragment_vi_0_r351 = str_fragment_vi_0_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_vi_1_r351 = str_fragment_vi_1_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_vi_2_r351 = str_fragment_vi_2_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_vi_3_r351 = str_fragment_vi_3_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_vi_4_r351 = str_fragment_vi_4_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_vi_5_r351 = str_fragment_vi_5_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_vi_6_r351 = str_fragment_vi_6_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_vi_7_r351 = str_fragment_vi_7_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_0_r364 = str_fragment_vi_0_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_1_r364 = str_fragment_vi_1_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_2_r364 = str_fragment_vi_2_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_3_r364 = str_fragment_vi_3_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_4_r364 = str_fragment_vi_4_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_5_r364 = str_fragment_vi_5_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_6_r364 = str_fragment_vi_6_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_vi_7_r364 = str_fragment_vi_7_r364.replace("bus-width = <4>", "bus-width = <2>")
 
-str_fragment_vi_others_r351 = ""
+str_fragment_vi_others_r364 = ""
 #  fragment@18 {
-#    target-path = \"/host1x@13e00000/vi@15c10000\";
+#    target-path = \"/bus@0/host1x@13e00000/vi@15c10000\";
 #    __overlay__ {
 #      num-channels = <8>;
 #      status = \"okay\";
@@ -375,18 +375,18 @@ str_fragment_vi_others_r351 = ""
 
 # below str_fragment_vi_n_r325 are dummy for orin devkit
 
-dict_fragment_vi_0 = {"325x": str_fragment_vi_0_r325, "351": str_fragment_vi_0_r351}
-dict_fragment_vi_1 = {"325x": str_fragment_vi_1_r325, "351": str_fragment_vi_1_r351}
-dict_fragment_vi_2 = {"325x": str_fragment_vi_2_r325, "351": str_fragment_vi_2_r351}
-dict_fragment_vi_3 = {"325x": str_fragment_vi_3_r325, "351": str_fragment_vi_3_r351}
-dict_fragment_vi_4 = {"325x": str_fragment_vi_4_r325, "351": str_fragment_vi_4_r351}
-dict_fragment_vi_5 = {"325x": str_fragment_vi_5_r325, "351": str_fragment_vi_5_r351}
-dict_fragment_vi_6 = {"325x": str_fragment_vi_6_r325, "351": str_fragment_vi_6_r351}
-dict_fragment_vi_7 = {"325x": str_fragment_vi_7_r325, "351": str_fragment_vi_7_r351}
+dict_fragment_vi_0 = {"325x": str_fragment_vi_0_r325, "364": str_fragment_vi_0_r364}
+dict_fragment_vi_1 = {"325x": str_fragment_vi_1_r325, "364": str_fragment_vi_1_r364}
+dict_fragment_vi_2 = {"325x": str_fragment_vi_2_r325, "364": str_fragment_vi_2_r364}
+dict_fragment_vi_3 = {"325x": str_fragment_vi_3_r325, "364": str_fragment_vi_3_r364}
+dict_fragment_vi_4 = {"325x": str_fragment_vi_4_r325, "364": str_fragment_vi_4_r364}
+dict_fragment_vi_5 = {"325x": str_fragment_vi_5_r325, "364": str_fragment_vi_5_r364}
+dict_fragment_vi_6 = {"325x": str_fragment_vi_6_r325, "364": str_fragment_vi_6_r364}
+dict_fragment_vi_7 = {"325x": str_fragment_vi_7_r325, "364": str_fragment_vi_7_r364}
 
 dict_fragment_vi_others = {
     "325x": str_fragment_vi_others_r325,
-    "351": str_fragment_vi_others_r351,
+    "364": str_fragment_vi_others_r364,
 }
 
 # ============= NVCSI R32.5 as dummy ============
@@ -428,11 +428,11 @@ str_fragment_nvcsi_others_r325 = ""
 
 
 
-str_fragment_nvcsi_ch0_r351 = """
+str_fragment_nvcsi_ch0_r364 = """
 // -----   NVCSI  ------
 
   fragment@19 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000\";
+    target = <&nvcsi>;
     __overlay__ {
         status = \"okay\";
         #address-cells = <1>;
@@ -629,21 +629,21 @@ str_fragment_nvcsi_ch0_r351 = """
 // channel@0
 
   fragment@20 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@0\";
     __overlay__ {
       status = \"okay\";
     };
   };
 
   fragment@21 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0\";
     __overlay__ {
       status = \"okay\";
     };
   };
   fragment@22 {
     // target = csi_in0
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0/endpoint@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
       port-index = <0>;
@@ -653,7 +653,7 @@ str_fragment_nvcsi_ch0_r351 = """
   };
 
   fragment@23 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@1\";
     __overlay__ {
       status = \"okay\";
     };
@@ -661,7 +661,7 @@ str_fragment_nvcsi_ch0_r351 = """
 
   fragment@24 {
     // target = csi_out0
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@1/endpoint@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@1/endpoint@1\";
     __overlay__ {
       status = \"okay\";
       remote-endpoint = <&vi_in0>;
@@ -671,18 +671,18 @@ str_fragment_nvcsi_ch0_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_nvcsi_ch1_r351 = """
+str_fragment_nvcsi_ch1_r364 = """
 // channel@1
 
   fragment@25 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@1\";
     __overlay__ {
       status = \"okay\";
     };
   };
 
   fragment@26 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@0\";
     __overlay__ {
       status = \"okay\";
     };
@@ -690,7 +690,7 @@ str_fragment_nvcsi_ch1_r351 = """
 
   fragment@27 {
     // target = csi_in1
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@0/endpoint@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
       port-index = <0>;
@@ -701,7 +701,7 @@ str_fragment_nvcsi_ch1_r351 = """
 
   fragment@28 {
     // target = csi_out1
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@1/endpoint@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@1/endpoint@1\";
     __overlay__ {
       status = \"okay\";
       remote-endpoint = <&vi_in1>;
@@ -711,18 +711,18 @@ str_fragment_nvcsi_ch1_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_nvcsi_ch2_r351 = """
+str_fragment_nvcsi_ch2_r364 = """
 // channel@2
 
   fragment@29 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@2\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@2\";
     __overlay__ {
       status = \"okay\";
     };
   };
 
   fragment@30 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@0\";
     __overlay__ {
       status = \"okay\";
     };
@@ -730,7 +730,7 @@ str_fragment_nvcsi_ch2_r351 = """
 
   fragment@31 {
     // target = csi_in2
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@0/endpoint@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
       port-index = <2>;
@@ -740,7 +740,7 @@ str_fragment_nvcsi_ch2_r351 = """
   };
 
   fragment@32 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@1\";
     __overlay__ {
       status = \"okay\";
     };
@@ -748,7 +748,7 @@ str_fragment_nvcsi_ch2_r351 = """
 
   fragment@33 {
     // target = csi_out2
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@1/endpoint@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@1/endpoint@1\";
     __overlay__ {
       status = \"okay\";
       remote-endpoint = <&vi_in2>;
@@ -758,18 +758,18 @@ str_fragment_nvcsi_ch2_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_nvcsi_ch3_r351 = """
+str_fragment_nvcsi_ch3_r364 = """
 // channel@3
 
   fragment@34 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@3\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@3\";
     __overlay__ {
       status = \"okay\";
     };
   };
 
   fragment@35 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@0\";
     __overlay__ {
       status = \"okay\";
     };
@@ -777,7 +777,7 @@ str_fragment_nvcsi_ch3_r351 = """
 
   fragment@36 {
     // target = csi_in3
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@0/endpoint@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
       port-index = <2>;
@@ -787,7 +787,7 @@ str_fragment_nvcsi_ch3_r351 = """
   };
 
   fragment@37 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@1\";
     __overlay__ {
       status = \"okay\";
     };
@@ -795,7 +795,7 @@ str_fragment_nvcsi_ch3_r351 = """
 
   fragment@38 {
     // target = csi_out3
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@1/endpoint@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@1/endpoint@1\";
     __overlay__ {
       status = \"okay\";
       remote-endpoint = <&vi_in3>;
@@ -805,18 +805,18 @@ str_fragment_nvcsi_ch3_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_nvcsi_ch4_r351 = """
+str_fragment_nvcsi_ch4_r364 = """
 // channel@4
 
   fragment@39 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@4\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@4\";
     __overlay__ {
       status = \"okay\";
     };
   };
 
   fragment@40 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@0\";
     __overlay__ {
       status = \"okay\";
     };
@@ -824,7 +824,7 @@ str_fragment_nvcsi_ch4_r351 = """
 
   fragment@41 {
     // target = csi_in4
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@0/endpoint@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
       port-index = <4>;
@@ -834,7 +834,7 @@ str_fragment_nvcsi_ch4_r351 = """
   };
 
   fragment@42 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@1\";
     __overlay__ {
       status = \"okay\";
     };
@@ -842,7 +842,7 @@ str_fragment_nvcsi_ch4_r351 = """
 
   fragment@43 {
     // target = csi_out4
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@1/endpoint@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@1/endpoint@1\";
     __overlay__ {
       status = \"okay\";
       remote-endpoint = <&vi_in4>;
@@ -852,18 +852,18 @@ str_fragment_nvcsi_ch4_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_nvcsi_ch5_r351 = """
+str_fragment_nvcsi_ch5_r364 = """
 // channel@5
 
   fragment@44 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@5\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@5\";
     __overlay__ {
       status = \"okay\";
     };
   };
 
   fragment@45 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@0\";
     __overlay__ {
       status = \"okay\";
     };
@@ -871,7 +871,7 @@ str_fragment_nvcsi_ch5_r351 = """
 
   fragment@46 {
     // target = csi_in5
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@0/endpoint@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
       port-index = <4>;
@@ -881,7 +881,7 @@ str_fragment_nvcsi_ch5_r351 = """
   };
 
   fragment@47 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@1\";
     __overlay__ {
       status = \"okay\";
     };
@@ -889,7 +889,7 @@ str_fragment_nvcsi_ch5_r351 = """
 
   fragment@48 {
     // target = csi_out5
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@1/endpoint@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@1/endpoint@1\";
     __overlay__ {
       status = \"okay\";
       remote-endpoint = <&vi_in5>;
@@ -899,12 +899,12 @@ str_fragment_nvcsi_ch5_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_nvcsi_ch6_r351 = """
+str_fragment_nvcsi_ch6_r364 = """
 // channel@6
 
   fragment@49 {
     // target = csi_in6
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@0/endpoint@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
       port-index = <6>;
@@ -914,7 +914,7 @@ str_fragment_nvcsi_ch6_r351 = """
   };
 
   fragment@50 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@1\";
     __overlay__ {
       status = \"okay\";
     };
@@ -922,7 +922,7 @@ str_fragment_nvcsi_ch6_r351 = """
 
   fragment@51 {
     // target = csi_out6
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@1/endpoint@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@1/endpoint@1\";
     __overlay__ {
       status = \"okay\";
       remote-endpoint = <&vi_in6>;
@@ -932,12 +932,12 @@ str_fragment_nvcsi_ch6_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_nvcsi_ch7_r351 = """
+str_fragment_nvcsi_ch7_r364 = """
 // channel@7
 
   fragment@52 {
     // target = csi_in7
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@0/endpoint@0\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@0/endpoint@0\";
     __overlay__ {
       status = \"okay\";
       port-index = <6>;
@@ -947,7 +947,7 @@ str_fragment_nvcsi_ch7_r351 = """
   };
 
   fragment@53 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@1\";
     __overlay__ {
       status = \"okay\";
     };
@@ -955,7 +955,7 @@ str_fragment_nvcsi_ch7_r351 = """
 
   fragment@54 {
     // target = csi_out7
-    target-path = \"/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@1/endpoint@1\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@1/endpoint@1\";
     __overlay__ {
       status = \"okay\";
       remote-endpoint = <&vi_in7>;
@@ -963,20 +963,20 @@ str_fragment_nvcsi_ch7_r351 = """
   };
 """
 if IO_BOARD_TYPE == "LEOPARD":
-  str_fragment_nvcsi_ch0_r351 = str_fragment_nvcsi_ch0_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_nvcsi_ch1_r351 = str_fragment_nvcsi_ch1_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_nvcsi_ch2_r351 = str_fragment_nvcsi_ch2_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_nvcsi_ch3_r351 = str_fragment_nvcsi_ch3_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_nvcsi_ch4_r351 = str_fragment_nvcsi_ch4_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_nvcsi_ch5_r351 = str_fragment_nvcsi_ch5_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_nvcsi_ch6_r351 = str_fragment_nvcsi_ch6_r351.replace("bus-width = <4>", "bus-width = <2>")
-  str_fragment_nvcsi_ch7_r351 = str_fragment_nvcsi_ch7_r351.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch0_r364 = str_fragment_nvcsi_ch0_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch1_r364 = str_fragment_nvcsi_ch1_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch2_r364 = str_fragment_nvcsi_ch2_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch3_r364 = str_fragment_nvcsi_ch3_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch4_r364 = str_fragment_nvcsi_ch4_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch5_r364 = str_fragment_nvcsi_ch5_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch6_r364 = str_fragment_nvcsi_ch6_r364.replace("bus-width = <4>", "bus-width = <2>")
+  str_fragment_nvcsi_ch7_r364 = str_fragment_nvcsi_ch7_r364.replace("bus-width = <4>", "bus-width = <2>")
 
 # -----------------------------------------------
 
-str_fragment_nvcsi_others_r351 = """
+str_fragment_nvcsi_others_r364 = """
   fragment@55 {
-    target-path = \"/host1x@13e00000/nvcsi@15a00000\";
+    target-path = \"/bus@0/host1x@13e00000/nvcsi@15a00000\";
     __overlay__ {
       status = \"okay\";
       num-channels = <8>;
@@ -984,14 +984,14 @@ str_fragment_nvcsi_others_r351 = """
   };
 
  fragment@56{
-   target-path = \"/host1x@13e00000/vi1@14c00000\";
+   target-path = \"/bus@0/host1x@13e00000/vi1@14c00000\";
    __overlay__ {
      status = \"okay\";
    };
  };
 
   fragment@57{
-    target-path = \"/host1x@13e00000/vi0@15c00000\";
+    target-path = \"/bus@0/host1x@13e00000/vi0@15c00000\";
     __overlay__ {
       status = \"okay\";
     };
@@ -1001,40 +1001,40 @@ str_fragment_nvcsi_others_r351 = """
 
 dict_fragment_nvcsi_ch0 = {
     "325x": str_fragment_nvcsi_ch0_r325,
-    "351": str_fragment_nvcsi_ch0_r351,
+    "364": str_fragment_nvcsi_ch0_r364,
 }
 dict_fragment_nvcsi_ch1 = {
     "325x": str_fragment_nvcsi_ch1_r325,
-    "351": str_fragment_nvcsi_ch1_r351,
+    "364": str_fragment_nvcsi_ch1_r364,
 }
 dict_fragment_nvcsi_ch2 = {
     "325x": str_fragment_nvcsi_ch2_r325,
-    "351": str_fragment_nvcsi_ch2_r351,
+    "364": str_fragment_nvcsi_ch2_r364,
 }
 dict_fragment_nvcsi_ch3 = {
     "325x": str_fragment_nvcsi_ch3_r325,
-    "351": str_fragment_nvcsi_ch3_r351,
+    "364": str_fragment_nvcsi_ch3_r364,
 }
 dict_fragment_nvcsi_ch4 = {
     "325x": str_fragment_nvcsi_ch4_r325,
-    "351": str_fragment_nvcsi_ch4_r351,
+    "364": str_fragment_nvcsi_ch4_r364,
 }
 dict_fragment_nvcsi_ch5 = {
     "325x": str_fragment_nvcsi_ch5_r325,
-    "351": str_fragment_nvcsi_ch5_r351,
+    "364": str_fragment_nvcsi_ch5_r364,
 }
 dict_fragment_nvcsi_ch6 = {
     "325x": str_fragment_nvcsi_ch6_r325,
-    "351": str_fragment_nvcsi_ch6_r351,
+    "364": str_fragment_nvcsi_ch6_r364,
 }
 dict_fragment_nvcsi_ch7 = {
     "325x": str_fragment_nvcsi_ch7_r325,
-    "351": str_fragment_nvcsi_ch7_r351,
+    "364": str_fragment_nvcsi_ch7_r364,
 }
 
 dict_fragment_nvcsi_others = {
     "325x": str_fragment_nvcsi_others_r325,
-    "351": str_fragment_nvcsi_others_r351,
+    "364": str_fragment_nvcsi_others_r364,
 }
 
 # ============ CAMERA MODULES  R32.5 ============
@@ -1076,7 +1076,7 @@ str_fragment_isx021_camera_module7_r325 = ""
 
 # ============ CAMERA MODULES  R35.1 ============
 
-str_fragment_camera_module_r351 = """
+str_fragment_camera_module_r364 = """
 
 // ----- Camera modules -----
 
@@ -1137,7 +1137,7 @@ str_fragment_camera_module_r351 = """
 
 # -----------------------------------------------
 
-str_fragment_isx021_camera_module0_r351 = """
+str_fragment_isx021_camera_module0_r364 = """
   fragment@71 {
     target-path = \"/tegra-camera-platform/modules/module0\";
     __overlay__ {
@@ -1153,15 +1153,14 @@ str_fragment_isx021_camera_module0_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 30-001d\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_a@1d\";
+      sysfs-device-tree = \"/sys/firmware/devicetree/base/bus@0/i2c@c250000/tca9546@70/i2c@0/isx021_a@1d\";
     };
   };
 """
 
 # -----------------------------------------------
 
-str_fragment_isx021_camera_module1_r351 = """
+str_fragment_isx021_camera_module1_r364 = """
   fragment@73 {
     target-path = \"/tegra-camera-platform/modules/module1\";
     __overlay__ {
@@ -1177,15 +1176,14 @@ str_fragment_isx021_camera_module1_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 30-001e\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@0/isx021_b@1e\";
+      sysfs-device-tree = \"/sys/firmware/devicetree/base/bus@0/i2c@c250000/tca9546@70/i2c@0/isx021_b@1e\";
     };
   };
 """
 
 # -----------------------------------------------
 
-str_fragment_isx021_camera_module2_r351 = """
+str_fragment_isx021_camera_module2_r364 = """
   fragment@75 {
     target-path = \"/tegra-camera-platform/modules/module2\";
     __overlay__ {
@@ -1201,15 +1199,14 @@ str_fragment_isx021_camera_module2_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 31-001d\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_c@1d\";
+      sysfs-device-tree = \"/sys/firmware/devicetree/base/bus@0/i2c@c250000/tca9546@70/i2c@1/isx021_c@1d\";
     };
   };
 """
 
 # -----------------------------------------------
 
-str_fragment_isx021_camera_module3_r351 = """
+str_fragment_isx021_camera_module3_r364 = """
   fragment@77 {
     target-path = \"/tegra-camera-platform/modules/module3\";
     __overlay__ {
@@ -1225,15 +1222,14 @@ str_fragment_isx021_camera_module3_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 31-001e\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@1/isx021_d@1e\";
+      sysfs-device-tree = \"/sys/firmware/devicetree/base/bus@0/i2c@c250000/tca9546@70/i2c@1/isx021_d@1e\";
     };
   };
 """
 
 # -----------------------------------------------
 
-str_fragment_isx021_camera_module4_r351 = """
+str_fragment_isx021_camera_module4_r364 = """
   fragment@79 {
     target-path = \"/tegra-camera-platform/modules/module4\";
     __overlay__ {
@@ -1249,15 +1245,14 @@ str_fragment_isx021_camera_module4_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 32-001d\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_e@1d\";
+      sysfs-device-tree = \"/sys/firmware/devicetree/base/bus@0/i2c@c250000/tca9546@70/i2c@2/isx021_e@1d\";
     };
   };
 """
 
 # -----------------------------------------------
 
-str_fragment_isx021_camera_module5_r351 = """
+str_fragment_isx021_camera_module5_r364 = """
   fragment@81 {
     target-path = \"/tegra-camera-platform/modules/module5\";
     __overlay__ {
@@ -1273,15 +1268,14 @@ str_fragment_isx021_camera_module5_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 32-001e\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@2/isx021_f@1e\";
+      sysfs-device-tree = \"/sys/firmware/devicetree/base/bus@0/i2c@c250000/tca9546@70/i2c@2/isx021_f@1e\";
     };
   };
 """
 
 # -----------------------------------------------
 
-str_fragment_isx021_camera_module6_r351 = """
+str_fragment_isx021_camera_module6_r364 = """
   fragment@83 {
     target-path = \"/tegra-camera-platform/modules/module6\";
     __overlay__ {
@@ -1297,15 +1291,14 @@ str_fragment_isx021_camera_module6_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 33-001d\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_g@1d\";
+      sysfs-device-tree = \"/sys/firmware/devicetree/base/bus@0/i2c@c250000/tca9546@70/i2c@3/isx021_g@1d\";
     };
   };
 """
 
 # -----------------------------------------------
 
-str_fragment_isx021_camera_module7_r351 = """
+str_fragment_isx021_camera_module7_r364 = """
   fragment@85 {
     target-path = \"/tegra-camera-platform/modules/module7\";
     __overlay__ {
@@ -1321,58 +1314,57 @@ str_fragment_isx021_camera_module7_r351 = """
     __overlay__ {
       status = \"okay\";
       pcl_id = \"v4l2_sensor\";
-      devname = \"isx021 33-001e\";
-      proc-device-tree = \"/proc/device-tree/i2c@c250000/tca9546@70/i2c@3/isx021_h@1e\";
+      sysfs-device-tree = \"/sys/firmware/devicetree/base/bus@0/i2c@c250000/tca9546@70/i2c@3/isx021_h@1e\";
     };
   };
 """
 
 if IO_BOARD_TYPE == "LEOPARD":
-  str_fragment_isx021_camera_module0_r351 = str_fragment_isx021_camera_module0_r351.replace("@c250000", "@c240000")
-  str_fragment_isx021_camera_module1_r351 = str_fragment_isx021_camera_module1_r351.replace("@c250000", "@c240000")
-  str_fragment_isx021_camera_module2_r351 = str_fragment_isx021_camera_module2_r351.replace("@c250000", "@c240000")
-  str_fragment_isx021_camera_module3_r351 = str_fragment_isx021_camera_module3_r351.replace("@c250000", "@c240000")
-  str_fragment_isx021_camera_module4_r351 = str_fragment_isx021_camera_module4_r351.replace("@c250000", "@c240000")
-  str_fragment_isx021_camera_module5_r351 = str_fragment_isx021_camera_module5_r351.replace("@c250000", "@c240000")
-  str_fragment_isx021_camera_module6_r351 = str_fragment_isx021_camera_module6_r351.replace("@c250000", "@c240000")
-  str_fragment_isx021_camera_module7_r351 = str_fragment_isx021_camera_module7_r351.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module0_r364 = str_fragment_isx021_camera_module0_r364.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module1_r364 = str_fragment_isx021_camera_module1_r364.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module2_r364 = str_fragment_isx021_camera_module2_r364.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module3_r364 = str_fragment_isx021_camera_module3_r364.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module4_r364 = str_fragment_isx021_camera_module4_r364.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module5_r364 = str_fragment_isx021_camera_module5_r364.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module6_r364 = str_fragment_isx021_camera_module6_r364.replace("@c250000", "@c240000")
+  str_fragment_isx021_camera_module7_r364 = str_fragment_isx021_camera_module7_r364.replace("@c250000", "@c240000")
 
 # below str_fragment_camera_module_r325
 dict_fragment_camera_module = {
     "325x": str_fragment_camera_module_r325,
-    "351":   str_fragment_camera_module_r351,
+    "364":   str_fragment_camera_module_r364,
 }
 dict_fragment_isx021_camera_module0 = {
     "325x": str_fragment_isx021_camera_module0_r325,
-    "351": str_fragment_isx021_camera_module0_r351,
+    "364": str_fragment_isx021_camera_module0_r364,
 }
 dict_fragment_isx021_camera_module1 = {
     "325x": str_fragment_isx021_camera_module1_r325,
-    "351": str_fragment_isx021_camera_module1_r351,
+    "364": str_fragment_isx021_camera_module1_r364,
 }
 dict_fragment_isx021_camera_module2 = {
     "325x": str_fragment_isx021_camera_module2_r325,
-    "351": str_fragment_isx021_camera_module2_r351,
+    "364": str_fragment_isx021_camera_module2_r364,
 }
 dict_fragment_isx021_camera_module3 = {
     "325x": str_fragment_isx021_camera_module3_r325,
-    "351": str_fragment_isx021_camera_module3_r351,
+    "364": str_fragment_isx021_camera_module3_r364,
 }
 dict_fragment_isx021_camera_module4 = {
     "325x": str_fragment_isx021_camera_module4_r325,
-    "351": str_fragment_isx021_camera_module4_r351,
+    "364": str_fragment_isx021_camera_module4_r364,
 }
 dict_fragment_isx021_camera_module5 = {
     "325x": str_fragment_isx021_camera_module5_r325,
-    "351": str_fragment_isx021_camera_module5_r351,
+    "364": str_fragment_isx021_camera_module5_r364,
 }
 dict_fragment_isx021_camera_module6 = {
     "325x": str_fragment_isx021_camera_module6_r325,
-    "351": str_fragment_isx021_camera_module6_r351,
+    "364": str_fragment_isx021_camera_module6_r364,
 }
 dict_fragment_isx021_camera_module7 = {
     "325x": str_fragment_isx021_camera_module7_r325,
-    "351": str_fragment_isx021_camera_module7_r351,
+    "364": str_fragment_isx021_camera_module7_r364,
 }
 
 # ===================  I2C ======================
@@ -1382,7 +1374,7 @@ str_i2c_switch = """
 
   fragment@90 {
     // declare the i2c switch for the four i2c clients
-    target-path = \"/i2c@c250000\";
+    target-path = \"/bus@0/i2c@c250000\";
     __overlay__ {
       tca9546@70 {
         status = \"okay\";
@@ -1420,7 +1412,7 @@ if IO_BOARD_TYPE == "LEOPARD":
 str_fragment_i2c_n = """
   fragment@91{
     //cami2c/i2c@0
-    target-path = \"/i2c@c250000/tca9546@70/i2c@0\";
+    target-path = \"/bus@0/i2c@c250000/tca9546@70/i2c@0\";
     __overlay__ {
       i2c-mux,deselect-on-exit;
       #address-cells = <1>;
@@ -1790,16 +1782,8 @@ str_i2c_isx021_7_p2 = str_i2c_isx021_n_p2.replace('vc_id = "0"', 'vc_id = "1"').
 
 dict_min_gain_val = {
     "354": 'min_gain_val = "1"',
-    "351": 'min_gain_val = "0"',
+    "364": 'min_gain_val = "0"',
 }
-
-def get_min_gain_val(rev_r354_exception):
-  if rev_r354_exception == True:
-    str_rc = dict_min_gain_val["354"]
-  else:
-    str_rc = dict_min_gain_val["351"]
-  return str_rc
-
 
 # -----------------------------------------------
 
@@ -2487,7 +2471,7 @@ str_i2c_imx728_7_p4 = str_i2c_imx728_n_p4.replace(
 
 # =============  DSER in Base DTB  ==============
 
-str_fragment_dser_in_base_dtb_r351 = ""
+str_fragment_dser_in_base_dtb_r364 = ""
 
 str_fragment_dser_in_base_dtb_r325 = """
 
@@ -2522,7 +2506,7 @@ fragment@98{
 
 dict_fragment_dser_in_base_dtb = {
     "325x": str_fragment_dser_in_base_dtb_r325,
-    "351": str_fragment_dser_in_base_dtb_r351,
+    "364": str_fragment_dser_in_base_dtb_r364,
 }
 
 # =================  FPGA  ======================
@@ -2532,7 +2516,7 @@ str_fpga = """
 // -----  FPGA -----
 
   fragment@100{
-    target-path = \"/i2c@3180000\";
+    target-path = \"/bus@0/i2c@3180000\";
     __overlay__ {
      t4_fpga: tier4_fpga@66 {
         compatible = \"nvidia,tier4_fpga\";
@@ -2859,37 +2843,37 @@ def deploy_n_options(str_n_options):
 
 dict_isx021_serdes_pix_clk = {
     "325x": 'serdes_pix_clk_hz = "375000000"',
-    "351": 'serdes_pix_clk_hz = "375000000"',
+    "364": 'serdes_pix_clk_hz = "375000000"',
 }
 dict_imx490_serdes_pix_clk = {
     "325x": 'serdes_pix_clk_hz = "375000000"',
-    "351": 'serdes_pix_clk_hz = "375000000"',
+    "364": 'serdes_pix_clk_hz = "375000000"',
 }
 dict_imx728_serdes_pix_clk = {
-    "351": 'serdes_pix_clk_hz =  "250000000"',
+    "364": 'serdes_pix_clk_hz =  "250000000"',
     "3521": 'serdes_pix_clk_hz = "250000000"',
 }
 
 if IO_BOARD_TYPE == "LEOPARD":
   dict_isx021_serdes_pix_clk["325x"] = dict_isx021_serdes_pix_clk["325x"].replace("375000000", "187500000")
-  dict_isx021_serdes_pix_clk["351"] = dict_isx021_serdes_pix_clk["351"].replace("375000000", "187500000")
+  dict_isx021_serdes_pix_clk["364"] = dict_isx021_serdes_pix_clk["364"].replace("375000000", "187500000")
   dict_imx490_serdes_pix_clk["325x"] = dict_imx490_serdes_pix_clk["325x"].replace("375000000", "187500000")
-  dict_imx490_serdes_pix_clk["351"] = dict_imx490_serdes_pix_clk["351"].replace("375000000", "187500000")
+  dict_imx490_serdes_pix_clk["364"] = dict_imx490_serdes_pix_clk["364"].replace("375000000", "187500000")
 
 def get_serdes_pix_clk(str_revision, str_camera_type):
     if str_camera_type == "C1":
-        if str_revision == "351":
+        if str_revision == "364":
             str_rc = dict_isx021_serdes_pix_clk[str_revision]
         else:
             str_rc = dict_isx021_serdes_pix_clk["325x"]
 
     elif str_camera_type == "C2":
-        if str_revision == "351":
+        if str_revision == "364":
             str_rc = dict_imx490_serdes_pix_clk[str_revision]
         else:
             str_rc = dict_imx490_serdes_pix_clk["325x"]
     elif str_camera_type == "C3":
-        if str_revision == "351":
+        if str_revision == "364":
             str_rc = dict_imx728_serdes_pix_clk[str_revision]
         else:
             str_rc = dict_imx728_serdes_pix_clk["3521"]
@@ -2931,13 +2915,8 @@ total_num_args = len(args)
 
 l4t_revision = args[1].upper()
 
-rev_r354_exception = False
-if l4t_revision == "R35.1" or l4t_revision == "R35.2.1":
-    str_rev_num = "351"
-    exception_handle_rev = "354"
-elif l4t_revision == "R35.4":
-    str_rev_num = "351"
-    rev_r354_exception = True
+if l4t_revision == "R36.4" :
+    str_rev_num = "364"
 else:
     usage()
     print(" Error!! : 1st argument should be R35.1 or R35.2.1")
@@ -3006,9 +2985,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_0_p2 = str_i2c_isx021_0_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera1 = (
                 str_i2c_isx021_0_p1
@@ -3023,9 +2999,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_0_p2 = str_i2c_imx490_0_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera1 = (
                 str_i2c_imx490_0_p1
@@ -3044,11 +3017,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
         elif camera[i] == "C3":
             str_w_i2c_imx728_0_p2 = str_i2c_imx728_0_p2.replace(
-                dict_imx728_serdes_pix_clk["351"],
+                dict_imx728_serdes_pix_clk["364"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera1 = (
                 str_i2c_imx728_0_p1
@@ -3080,9 +3050,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_1_p2 = str_i2c_isx021_1_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera2 = (
                 str_i2c_isx021_1_p1
@@ -3097,9 +3064,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_1_p2 = str_i2c_imx490_1_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera2 = (
                 str_i2c_imx490_1_p1
@@ -3117,11 +3081,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
         elif camera[i] == "C3":
             str_w_i2c_imx728_1_p2 = str_i2c_imx728_1_p2.replace(
-                dict_imx728_serdes_pix_clk["351"],
+                dict_imx728_serdes_pix_clk["364"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera2 = (
                 str_i2c_imx728_1_p1
@@ -3152,9 +3113,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_2_p2 = str_i2c_isx021_2_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera3 = (
                 str_i2c_isx021_2_p1
@@ -3169,9 +3127,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_2_p2 = str_i2c_imx490_2_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera3 = (
                 str_i2c_imx490_2_p1
@@ -3190,11 +3145,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
         elif camera[i] == "C3":
             str_w_i2c_imx728_2_p2 = str_i2c_imx728_2_p2.replace(
-                dict_imx728_serdes_pix_clk["351"],
+                dict_imx728_serdes_pix_clk["364"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera3 = (
                 str_i2c_imx728_2_p1
@@ -3226,9 +3178,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_3_p2 = str_i2c_isx021_3_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera4 = (
                 str_i2c_isx021_3_p1
@@ -3242,9 +3191,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_3_p2 = str_i2c_imx490_3_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera4 = (
                 str_i2c_imx490_3_p1
@@ -3262,11 +3208,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
         elif camera[i] == "C3":
             str_w_i2c_imx728_3_p2 = str_i2c_imx728_3_p2.replace(
-                dict_imx728_serdes_pix_clk["351"],
+                dict_imx728_serdes_pix_clk["364"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera4 = (
                 str_i2c_imx728_3_p1
@@ -3297,9 +3240,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_4_p2 = str_i2c_isx021_4_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera5 = (
                 str_i2c_isx021_4_p1
@@ -3314,9 +3254,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_4_p2 = str_i2c_imx490_4_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera5 = (
                 str_i2c_imx490_4_p1
@@ -3335,11 +3272,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
         elif camera[i] == "C3":
             str_w_i2c_imx728_4_p2 = str_i2c_imx728_4_p2.replace(
-                dict_imx728_serdes_pix_clk["351"],
+                dict_imx728_serdes_pix_clk["364"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera5 = (
                 str_i2c_imx728_4_p1
@@ -3371,9 +3305,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_5_p2 = str_i2c_isx021_5_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera6 = (
                 str_i2c_isx021_5_p1
@@ -3387,9 +3318,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_5_p2 = str_i2c_imx490_5_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera6 = (
                 str_i2c_imx490_5_p1
@@ -3407,11 +3335,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
         elif camera[i] == "C3":
             str_w_i2c_imx728_5_p2 = str_i2c_imx728_5_p2.replace(
-                dict_imx728_serdes_pix_clk["351"],
+                dict_imx728_serdes_pix_clk["364"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera6 = (
                 str_i2c_imx728_5_p1
@@ -3442,9 +3367,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_6_p2 = str_i2c_isx021_6_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera7 = (
                 str_i2c_isx021_6_p1
@@ -3459,9 +3381,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_6_p2 = str_i2c_imx490_6_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera7 = (
                 str_i2c_imx490_6_p1
@@ -3482,9 +3401,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx728_6_p2 = str_i2c_imx728_6_p2.replace(
                 dict_imx728_serdes_pix_clk["3521"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera7 = (
                 str_i2c_imx728_6_p1
@@ -3516,9 +3432,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_isx021_7_p2 = str_i2c_isx021_7_p2.replace(
                 dict_isx021_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera8 = (
                 str_i2c_isx021_7_p1
@@ -3532,9 +3445,6 @@ for i in range(MAX_NUM_CAMERAS):
             str_w_i2c_imx490_7_p2 = str_i2c_imx490_7_p2.replace(
                 dict_imx490_serdes_pix_clk["325x"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera8 = (
                 str_i2c_imx490_7_p1
@@ -3553,11 +3463,8 @@ for i in range(MAX_NUM_CAMERAS):
             )
         elif camera[i] == "C3":
             str_w_i2c_imx728_7_p2 = str_i2c_imx728_7_p2.replace(
-                dict_imx728_serdes_pix_clk["351"],
+                dict_imx728_serdes_pix_clk["364"],
                 get_serdes_pix_clk(str_rev_num, camera[i]),
-            ).replace(
-              dict_min_gain_val["351"],
-              get_min_gain_val(rev_r354_exception)
             )
             str_camera8 = (
                 str_i2c_imx728_7_p1
@@ -3704,19 +3611,11 @@ str_whole_dts = (
     + str_overlay_end
 )
 
-if str_rev_num == "351":
-  if rev_r354_exception == True:
-    str_fname_rev_num = "354"
-  else:
-    str_fname_rev_num = "351"
-else:
-    str_fname_rev_num = "unknown"
-
 overlay_dts_file_name = (
     "tier4"
     + str_w_camera_type
     + "-gmsl-device-tree-overlay-roscube-orin-r"
-    + str_fname_rev_num
+    + str_rev_num
     + ".dts"
 )
 

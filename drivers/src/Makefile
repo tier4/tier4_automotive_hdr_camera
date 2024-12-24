@@ -265,6 +265,24 @@ else ifeq ($(L4T_RELEASE_MAIN), R35)
             TARGET_ISX021_IMX490_DTS        := Unknown
             TARGET_ISX021_IMX490_IMX728_DTS := Unknown
         endif
+else ifeq ($(L4T_RELEASE_MAIN), R36)
+        ifeq ($(MODEL),$(ROScube_Orin_Model_word))
+            # RQX-59G R36.x
+            KERNELRELEASE                   := $(shell uname -r)
+            TARGET_ISX021_DTS               := tier4-isx021-gmsl-device-tree-overlay-roscube-orin-r364
+            TARGET_IMX490_DTS               := tier4-imx490-gmsl-device-tree-overlay-roscube-orin-r364
+            TARGET_IMX728_DTS               := tier4-imx728-gmsl-device-tree-overlay-roscube-orin-r364
+            TARGET_ISX021_IMX490_DTS        := tier4-isx021-imx490-gmsl-device-tree-overlay-roscube-orin-r364
+            TARGET_ISX021_IMX490_IMX728_DTS := tier4-isx021-imx490-imx728-gmsl-device-tree-overlay-roscube-orin-r364
+            MAKE_OVERLAY_DTS_CMD            := make_overlay_dts_roscube-orin-r364.py r36.4
+        else
+            KERNELRELEASE                   := $(shell uname -r)
+            TARGET_ISX021_DTS               := Unknown
+            TARGET_IMX490_DTS               := Unknown
+            TARGET_IMX729_DTS               := Unknown
+            TARGET_ISX021_IMX490_DTS        := Unknown
+            TARGET_ISX021_IMX490_IMX728_DTS := Unknown
+        endif
 else
     KERNELRELEASE := Unknown
     TARGET_ISX021_DTS               := Unknown
@@ -305,9 +323,14 @@ ifeq ($(ARCH), arm64)
     endif
 endif
 
+# for JetPack 6.x (L4T R36.x)
+KBUILD_EXTRA_SYMBOLS += /usr/src/nvidia/nvidia-oot/Module.symvers
+ccflags-y += -I/usr/src/nvidia/nvidia-oot/include
+#
+
 ccflags-y += -DBUILD_STAMP="\"`date +'%Y-%m-%d %H:%M:%S'`\""
 
-obj-m := tier4-max9295.o tier4-max9296.o tier4-isx021.o tier4-imx490.o tier4-imx728.o tier4-gw5300.o tier4-fpga.o
+obj-m := tier4-max9295.o tier4-max9296.o tier4-isx021.o tier4-imx490.o tier4-imx728.o tier4-gw5300.o tier4-fpga.o max20089.o
 
 # ------------------------------------------------
 

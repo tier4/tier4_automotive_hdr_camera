@@ -28,6 +28,7 @@
 #include <linux/uaccess.h>
 #include <media/tegracam_core.h>
 
+#include "max20089.h"
 #include "tier4-fpga.h"
 #include "tier4-gmsl-link.h"
 #include "tier4-gw5300.h"
@@ -36,10 +37,11 @@
 #include "tier4-max9295.h"
 #include "tier4-max9296.h"
 
+MODULE_SOFTDEP("pre: max20089");
+MODULE_SOFTDEP("pre: tier4_fpga");
 MODULE_SOFTDEP("pre: tier4_max9296");
 MODULE_SOFTDEP("pre: tier4_max9295");
 MODULE_SOFTDEP("pre: tier4_gw5300");
-MODULE_SOFTDEP("pre: tier4_fpga");
 MODULE_SOFTDEP("pre: tier4_isx021");
 MODULE_SOFTDEP("pre: tier4_imx490");
 
@@ -122,6 +124,7 @@ struct tier4_imx728
   bool last_distortion_correction;
   bool inhibit_fpga_access;
   struct device *fpga_dev;
+  struct device *cam_power_protect_dev;
 };
 
 static const struct regmap_config tier4_sensor_regmap_config = {
@@ -283,7 +286,7 @@ static int tier4_imx728_set_fsync_trigger_mode(struct tier4_imx728 *priv, int mo
           }
         }
         des_num = priv->g_ctx.reg_mux;
-        err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num, priv->trigger_mode);
+        err = tier4_fpga_set_fsync_signal_frequency(priv->fpga_dev, des_num, priv->trigger_mode, SENSOR_ID_IMX728);
         if (err)
         {
           dev_err(dev, "[%s] : Setting the frequency of fsync genrated by FPGA failed.\n", __func__);
@@ -364,7 +367,25 @@ static int tier4_imx728_gmsl_serdes_setup(struct tier4_imx728 *priv)
 
   /* For now no separate power on required for serializer device */
 
-  if ((priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_XAVIER) && (priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_ORIN))
+  if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER) ||
+      (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN))
+  {
+    if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
+    {
+      // only RQX-59G with ADLINK GMSL board supports read/write MAX20089
+      if (MAX9295_REG_PORT_A == priv->g_ctx.ser_reg)
+        max20089_power_on_cam(priv->cam_power_protect_dev, MAX20089_EN_OUT1);
+      else if (MAX9295_REG_PORT_B == priv->g_ctx.ser_reg)
+        max20089_power_on_cam(priv->cam_power_protect_dev, MAX20089_EN_OUT2);
+    }
+
+    // power on deserializer
+    tier4_fpga_power_on_deserializer(priv->fpga_dev, priv->g_ctx.reg_mux);
+    
+    // sleep to wait devices ready
+    msleep(100);
+  }
+  else 
   {
     tier4_max9296_power_on(priv->dser_dev);
   }
@@ -382,11 +403,16 @@ static int tier4_imx728_gmsl_serdes_setup(struct tier4_imx728 *priv)
 
   err = tier4_max9295_setup_control(priv->ser_dev);
 
-  /* proceed even if ser setup failed, to setup deser correctly */
   if (err)
   {
     dev_err(dev, "[%s] : GMSL serializer setup failed\n", __func__);
-    goto error;
+    
+    /* 
+      No "goto error" here, instead, go into tier4_max9296_setup_control()
+      proceed even if ser setup failed, to setup deser correctly
+      So that if MAX9296 Link B is not found, it will set back to Link A 
+    */ 
+    // goto error;
   }
 
   des_err = tier4_max9296_setup_control(priv->dser_dev, &priv->i2c_client->dev);
@@ -837,7 +863,7 @@ static int tier4_imx728_stop_streaming(struct tegracam_device *tc_dev)
 
   mutex_lock(&tier4_imx728_lock);
 
-  for (i = 0; i < camera_channel_count; i++)
+  for (i = 0; i < MAX_NUM_CAMERA; i++)
   {
     if (tier4_imx728_is_camera_connected_to_port(i))
     {
@@ -899,7 +925,7 @@ static int tier4_imx728_start_streaming(struct tegracam_device *tc_dev)
 
   mutex_lock(&tier4_imx728_lock);
 
-  for (i = 0; i < camera_channel_count; i++)
+  for (i = 0; i < MAX_NUM_CAMERA; i++)
   {
     if (i & 0x1)
     {  // if  i = 1,3,5,7 ( GMSL B port of a Des )
@@ -1036,6 +1062,8 @@ static int tier4_imx728_board_setup(struct tier4_imx728 *priv)
   struct i2c_client *isp_i2c = NULL;
   struct device_node *fpga_node = NULL;
   struct i2c_client *fpga_i2c = NULL;
+  struct device_node *cam_power_protect_node = NULL;
+  struct i2c_client *cam_power_protect_i2c = NULL;
   struct device_node *gmsl;
   struct device_node *root_node;
   int value = 0xFFFF;
@@ -1351,6 +1379,34 @@ static int tier4_imx728_board_setup(struct tier4_imx728 *priv)
     priv->fpga_dev = &fpga_i2c->dev;
   }
 
+  if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
+  {
+    // CAM Power Protector, only for RQX-59G with ADLINK GMSL board
+
+    cam_power_protect_node = of_parse_phandle(node, "nvidia,cam-power-protector", 0);
+    if (cam_power_protect_node == NULL)
+    {
+      dev_err(dev, "[%s] : Missing %s handle\n", __func__, "nvidia,cam-power-protector");
+      goto error;
+    }
+
+    cam_power_protect_i2c = of_find_i2c_device_by_node(cam_power_protect_node);
+    of_node_put(cam_power_protect_node);
+    if (cam_power_protect_i2c == NULL)
+    {
+      dev_err(dev, "[%s] : Missing CAM Power Protector Handle\n", __func__);
+      goto error;
+    }
+
+    if (cam_power_protect_i2c->dev.driver == NULL)
+    {
+      dev_err(dev, "[%s] : Missing CAM Power Protector driver\n", __func__);
+      goto error;
+    }
+
+    priv->cam_power_protect_dev = &cam_power_protect_i2c->dev;
+  }
+
   /* populate g_ctx from DT */
 
   gmsl = of_get_child_by_name(node, "gmsl-link");
@@ -1648,15 +1704,12 @@ err_max9295_unpair:
   tier4_max9295_sdev_unpair(priv->ser_dev, &client->dev);
 err_tegracam_unreg:
   tegracam_device_unregister(priv->tc_dev);
-
+  camera_channel_count++;
   tier4_isx021_sensor_mutex_unlock();
 
-//  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p \n", __func__, camera_channel_count,
-//           wst_priv[camera_channel_count].p_client);
 
 
   return err;
-  //return NO_ERROR;  // err;
 }
 
 static int tier4_imx728_remove(struct i2c_client *client)
@@ -1728,13 +1781,40 @@ static void tier4_imx728_shutdown(struct i2c_client *client)
     goto error_exit;
   }
 
-  for (i = 0; i < camera_channel_count; i++)
+  for (i = 0; i < MAX_NUM_CAMERA; i++)
   {
     if (tier4_imx728_is_current_i2c_client(client, i))
     {
       priv = wst_priv[i].p_priv;
 
-      if (i & 0x1)
+      if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER) ||
+          (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN))
+      {
+        /**
+        * For RQX-59G, we don't write max9295 and max9296 registers when shutdown is invoked.
+        * Instead, we disable deserializer power by calling tier4_fpga_power_off_deserializer().
+        * Furthermore, we disable camera power by calling max20089_power_off_cam().
+        */
+        
+        if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
+        {
+          // only RQX-59G with ADLINK GMSL board supports read/write MAX20089
+          if (MAX9295_REG_PORT_A == priv->g_ctx.ser_reg)
+            max20089_power_off_cam(priv->cam_power_protect_dev, 0x01);
+          else if (MAX9295_REG_PORT_B == priv->g_ctx.ser_reg)
+            max20089_power_off_cam(priv->cam_power_protect_dev, 0x02);
+        }
+
+        // power off deserializer
+        tier4_fpga_power_off_deserializer(priv->fpga_dev, priv->g_ctx.reg_mux);
+
+        // release mutex lock
+        mutex_unlock(&tier4_imx728_lock);
+        tier4_isx021_sensor_mutex_unlock();
+        return;
+      }
+
+      if (MAX9295_REG_PORT_B == priv->g_ctx.ser_reg) // Even port
       {  // Even port number( GMSL B port on a Des : i = port_number -1 )
 
         if (tier4_imx728_is_camera_connected_to_port(i - 1))
@@ -1749,9 +1829,8 @@ static void tier4_imx728_shutdown(struct i2c_client *client)
               tier4_imx728_set_des_shutdown(i, true);      // Des will be shut down
             }
             else
-            {  //  if Des on the another port is already shut down. This is Error case.
-              tier4_imx728_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx728_set_des_shutdown(i, false);      //  Des will not be shutdown
+            {
+              // Des is already shut down. This is Error case.
             }
           }
           else
@@ -1763,17 +1842,19 @@ static void tier4_imx728_shutdown(struct i2c_client *client)
               tier4_imx728_set_des_shutdown(i, false);     //  The Des won't be shut down.
             }
             else
-            {  // Only Des on another port is already shut down. This is Error case.
-              tier4_imx728_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx728_set_des_shutdown(i, false);      //  Des will not be shut down.
+            {
+              // Des is already shut down. This is Error case.
             }
-          }                                            // a camera is connected to only (GMSL B) port on Des.
+          }
+        }
+        else
+        {                                              // a camera is connected to only (GMSL B) port on Des.
           tier4_imx728_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
           tier4_imx728_set_des_shutdown(i, true);      // The Des won't be shut down.
         }
       }
-      else
-      {  // if (  i & 0x1 ) == 0
+      else // MAX9295_REG_PORT_A, odd port
+      {
 
         if (tier4_imx728_is_camera_connected_to_port(i + 1))
         {  // Another camera is connected to another(GMSL B) port on the Des
@@ -1784,12 +1865,11 @@ static void tier4_imx728_shutdown(struct i2c_client *client)
             if (tier4_imx728_is_des_shutdown(i + 1) == false)
             {                                              // if Des is not shut down yet.
               tier4_imx728_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
-              tier4_imx728_set_des_shutdown(i, false);     //  The Des will be shut down.
+              tier4_imx728_set_des_shutdown(i, true);     //  The Des will be shut down.
             }
             else
-            {                                               // Des is already shut down. This is Error case.
-              tier4_imx728_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx728_set_des_shutdown(i, false);      //  The Des will not be shut down.
+            {
+              // Des is already shut down. This is Error case.
             }
           }
           else
@@ -1802,10 +1882,8 @@ static void tier4_imx728_shutdown(struct i2c_client *client)
               tier4_imx728_set_des_shutdown(i, false);     //  The Des will not be shut down.
             }
             else
-            {                                               // Only Des on another(GMSL B) port is already shut down.
-                                                            // This is Error case.
-              tier4_imx728_set_isp_ser_shutdown(i, false);  // ISP and Ser will not be shut down
-              tier4_imx728_set_des_shutdown(i, false);      //  The Des will not be shut down.
+            {
+              // Des is already shut down. This is Error case.
             }
           }
         }
@@ -1814,8 +1892,8 @@ static void tier4_imx728_shutdown(struct i2c_client *client)
           tier4_imx728_set_isp_ser_shutdown(i, true);  // ISP and Ser will be shut down
           tier4_imx728_set_des_shutdown(i, true);      //  The Des will be shut down.
         }
-      }  //  if ( i & 0x1 )
-         //            break;
+      }
+
 
       if (tier4_imx728_is_isp_ser_shutdown(i))
       {
@@ -1831,7 +1909,7 @@ static void tier4_imx728_shutdown(struct i2c_client *client)
         tier4_max9296_reset_control(priv->dser_dev, &client->dev, true);
       }
 
-      if (priv == NULL || i >= camera_channel_count)
+      if (priv == NULL || i >= MAX_NUM_CAMERA)
       {
         mutex_unlock(&tier4_imx728_lock);
         tier4_isx021_sensor_mutex_unlock();

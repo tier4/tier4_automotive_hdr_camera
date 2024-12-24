@@ -25,7 +25,7 @@
 #include "tier4-max9295.h"
 #include "tier4-gmsl-link.h"
 
-#define MAX9295_SHOW_I2C_WRITE_MSG  1
+#define MAX9295_SHOW_I2C_WRITE_MSG  0
 
 /* register specifics */
 
@@ -197,6 +197,7 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
   //    u8 e;
   char str_bus_num[4], str_sl_addr[4];
   int len;
+  int max_retry = 3;
 
   memset(str_bus_num, 0, 4);
   memset(str_sl_addr, 0, 4);
@@ -210,10 +211,13 @@ static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
   }
 
   err = regmap_write(priv->regmap, addr, val);
-
   if (err)
   {
-    dev_err(dev, "[%s] : Max9295 I2C write failed Reg at 0x%04X:[0x%02X].\n", __func__, addr, val);
+    while (max_retry-- && err) {
+      dev_err(dev, "[%s] : retry-%d: Max9295 I2C write failed Reg at 0x%04X:[0x%02X].\n", __func__, max_retry, addr, val);
+      msleep(100);
+      err = regmap_write(priv->regmap, addr, val);
+    }
   }
 #if MAX9295_SHOW_I2C_WRITE_MSG
   else
@@ -407,7 +411,10 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, 
     err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x10);
   }
   else
-  {  // power down caemra sensor
+  {  
+    // TODO: Don't know why the even ports produce errors when system is shuting down.
+    
+    // power down caemra sensor
     err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
     msleep(100);
     if (sensor_id == SENSOR_ID_ISX021)
@@ -426,7 +433,7 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id, 
 
   if (err)
   {
-    dev_err(dev, "[%s] : Ppower on/off Camera Sensor or ISP failed.\n", __func__);
+    dev_err(dev, "[%s] : Power on/off Camera Sensor or ISP failed.\n", __func__);
   }
 
   msleep(50);
@@ -552,6 +559,8 @@ int tier4_max9295_setup_control(struct device *dev)
   /* PLL setting & Enable PLL */
   tier4_max9295_write_reg(dev, MAX9295_REF_VTG0_ADDR, 0x59);
 
+  /* delay to settle link */
+  msleep(70);
 
   g_ctx->serdev_found = true;
 
@@ -760,7 +769,7 @@ static struct i2c_driver tier4_max9295_i2c_driver = {
 
 static int __init tier4_max9295_init(void)
 {
-  printk(KERN_INFO "MAX9295 Driver for TIER4 C1 camera : %s\n", BUILD_STAMP);
+  printk(KERN_INFO "MAX9295 Driver for TIER4 camera : %s\n", BUILD_STAMP);
 
   return i2c_add_driver(&tier4_max9295_i2c_driver);
 }
