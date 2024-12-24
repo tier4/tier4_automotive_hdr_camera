@@ -36,6 +36,7 @@
 #define FPGA_ENABLED 0xF0
 #define FPGA_DISABLED 0xFF
 #define NO_ERROR 0
+#define ERROR_INDEX -1
 
 #define FPGA_REG_VERSION_ADDR 0x1
 #define FPGA_REG_ENABLE_ADDR 0x4
@@ -453,6 +454,108 @@ static int tier4_fpga_parse_dt(struct tier4_fpga *priv, struct i2c_client *clien
 
   return NO_ERROR;
 }
+
+// ---------------------------------------------------------
+
+int tier4_fpga_power_on_deserializer(struct device *dev, int des_number)
+{
+  int err = 0;
+  u8 val8, addr8;
+  u8 read8 = 0;
+
+  addr8 = (u8)FPGA_REG_MODE_ADDR;
+  err = tier4_fpga_read_reg(dev, addr8, &read8);
+  if (err)
+  {
+    dev_err(dev, "[%s] Failed to read FPGA register\n", __func__);
+    return err;
+  }
+
+  if (des_number == 0)
+    val8 = read8 | 0x10;
+  else if (des_number == 1)
+    val8 = read8 | 0x20;
+  else if (des_number == 2)
+    val8 = read8 | 0x40;
+  else if (des_number == 3)
+    val8 = read8 | 0x80;
+  else 
+  {
+    dev_err(dev, "[%s] Invalid des_number: %d\n", __func__, des_number);
+    return ERROR_INDEX;
+  }
+  
+  if (read8 == val8)
+  {
+      dev_info(dev, "[%s] DES-%d has already been powered on\n", __func__, des_number);
+      return NO_ERROR;
+  }
+
+  err = tier4_fpga_write_reg(dev, addr8, val8);
+  if (err)
+  {
+    dev_err(dev, "[%s] Failed to power on DES-%d\n", __func__, des_number);
+    return err;
+  }
+  else
+  {
+    dev_info(dev, "[%s] Successfully power on DES-%d\n", __func__, des_number);
+  }
+
+  return NO_ERROR;
+}
+EXPORT_SYMBOL(tier4_fpga_power_on_deserializer);
+
+// ---------------------------------------------------------
+
+int tier4_fpga_power_off_deserializer(struct device *dev, int des_number)
+{
+  int err = 0;
+  u8 val8, addr8;
+  u8 read8 = 0;
+
+  addr8 = (u8)FPGA_REG_MODE_ADDR;
+  err = tier4_fpga_read_reg(dev, addr8, &read8);
+  if (err)
+  {
+    dev_err(dev, "[%s] Failed to read FPGA register\n", __func__);
+    return err;
+  }
+
+  if (des_number == 0)
+    val8 = read8 & ~(0x10);
+  else if (des_number == 1)
+    val8 = read8 & ~(0x20);
+  else if (des_number == 2)
+    val8 = read8 & ~(0x40);
+  else if (des_number == 3)
+    val8 = read8 & ~(0x80);
+  else 
+  {
+    dev_err(dev, "[%s] Invalid des_number: %d\n", __func__, des_number);
+    return ERROR_INDEX;
+  }
+
+  if (read8 == val8)
+  {
+      dev_info(dev, "[%s] DES-%d has already been powered off\n", __func__, des_number);
+      return NO_ERROR;
+  }
+
+  err = tier4_fpga_write_reg(dev, addr8, val8);
+  if (err)
+  {
+    dev_err(dev, "[%s] Failed to power off DES-%d\n", __func__, des_number);
+    return err;
+  }
+  else
+  {
+    dev_info(dev, "[%s] Successfully power off DES-%d\n", __func__, des_number);
+  }
+
+  return NO_ERROR;
+}
+EXPORT_SYMBOL(tier4_fpga_power_off_deserializer);
 
 // ---------------------------------------------------------
 

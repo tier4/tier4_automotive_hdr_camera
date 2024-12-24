@@ -154,4 +154,22 @@ int tier4_fpga_check_access(struct device *dev);
 
 int tier4_fpga_get_slave_addr(struct device *dev, struct tier4_gmsl_link_ctx *g_ctx);
 
+/**
+ * @brief power on deserializer by writing i2c commands to FPGA
+ * 
+ * @param dev           pointer to fpga device structure.
+ * @param des_number    deserializer number ( 0 to 3 )
+ * @return 0 for success, or -1 otherwise.
+ */
+int tier4_fpga_power_on_deserializer(struct device *dev, int des_number);
+
+/**
+ * @brief power off deserializer by writing i2c commands to FPGA
+ * 
+ * @param dev           pointer to fpga device structure.
+ * @param des_number    deserializer number ( 0 to 3 )
+ * @return 0 for success, or -1 otherwise. 
+ */
+int tier4_fpga_power_off_deserializer(struct device *dev, int des_number);
+
 #endif /* __TIER4_FPGA_H__ */

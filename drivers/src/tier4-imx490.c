@@ -28,6 +28,7 @@
 #include <linux/uaccess.h>
 #include <media/tegracam_core.h>
 
+#include "max20089.h"
 #include "tier4-fpga.h"
 #include "tier4-gmsl-link.h"
 #include "tier4-gw5300.h"
@@ -36,10 +37,11 @@
 #include "tier4-max9295.h"
 #include "tier4-max9296.h"
 
+MODULE_SOFTDEP("pre: max20089");
+MODULE_SOFTDEP("pre: tier4_fpga");
 MODULE_SOFTDEP("pre: tier4_max9296");
 MODULE_SOFTDEP("pre: tier4_max9295");
 MODULE_SOFTDEP("pre: tier4_gw5300");
-MODULE_SOFTDEP("pre: tier4_fpga");
 MODULE_SOFTDEP("pre: tier4_isx021");
 
 #define USE_DISTORTION_CORRECTION  1
@@ -120,6 +122,7 @@ struct tier4_imx490
   bool auto_exposure;
   bool inhibit_fpga_access;
   struct device *fpga_dev;
+  struct device *cam_power_protect_dev;
 };
 
 static const struct regmap_config tier4_sensor_regmap_config = {
@@ -352,7 +355,25 @@ static int tier4_imx490_gmsl_serdes_setup(struct tier4_imx490 *priv)
 
   /* For now no separate power on required for serializer device */
 
-  if ((priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_XAVIER) && (priv->g_ctx.hardware_model != HW_MODEL_ADLINK_ROSCUBE_ORIN))
+  if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER) ||
+      (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN))
+  {
+    if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
+    {
+      // only RQX-59G with ADLINK GMSL board supports read/write MAX20089
+      if (MAX9295_REG_PORT_A == priv->g_ctx.ser_reg)
+        max20089_power_on_cam(priv->cam_power_protect_dev, MAX20089_EN_OUT1);
+      else if (MAX9295_REG_PORT_B == priv->g_ctx.ser_reg)
+        max20089_power_on_cam(priv->cam_power_protect_dev, MAX20089_EN_OUT2);
+    }
+
+    // power on deserializer
+    tier4_fpga_power_on_deserializer(priv->fpga_dev, priv->g_ctx.reg_mux);
+
+    // sleep to wait devices ready
+    msleep(100);
+  }
+  else 
   {
     tier4_max9296_power_on(priv->dser_dev);
   }
@@ -1102,6 +1123,8 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
   struct i2c_client *isp_i2c = NULL;
   struct device_node *fpga_node = NULL;
   struct i2c_client *fpga_i2c = NULL;
+  struct device_node *cam_power_protect_node = NULL;
+  struct i2c_client *cam_power_protect_i2c = NULL;
   struct device_node *gmsl;
   struct device_node *root_node;
   int value = 0xFFFF;
@@ -1417,6 +1440,34 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
     }
 
     priv->fpga_dev = &fpga_i2c->dev;
+  }
+  
+  if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
+  {
+    // CAM Power Protector, only for RQX-59G with ADLINK GMSL board
+
+    cam_power_protect_node = of_parse_phandle(node, "nvidia,cam-power-protector", 0);
+    if (cam_power_protect_node == NULL)
+    {
+      dev_err(dev, "[%s] : Missing %s handle\n", __func__, "nvidia,cam-power-protector");
+      goto error;
+    }
+
+    cam_power_protect_i2c = of_find_i2c_device_by_node(cam_power_protect_node);
+    of_node_put(cam_power_protect_node);
+    if (cam_power_protect_i2c == NULL)
+    {
+      dev_err(dev, "[%s] : Missing CAM Power Protector Handle\n", __func__);
+      goto error;
+    }
+
+    if (cam_power_protect_i2c->dev.driver == NULL)
+    {
+      dev_err(dev, "[%s] : Missing CAM Power Protector driver\n", __func__);
+      goto error;
+    }
+
+    priv->cam_power_protect_dev = &cam_power_protect_i2c->dev;
   }
 
   /* populate g_ctx from DT */
@@ -1808,6 +1859,33 @@ static void tier4_imx490_shutdown(struct i2c_client *client)
     if (tier4_imx490_is_current_i2c_client(client, i))
     {
       priv = wst_priv[i].p_priv;
+
+      if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER) ||
+          (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN))
+      {
+        /**
+        * For RQX-59G, we don't write max9295 and max9296 registers when shutdown is invoked.
+        * Instead, we disable deserializer power by calling tier4_fpga_power_off_deserializer().
+        * Furthermore, we disable camera power by calling max20089_power_off_cam().
+        */
+
+        if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)
+        {
+          // only RQX-59G with ADLINK GMSL board supports read/write MAX20089
+          if (MAX9295_REG_PORT_A == priv->g_ctx.ser_reg)
+            max20089_power_off_cam(priv->cam_power_protect_dev, 0x01);
+          else if (MAX9295_REG_PORT_B == priv->g_ctx.ser_reg)
+            max20089_power_off_cam(priv->cam_power_protect_dev, 0x02);
+        }
+
+        // power off deserializer
+        tier4_fpga_power_off_deserializer(priv->fpga_dev, priv->g_ctx.reg_mux);
+
+        // release mutex lock
+        mutex_unlock(&tier4_imx490_lock);
+        tier4_isx021_sensor_mutex_unlock();
+        return;
+      }
 
       if (MAX9295_REG_PORT_B == priv->g_ctx.ser_reg) // Even port
       {  // Even port number( GMSL B port on a Des : i = port_number -1 )
