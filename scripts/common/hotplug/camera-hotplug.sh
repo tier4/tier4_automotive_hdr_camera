@@ -16,15 +16,14 @@ set -eux
 mkdir -p overlay
 cd overlay
 rm -f *.dts *.dtbo
-"../../../../drivers/src/make_overlay_dts_$BOARD.py" "$L4T_REVISION" ${@:3}
+"../../../../tools/dts_generator/make_overlay_dts_$BOARD.py" "$L4T_REVISION" ${@:3}
 dtc -O dtb -o target.dtbo -@ $(ls *.dts)
 
-sudo modprobe -r tier4-isx021 || true
-sudo modprobe -r tier4-imx490 || true
+sudo modprobe -r tier4_imx728 || true
 sudo rmdir /sys/kernel/config/device-tree/overlays/camera/ || true
 
 sudo mkdir -p /sys/kernel/config/device-tree/overlays/camera/
 sudo cp target.dtbo /sys/kernel/config/device-tree/overlays/camera/dtbo
 echo 1 | sudo tee /sys/kernel/config/device-tree/overlays/camera/status
 
-sudo modprobe tier4-imx490
+sudo modprobe tier4-imx728

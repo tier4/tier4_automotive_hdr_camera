@@ -1,0 +1,44 @@
+name: GStreamer V4L2 tests
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: false
+        type: string
+      video-device:
+        required: true
+        type: string
+      gstreamer-options:
+        required: true
+        type: string
+      artifact-name:
+        required: false
+        type: string
+
+jobs:
+  check-camera:
+    runs-on: [self-hosted, linux, ARM64, "${{ inputs.platform }}"]
+    timeout-minutes: 3
+    steps:
+      - run: |
+          ls -l ${{ inputs.video-device }}
+          ls -l /dev/v4l-subdev*
+          ls -l /dev/media*
+          v4l2-ctl -d "${{ inputs.video-device }}" --all
+
+  dump-v4l2-stream:
+    runs-on: [self-hosted, linux, ARM64, "${{ inputs.platform }}"]
+    needs: check-camera
+    timeout-minutes: 3
+    steps:
+      - run: |
+          gst-launch-1.0 -e v4l2src io-mode=0 device=${{ inputs.video-device }} do-timestamp=true num-buffers=60 ! '${{ inputs.gstreamer-options }}' ! nvvidconv ! nvjpegenc ! qtmux ! filesink location=output.mov
+          ls -l output.mov
+          test -s output.mov
+      - name: Upload the captured Motion JPEG video
+        if: ${{ inputs.artifact-name != '' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: output.mov

@@ -1,0 +1,171 @@
+name: Test camera devicetree overlay generation scripts
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - 'tools/dts_generator/make_overlay_dts*.py'
+
+jobs:
+  test-make-overlay-dts-roscube:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R32.5.1, R32.5.2, R32.6.1, R35.4.1]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
+      - name: Generate devicetree overlay
+        run: |
+          ./tools/dts_generator/make_overlay_dts_roscube.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
+
+  test-make-overlay-dts-roscube-orin:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R35.1, R35.2.1]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
+      - name: Generate devicetree overlay
+        run: |
+          ./tools/dts_generator/make_overlay_dts_roscube-orin.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
+
+  test-make-overlay-dts-orin-devkit:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R35.1, R35.2.1]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
+      - name: Generate devicetree overlay
+        run: |
+          ./tools/dts_generator/make_overlay_dts_orin-devkit.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
+
+  test-make-overlay-dts-xavier-devkit:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R32.5.1, R32.5.2, R32.6.1, R35.1, R35.2.1, R35.3.1]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
+      - name: Generate devicetree overlay
+        run: |
+          ./tools/dts_generator/make_overlay_dts_xavier-devkit.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
+
+  test-make-overlay-dts-eac-5000:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R35.3.1]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
+      - name: Generate devicetree overlay
+        run: |
+          ./tools/dts_generator/make_overlay_dts_eac-5000.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
+
+  test-make-overlay-dts-anvil:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 3
+    strategy:
+      matrix:
+        revision: [R35]
+        camera-combination: [
+          "-8 C1", "-8 C2",
+          "-6 C1 -2 C2", "-6 C2 -2 C1", "-2 C1 -6 C2", "-2 C2 -6 C1", 
+          "-4 C1 -4 C2", "-4 C2 -4 C1",
+          "-4 C1 -2 C1 -2 C2", "-4 C1 -2 C2 -2 C1", "-4 C2 -2 C1 -2 C2", "-4 C2 -2 C2 -2 C1",
+          "-2 C1 -2 C2 -4 C1", "-2 C2 -2 C1 -4 C1", "-2 C1 -2 C2 -4 C2", "-2 C2 -2 C1 -4 C2",
+          "-2 C1 -2 C2 -2 C1 -2 C2", "-2 C2 -2 C1 -2 C2 -2 C1"
+        ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install device-tree-compiler
+        run: command -v dtc || ( sudo apt-get update && sudo apt-get install -y device-tree-compiler )
+      - name: Generate devicetree overlay
+        run: |
+          ./tools/dts_generator/make_overlay_dts_anvil.py "${{ matrix.revision }}" ${{ matrix.camera-combination }}
+          ls -l *.dts
+      - name: Compile the generated devicetree overlay
+        run: |
+          dtc -O dtb -@ *.dts -o compiled.dtbo
+          ls -l *.dtbo
+

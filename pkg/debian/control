@@ -1,0 +1,13 @@
+Source: tier4-camera-gmsl
+Section: kernel
+Priority: optional
+Maintainer: Ryo Munakata <ryo.munakata@tier4.jp>
+Build-Depends: debhelper (>=9), dkms
+Standards-Version: 3.9.6
+Homepage: <https://edge.auto/automotive-camera>
+
+Package: tier4-camera-gmsl
+Architecture: arm64
+Provides: tier4-camera-gmsl
+Depends: ${misc:Depends}
+Description: V4L2 camera drivers for TIER IV C1/C2/C3 cameras
