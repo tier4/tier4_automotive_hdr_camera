@@ -1,0 +1,55 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+package         = tier4-camera-gmsl
+deb_version	:= $(shell dpkg-parsechangelog | grep ^Version:| cut -d ' ' -f 2)
+dkms_version	:= $(shell cat dkms.conf | grep ^PACKAGE_VERSION= | cut -d '"' -f 2)
+dkms_src_dir	:= $(CURDIR)/debian/${package}/usr/src/tier4-camera-gmsl-$(dkms_version)/
+kernel_src_dir ?= /lib/modules/$(kernel_release)/build
+
+UDEV_FILE := ./debian/udev
+
+ROScube_Orin_word := 590
+ROScube_Orin_Model_word := ROScube-Orin
+
+dt_model := $(shell cat /proc/device-tree/model | tr -d "\0" )
+
+ifeq ($(ROScube_Orin_word), $(findstring $(ROScube_Orin_word),$(dt_model)))
+    MODEL := $(ROScube_Orin_Model_word)
+endif
+
+%:
+	dh $@ --with dkms
+
+override_dh_auto_build:
+	# don't actually build the modules
+
+override_dh_auto_install:
+	dh_install debian/etc ../${package}
+#	dh_install debian/var ../${package}
+	dh_install debian/usr ../${package}
+	mkdir -p $(dkms_src_dir)
+	cp -rf $(CURDIR)/../src/${package}/* $(dkms_src_dir)
+	cp -rf $(CURDIR)/../tools/dts_generator/* $(dkms_src_dir)
+
+override_dh_usrlocal:
+
+override_dh_installudev:
+
+ifeq ($(MODEL),$(ROScube_Orin_Model_word))
+	sed -i -e 's/001b/001d/g' $(UDEV_FILE)
+	sed -i -e 's/001c/001e/g' $(UDEV_FILE)
+endif
+
+	dh_installudev --priority 99
+
+override_dh_dkms:
+	dh_dkms -V $(deb_version)
+
+override_dh_fixperms:
+	dh_fixperms
+	find ${dkms_src_dir} -type f -exec chmod -x {} \;
+
+ifneq ($(DEB_VERSION),$(DKMS_VERSION))
+	$(error Debian package version is different from dkms.conf package version)
+endif

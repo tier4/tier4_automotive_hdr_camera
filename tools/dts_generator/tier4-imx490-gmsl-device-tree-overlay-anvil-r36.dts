@@ -1,0 +1,2192 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	overlay-name = "TIERIV GMSL2 Camera Device Tree Overlay: C2x8";
+	jetson-header-name = "Jetson AGX CSI Connector";
+	compatible = "nvidia,p2822-0000+p2888-0001", "nvidia,p3509-0000+p3668-0001", "nvidia,p3737-0000+p3701-0000", "nvidia,p3737-0000+p3701-0000", "nvidia,p3737-0000+p3701-0004", "nvidia,p3737-0000+p3701-0005", "nvidia,tegra234", "nvidia,tegra23x";
+
+	fragment@1 {
+		target-path = "/tegra-capture-vi";
+
+		__overlay__ {
+			status = "okay";
+			num-channels = <8>;
+		};
+	};
+
+	fragment@2 {
+		target-path = "/tegra-capture-vi/ports/port@7";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@3 {
+		target-path = "/tegra-capture-vi/ports/port@7/endpoint";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <0>;
+			vc-id = <1>;
+			bus-width = <4>;
+			remote-endpoint = <&csi_out7>;
+		};
+	};
+
+	fragment@4 {
+		target-path = "/tegra-capture-vi/ports/port@6";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@5 {
+		target-path = "/tegra-capture-vi/ports/port@6/endpoint";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <0>;
+			vc-id = <0>;
+			bus-width = <4>;
+			remote-endpoint = <&csi_out6>;
+		};
+	};
+
+	fragment@6 {
+		target-path = "/tegra-capture-vi/ports/port@5";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@7 {
+		target-path = "/tegra-capture-vi/ports/port@5/endpoint";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <2>;
+			vc-id = <1>;
+			bus-width = <4>;
+			remote-endpoint = <&csi_out5>;
+		};
+	};
+
+	fragment@8 {
+		target-path = "/tegra-capture-vi/ports/port@4";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@9 {
+		target-path = "/tegra-capture-vi/ports/port@4/endpoint";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <2>;
+			vc-id = <0>;
+			bus-width = <4>;
+			remote-endpoint = <&csi_out4>;
+		};
+	};
+
+	fragment@10 {
+		target-path = "/tegra-capture-vi/ports/port@3";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@11 {
+		target-path = "/tegra-capture-vi/ports/port@3/endpoint";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <4>;
+			vc-id = <1>;
+			bus-width = <4>;
+			remote-endpoint = <&csi_out3>;
+		};
+	};
+
+	fragment@12 {
+		target-path = "/tegra-capture-vi/ports/port@2";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@13 {
+		target-path = "/tegra-capture-vi/ports/port@2/endpoint";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <4>;
+			vc-id = <0>;
+			bus-width = <4>;
+			remote-endpoint = <&csi_out2>;
+		};
+	};
+
+	fragment@14 {
+		target-path = "/tegra-capture-vi/ports/port@1";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@15 {
+		target-path = "/tegra-capture-vi/ports/port@1/endpoint";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <5>;
+			vc-id = <1>;
+			bus-width = <4>;
+			remote-endpoint = <&csi_out1>;
+		};
+	};
+
+	fragment@16 {
+		target-path = "/tegra-capture-vi/ports/port@0";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@17 {
+		target-path = "/tegra-capture-vi/ports/port@0/endpoint";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <5>;
+			vc-id = <0>;
+			bus-width = <4>;
+			remote-endpoint = <&csi_out0>;
+		};
+	};
+
+	fragment@18 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000";
+
+		__overlay__ {
+			status = "okay";
+			num-channels = <8>;
+		};
+	};
+
+	fragment@19 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@7";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@20 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@0";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@21 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@0/endpoint@14";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <0>;
+			bus-width = <4>;
+			remote-endpoint = <&cam_out7>;
+		};
+	};
+
+	fragment@22 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@1";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@23 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@7/ports/port@1/endpoint@15";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <0>;
+			bus-width = <4>;
+			remote-endpoint = <&vi_in7>;
+		};
+	};
+
+	fragment@24 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@6";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@25 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@0";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@26 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@0/endpoint@12";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <0>;
+			bus-width = <4>;
+			remote-endpoint = <&cam_out6>;
+		};
+	};
+
+	fragment@27 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@1";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@28 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@6/ports/port@1/endpoint@13";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <0>;
+			bus-width = <4>;
+			remote-endpoint = <&vi_in6>;
+		};
+	};
+
+	fragment@29 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@5";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@30 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@0";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@31 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@0/endpoint@10";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <2>;
+			bus-width = <4>;
+			remote-endpoint = <&cam_out5>;
+		};
+	};
+
+	fragment@32 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@1";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@33 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@5/ports/port@1/endpoint@11";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <2>;
+			bus-width = <4>;
+			remote-endpoint = <&vi_in5>;
+		};
+	};
+
+	fragment@34 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@4";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@35 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@0";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@36 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@0/endpoint@8";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <2>;
+			bus-width = <4>;
+			remote-endpoint = <&cam_out4>;
+		};
+	};
+
+	fragment@37 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@1";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@38 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@4/ports/port@1/endpoint@9";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <2>;
+			bus-width = <4>;
+			remote-endpoint = <&vi_in4>;
+		};
+	};
+
+	fragment@39 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@3";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@40 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@0";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@41 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@0/endpoint@6";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <4>;
+			bus-width = <4>;
+			remote-endpoint = <&cam_out3>;
+		};
+	};
+
+	fragment@42 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@1";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@43 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@3/ports/port@1/endpoint@7";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <4>;
+			bus-width = <4>;
+			remote-endpoint = <&vi_in3>;
+		};
+	};
+
+	fragment@44 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@2";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@45 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@0";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@46 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@0/endpoint@4";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <4>;
+			bus-width = <4>;
+			remote-endpoint = <&cam_out2>;
+		};
+	};
+
+	fragment@47 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@1";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@48 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@2/ports/port@1/endpoint@5";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <4>;
+			bus-width = <4>;
+			remote-endpoint = <&vi_in2>;
+		};
+	};
+
+	fragment@49 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@1";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@50 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@0";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@51 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@0/endpoint@2";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <6>;
+			bus-width = <4>;
+			remote-endpoint = <&cam_out1>;
+		};
+	};
+
+	fragment@52 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@1";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@53 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@1/ports/port@1/endpoint@3";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <6>;
+			bus-width = <4>;
+			remote-endpoint = <&vi_in1>;
+		};
+	};
+
+	fragment@54 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@0";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@55 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@56 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@0/endpoint@0";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <6>;
+			bus-width = <4>;
+			remote-endpoint = <&cam_out0>;
+		};
+	};
+
+	fragment@57 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@1";
+
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@58 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000/channel@0/ports/port@1/endpoint@1";
+
+		__overlay__ {
+			status = "okay";
+			port-index = <6>;
+			bus-width = <4>;
+			remote-endpoint = <&vi_in0>;
+		};
+	};
+
+	fragment@79 {
+		target-path = "/tegra-camera-platform";
+
+		__overlay__ {
+			status = "okay";
+			num_csi_lanes = <16>;
+			max_lane_speed = <2500000>;
+			min_bits_per_pixel = <10>;
+			vi_peak_byte_per_pixel = <2>;
+			vi_bw_margin_pct = <25>;
+			isp_peak_byte_per_pixel = <5>;
+			isp_bw_margin_pct = <25>;
+		};
+	};
+
+	fragment@63 {
+		target-path = "/tegra-camera-platform/modules/module7";
+
+		__overlay__ {
+			badge = "imx490_bottom";
+			position = "bottom";
+			orientation = "1";
+			status = "okay";
+		};
+	};
+
+	fragment@64 {
+		target-path = "/tegra-camera-platform/modules/module7/drivernode0";
+
+		__overlay__ {
+			status = "okay";
+			pcl_id = "v4l2_sensor";
+			devname = "imx490 43-002c";
+			proc-device-tree = "/proc/device-tree/bus@0/i2c@31e0000/tca9544@72/i2c@3/imx490_a@2c";
+		};
+	};
+
+	fragment@65 {
+		target-path = "/tegra-camera-platform/modules/module6";
+
+		__overlay__ {
+			badge = "imx490_top";
+			position = "top";
+			orientation = "1";
+			status = "okay";
+		};
+	};
+
+	fragment@66 {
+		target-path = "/tegra-camera-platform/modules/module6/drivernode0";
+
+		__overlay__ {
+			status = "okay";
+			pcl_id = "v4l2_sensor";
+			devname = "imx490 43-002b";
+			proc-device-tree = "/proc/device-tree/bus@0/i2c@31e0000/tca9544@72/i2c@3/imx490_b@2b";
+		};
+	};
+
+	fragment@67 {
+		target-path = "/tegra-camera-platform/modules/module5";
+
+		__overlay__ {
+			badge = "imx490_right2";
+			position = "right2";
+			orientation = "1";
+			status = "okay";
+		};
+	};
+
+	fragment@68 {
+		target-path = "/tegra-camera-platform/modules/module5/drivernode0";
+
+		__overlay__ {
+			status = "okay";
+			pcl_id = "v4l2_sensor";
+			devname = "imx490 42-002c";
+			proc-device-tree = "/proc/device-tree/bus@0/i2c@31e0000/tca9544@72/i2c@2/imx490_c@2c";
+		};
+	};
+
+	fragment@69 {
+		target-path = "/tegra-camera-platform/modules/module4";
+
+		__overlay__ {
+			badge = "imx490_left2";
+			position = "left2";
+			orientation = "1";
+			status = "okay";
+		};
+	};
+
+	fragment@70 {
+		target-path = "/tegra-camera-platform/modules/module4/drivernode0";
+
+		__overlay__ {
+			status = "okay";
+			pcl_id = "v4l2_sensor";
+			devname = "imx490 42-002b";
+			proc-device-tree = "/proc/device-tree/bus@0/i2c@31e0000/tca9544@72/i2c@2/imx490_d@2b";
+		};
+	};
+
+	fragment@71 {
+		target-path = "/tegra-camera-platform/modules/module3";
+
+		__overlay__ {
+			badge = "imx490_right";
+			position = "right";
+			orientation = "1";
+			status = "okay";
+		};
+	};
+
+	fragment@72 {
+		target-path = "/tegra-camera-platform/modules/module3/drivernode0";
+
+		__overlay__ {
+			status = "okay";
+			pcl_id = "v4l2_sensor";
+			devname = "imx490 41-002c";
+			proc-device-tree = "/proc/device-tree/bus@0/i2c@31e0000/tca9544@72/i2c@1/imx490_e@2c";
+		};
+	};
+
+	fragment@73 {
+		target-path = "/tegra-camera-platform/modules/module2";
+
+		__overlay__ {
+			badge = "imx490_left";
+			position = "left";
+			orientation = "1";
+			status = "okay";
+		};
+	};
+
+	fragment@74 {
+		target-path = "/tegra-camera-platform/modules/module2/drivernode0";
+
+		__overlay__ {
+			status = "okay";
+			pcl_id = "v4l2_sensor";
+			devname = "imx490 41-002b";
+			proc-device-tree = "/proc/device-tree/bus@0/i2c@31e0000/tca9544@72/i2c@1/imx490_f@2b";
+		};
+	};
+
+	fragment@75 {
+		target-path = "/tegra-camera-platform/modules/module1";
+
+		__overlay__ {
+			badge = "imx490_front";
+			position = "front";
+			orientation = "1";
+			status = "okay";
+		};
+	};
+
+	fragment@76 {
+		target-path = "/tegra-camera-platform/modules/module1/drivernode0";
+
+		__overlay__ {
+			status = "okay";
+			pcl_id = "v4l2_sensor";
+			devname = "imx490 40-002c";
+			proc-device-tree = "/proc/device-tree/bus@0/i2c@31e0000/tca9544@72/i2c@0/imx490_g@2c";
+		};
+	};
+
+	fragment@77 {
+		target-path = "/tegra-camera-platform/modules/module0";
+
+		__overlay__ {
+			badge = "imx490_rear";
+			position = "rear";
+			orientation = "1";
+			status = "okay";
+		};
+	};
+
+	fragment@78 {
+		target-path = "/tegra-camera-platform/modules/module0/drivernode0";
+
+		__overlay__ {
+			status = "okay";
+			pcl_id = "v4l2_sensor";
+			devname = "imx490 40-002b";
+			proc-device-tree = "/proc/device-tree/bus@0/i2c@31e0000/tca9544@72/i2c@0/imx490_h@2b";
+		};
+	};
+
+	fragment@80 {
+		target-path = "/";
+
+		__overlay__ {
+			tier4,cameras = "C2", "C2", "C2", "C2", "C2", "C2", "C2", "C2";
+		};
+	};
+
+	fragment@81 {
+		target-path = "/bus@0/i2c@31e0000/tca9544@72";
+
+		__overlay__ {
+			status = "okay";
+			compatible = "nxp,pca9544";
+			reg = <0x72>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			vcc-supply = <&vdd_1v8_sys>;
+			skip_mux_detect;
+			force_bus_start = <40>;
+		};
+	};
+
+	fragment@82 {
+		target-path = "/bus@0/i2c@31e0000/tca9544@72/i2c@3";
+
+		__overlay__ {
+			status = "okay";
+			reg = <3>;
+			i2c-mux,deselect-on-exit;
+
+			ser7_b: max9295_a@60 {
+				status = "okay";
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x60>;
+				nvidia,gmsl-dser-device = <&dserd>;
+				vc-id = <1>;
+			};
+
+			isp7_b: gw5300_a@6f {
+				compatible = "nvidia,tier4_gw5300";
+				status = "okay";
+				reg = <0x6f>;
+			};
+
+			imx490_a@2c {
+				status = "okay";
+				compatible = "nvidia,tier4_imx490";
+				reg = <0x2c>;
+				def-addr = <0x1a>;
+				mclk = "extperiph1";
+				clocks = <&bpmp 36U>, <&bpmp 36U>;
+				clock-names = "extperiph1","pllp_grtba";
+				nvidia,isp-device = <&isp7_b>;
+				nvidia,gmsl-ser-device = <&ser7_b>;
+				nvidia,gmsl-dser-device = <&dserd>;
+				physical_w = "15.0";
+				physical_h = "12.5";
+				sensor_model = "imx490";
+				fsync-mode = "false";
+				distortion-correction = "false";
+				auto-exposure = "true";
+				post_crop_frame_drop = "0";
+				use_decibel_gain = "true";
+				use_sensor_mode_id = "true";
+				reg_mux = <3>;
+				
+				/* mode IMX490_MODE_2880X1860_CROP_30FPS */
+				mode0 {
+					num_lanes = "4";
+					vc_id = "0";
+					tegra_sinterface = "serial_g";
+					mclk_khz = "24000";
+					discontinuous_clk = "no";
+					dpcm_enable = "false";
+					phy_mode = "DPHY";
+					cil_settletime = "0";
+					dynamic_pixel_bit_depth = "16";
+					csi_pixel_bit_depth = "16";
+					mode_type = "yuv";
+					pixel_phase = "uyvy";
+					active_w = "2880";
+					active_h = "1860";
+					readout_orientation = "0";
+					line_length = "2250";
+					inherent_gain = "1";
+					pix_clk_hz = "757";
+					serdes_pix_clk_hz = "350000000";
+					gain_factor = "10";
+					min_gain_val = "0";
+					max_gain_val = "300";
+					step_gain_val = "3";
+					default_gain = "0";
+					min_hdr_ratio = "1";
+					max_hdr_ratio = "1";
+					framerate_factor = "1000000";
+					min_framerate = "30000000";
+					max_framerate = "30000000";
+					step_framerate = "1";
+					default_framerate = "30000000";
+					exposure_factor = "1000000";
+					min_exp_time = "24";
+					max_exp_time = "33333";
+					step_exp_time = "1";
+					default_exp_time = "33333";
+					embedded_metadata_height = "0";
+				};
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						reg = <0>;
+
+						cam_out7: endpoint {
+							vc-id = <1>;
+							port-index = <0>;
+							bus-width = <4>;
+							remote-endpoint = <&csi_in7>;
+						};
+					};
+				};
+
+				gmsl-link {
+					src-csi-port = "b";
+					dst-csi-port = "a";
+					serdes-csi-link = "b";
+					csi-mode = "1x4";
+					st-vc = <1>;
+					vc-id = <1>;
+					num-lanes = <4>;
+					streams = "ued-u1","yuv8";
+				};
+			};
+
+			ser6_prim: max9295_prim@62 {
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x62>;
+				is-prim-ser;
+				status = "okay";
+			};
+
+			ser6_a: max9295_b@42 {
+				status = "okay";
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x42>;
+				nvidia,gmsl-dser-device = <&dserd>;
+				vc-id = <0>;
+			};
+
+			isp6_prim: gw5300_prim@6d {
+				status = "okay";
+				compatible = "nvidia,tier4_gw5300";
+				reg = <0x6d>;
+				is-prim-isp;
+			};
+
+			isp6_a: gw5300_b@6e {
+				compatible = "nvidia,tier4_gw5300";
+				status = "okay";
+				reg = <0x6e>;
+			};
+
+			imx490_b@2b {
+				status = "okay";
+				compatible = "nvidia,tier4_imx490";
+				reg = <0x2b>;
+				def-addr = <0x1a>;
+				mclk = "extperiph1";
+				clocks = <&bpmp 36U>, <&bpmp 36U>;
+				clock-names = "extperiph1","pllp_grtba";
+				nvidia,isp-device = <&isp6_a>;
+				nvidia,gmsl-ser-device = <&ser6_a>;
+				nvidia,gmsl-dser-device = <&dserd>;
+				physical_w = "15.0";
+				physical_h = "12.5";
+				sensor_model = "imx490";
+				fsync-mode = "false";
+				distortion-correction = "false";
+				auto-exposure = "true";
+				post_crop_frame_drop = "0";
+				use_decibel_gain = "true";
+				use_sensor_mode_id = "true";
+				reg_mux = <3>;
+				
+				/* mode IMX490_MODE_2880X1860_CROP_30FPS */
+				mode0 {
+					num_lanes = "4";
+					vc_id = "0";
+					tegra_sinterface = "serial_g";
+					mclk_khz = "24000";
+					discontinuous_clk = "no";
+					dpcm_enable = "false";
+					phy_mode = "DPHY";
+					cil_settletime = "0";
+					dynamic_pixel_bit_depth = "16";
+					csi_pixel_bit_depth = "16";
+					mode_type = "yuv";
+					pixel_phase = "uyvy";
+					active_w = "2880";
+					active_h = "1860";
+					readout_orientation = "0";
+					line_length = "2250";
+					inherent_gain = "1";
+					pix_clk_hz = "757";
+					serdes_pix_clk_hz = "350000000";
+					gain_factor = "10";
+					min_gain_val = "0";
+					max_gain_val = "300";
+					step_gain_val = "3";
+					default_gain = "0";
+					min_hdr_ratio = "1";
+					max_hdr_ratio = "1";
+					framerate_factor = "1000000";
+					min_framerate = "30000000";
+					max_framerate = "30000000";
+					step_framerate = "1";
+					default_framerate = "30000000";
+					exposure_factor = "1000000";
+					min_exp_time = "24";
+					max_exp_time = "33333";
+					step_exp_time = "1";
+					default_exp_time = "33333";
+					embedded_metadata_height = "0";
+				};
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						reg = <0>;
+
+						cam_out6: endpoint {
+							vc-id = <0>;
+							port-index = <0>;
+							bus-width = <4>;
+							remote-endpoint = <&csi_in6>;
+						};
+					};
+				};
+
+				gmsl-link {
+					src-csi-port = "b";
+					dst-csi-port = "a";
+					serdes-csi-link = "a";
+					csi-mode = "1x4";
+					st-vc = <0>;
+					vc-id = <0>;
+					num-lanes = <4>;
+					streams = "ued-u1","yuv8";
+				};
+			};
+		};
+	};
+
+	fragment@83 {
+		target-path = "/bus@0/i2c@31e0000/tca9544@72/i2c@2";
+
+		__overlay__ {
+			status = "okay";
+			reg = <2>;
+			i2c-mux,deselect-on-exit;
+
+			ser5_b: max9295_c@60 {
+				status = "okay";
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x60>;
+				nvidia,gmsl-dser-device = <&dserc>;
+				vc-id = <1>;
+			};
+
+			isp5_b: gw5300_c@6f {
+				compatible = "nvidia,tier4_gw5300";
+				status = "okay";
+				reg = <0x6f>;
+			};
+
+			imx490_c@2c {
+				status = "okay";
+				compatible = "nvidia,tier4_imx490";
+				reg = <0x2c>;
+				def-addr = <0x1a>;
+				mclk = "extperiph1";
+				clocks = <&bpmp 36U>, <&bpmp 36U>;
+				clock-names = "extperiph1","pllp_grtba";
+				nvidia,isp-device = <&isp5_b>;
+				nvidia,gmsl-ser-device = <&ser5_b>;
+				nvidia,gmsl-dser-device = <&dserc>;
+				physical_w = "15.0";
+				physical_h = "12.5";
+				sensor_model = "imx490";
+				fsync-mode = "false";
+				distortion-correction = "false";
+				auto-exposure = "true";
+				post_crop_frame_drop = "0";
+				use_decibel_gain = "true";
+				use_sensor_mode_id = "true";
+				reg_mux = <2>;
+				
+				/* mode IMX490_MODE_2880X1860_CROP_30FPS */
+				mode0 {
+					num_lanes = "4";
+					vc_id = "0";
+					tegra_sinterface = "serial_g";
+					mclk_khz = "24000";
+					discontinuous_clk = "no";
+					dpcm_enable = "false";
+					phy_mode = "DPHY";
+					cil_settletime = "0";
+					dynamic_pixel_bit_depth = "16";
+					csi_pixel_bit_depth = "16";
+					mode_type = "yuv";
+					pixel_phase = "uyvy";
+					active_w = "2880";
+					active_h = "1860";
+					readout_orientation = "0";
+					line_length = "2250";
+					inherent_gain = "1";
+					pix_clk_hz = "757";
+					serdes_pix_clk_hz = "350000000";
+					gain_factor = "10";
+					min_gain_val = "0";
+					max_gain_val = "300";
+					step_gain_val = "3";
+					default_gain = "0";
+					min_hdr_ratio = "1";
+					max_hdr_ratio = "1";
+					framerate_factor = "1000000";
+					min_framerate = "30000000";
+					max_framerate = "30000000";
+					step_framerate = "1";
+					default_framerate = "30000000";
+					exposure_factor = "1000000";
+					min_exp_time = "24";
+					max_exp_time = "33333";
+					step_exp_time = "1";
+					default_exp_time = "33333";
+					embedded_metadata_height = "0";
+				};
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						reg = <0>;
+
+						cam_out5: endpoint {
+							vc-id = <1>;
+							port-index = <2>;
+							bus-width = <4>;
+							remote-endpoint = <&csi_in5>;
+						};
+					};
+				};
+
+				gmsl-link {
+					src-csi-port = "b";
+					dst-csi-port = "a";
+					serdes-csi-link = "b";
+					csi-mode = "1x4";
+					st-vc = <1>;
+					vc-id = <1>;
+					num-lanes = <4>;
+					streams = "ued-u1","yuv8";
+				};
+			};
+
+			ser4_prim: max9295_prim@62 {
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x62>;
+				is-prim-ser;
+				status = "okay";
+			};
+
+			ser4_a: max9295_d@42 {
+				status = "okay";
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x42>;
+				nvidia,gmsl-dser-device = <&dserc>;
+				vc-id = <0>;
+			};
+
+			isp4_prim: gw5300_prim@6d {
+				status = "okay";
+				compatible = "nvidia,tier4_gw5300";
+				reg = <0x6d>;
+				is-prim-isp;
+			};
+
+			isp4_a: gw5300_d@6e {
+				compatible = "nvidia,tier4_gw5300";
+				status = "okay";
+				reg = <0x6e>;
+			};
+
+			imx490_d@2b {
+				status = "okay";
+				compatible = "nvidia,tier4_imx490";
+				reg = <0x2b>;
+				def-addr = <0x1a>;
+				mclk = "extperiph1";
+				clocks = <&bpmp 36U>, <&bpmp 36U>;
+				clock-names = "extperiph1","pllp_grtba";
+				nvidia,isp-device = <&isp4_a>;
+				nvidia,gmsl-ser-device = <&ser4_a>;
+				nvidia,gmsl-dser-device = <&dserc>;
+				physical_w = "15.0";
+				physical_h = "12.5";
+				sensor_model = "imx490";
+				fsync-mode = "false";
+				distortion-correction = "false";
+				auto-exposure = "true";
+				post_crop_frame_drop = "0";
+				use_decibel_gain = "true";
+				use_sensor_mode_id = "true";
+				reg_mux = <2>;
+				
+				/* mode IMX490_MODE_2880X1860_CROP_30FPS */
+				mode0 {
+					num_lanes = "4";
+					vc_id = "0";
+					tegra_sinterface = "serial_g";
+					mclk_khz = "24000";
+					discontinuous_clk = "no";
+					dpcm_enable = "false";
+					phy_mode = "DPHY";
+					cil_settletime = "0";
+					dynamic_pixel_bit_depth = "16";
+					csi_pixel_bit_depth = "16";
+					mode_type = "yuv";
+					pixel_phase = "uyvy";
+					active_w = "2880";
+					active_h = "1860";
+					readout_orientation = "0";
+					line_length = "2250";
+					inherent_gain = "1";
+					pix_clk_hz = "757";
+					serdes_pix_clk_hz = "350000000";
+					gain_factor = "10";
+					min_gain_val = "0";
+					max_gain_val = "300";
+					step_gain_val = "3";
+					default_gain = "0";
+					min_hdr_ratio = "1";
+					max_hdr_ratio = "1";
+					framerate_factor = "1000000";
+					min_framerate = "30000000";
+					max_framerate = "30000000";
+					step_framerate = "1";
+					default_framerate = "30000000";
+					exposure_factor = "1000000";
+					min_exp_time = "24";
+					max_exp_time = "33333";
+					step_exp_time = "1";
+					default_exp_time = "33333";
+					embedded_metadata_height = "0";
+				};
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						reg = <0>;
+
+						cam_out4: endpoint {
+							vc-id = <0>;
+							port-index = <2>;
+							bus-width = <4>;
+							remote-endpoint = <&csi_in4>;
+						};
+					};
+				};
+
+				gmsl-link {
+					src-csi-port = "b";
+					dst-csi-port = "a";
+					serdes-csi-link = "a";
+					csi-mode = "1x4";
+					st-vc = <0>;
+					vc-id = <0>;
+					num-lanes = <4>;
+					streams = "ued-u1","yuv8";
+				};
+			};
+		};
+	};
+
+	fragment@84 {
+		target-path = "/bus@0/i2c@31e0000/tca9544@72/i2c@1";
+
+		__overlay__ {
+			status = "okay";
+			reg = <1>;
+			i2c-mux,deselect-on-exit;
+
+			ser3_b: max9295_e@60 {
+				status = "okay";
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x60>;
+				nvidia,gmsl-dser-device = <&dserb>;
+				vc-id = <1>;
+			};
+
+			isp3_b: gw5300_e@6f {
+				compatible = "nvidia,tier4_gw5300";
+				status = "okay";
+				reg = <0x6f>;
+			};
+
+			imx490_e@2c {
+				status = "okay";
+				compatible = "nvidia,tier4_imx490";
+				reg = <0x2c>;
+				def-addr = <0x1a>;
+				mclk = "extperiph1";
+				clocks = <&bpmp 36U>, <&bpmp 36U>;
+				clock-names = "extperiph1","pllp_grtba";
+				nvidia,isp-device = <&isp3_b>;
+				nvidia,gmsl-ser-device = <&ser3_b>;
+				nvidia,gmsl-dser-device = <&dserb>;
+				physical_w = "15.0";
+				physical_h = "12.5";
+				sensor_model = "imx490";
+				fsync-mode = "false";
+				distortion-correction = "false";
+				auto-exposure = "true";
+				post_crop_frame_drop = "0";
+				use_decibel_gain = "true";
+				use_sensor_mode_id = "true";
+				reg_mux = <1>;
+				
+				/* mode IMX490_MODE_2880X1860_CROP_30FPS */
+				mode0 {
+					num_lanes = "4";
+					vc_id = "0";
+					tegra_sinterface = "serial_g";
+					mclk_khz = "24000";
+					discontinuous_clk = "no";
+					dpcm_enable = "false";
+					phy_mode = "DPHY";
+					cil_settletime = "0";
+					dynamic_pixel_bit_depth = "16";
+					csi_pixel_bit_depth = "16";
+					mode_type = "yuv";
+					pixel_phase = "uyvy";
+					active_w = "2880";
+					active_h = "1860";
+					readout_orientation = "0";
+					line_length = "2250";
+					inherent_gain = "1";
+					pix_clk_hz = "757";
+					serdes_pix_clk_hz = "350000000";
+					gain_factor = "10";
+					min_gain_val = "0";
+					max_gain_val = "300";
+					step_gain_val = "3";
+					default_gain = "0";
+					min_hdr_ratio = "1";
+					max_hdr_ratio = "1";
+					framerate_factor = "1000000";
+					min_framerate = "30000000";
+					max_framerate = "30000000";
+					step_framerate = "1";
+					default_framerate = "30000000";
+					exposure_factor = "1000000";
+					min_exp_time = "24";
+					max_exp_time = "33333";
+					step_exp_time = "1";
+					default_exp_time = "33333";
+					embedded_metadata_height = "0";
+				};
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						reg = <0>;
+
+						cam_out3: endpoint {
+							vc-id = <1>;
+							port-index = <4>;
+							bus-width = <4>;
+							remote-endpoint = <&csi_in3>;
+						};
+					};
+				};
+
+				gmsl-link {
+					src-csi-port = "b";
+					dst-csi-port = "a";
+					serdes-csi-link = "b";
+					csi-mode = "1x4";
+					st-vc = <1>;
+					vc-id = <1>;
+					num-lanes = <4>;
+					streams = "ued-u1","yuv8";
+				};
+			};
+
+			ser2_prim: max9295_prim@62 {
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x62>;
+				is-prim-ser;
+				status = "okay";
+			};
+
+			ser2_a: max9295_f@42 {
+				status = "okay";
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x42>;
+				nvidia,gmsl-dser-device = <&dserb>;
+				vc-id = <0>;
+			};
+
+			isp2_prim: gw5300_prim@6d {
+				status = "okay";
+				compatible = "nvidia,tier4_gw5300";
+				reg = <0x6d>;
+				is-prim-isp;
+			};
+
+			isp2_a: gw5300_f@6e {
+				compatible = "nvidia,tier4_gw5300";
+				status = "okay";
+				reg = <0x6e>;
+			};
+
+			imx490_f@2b {
+				status = "okay";
+				compatible = "nvidia,tier4_imx490";
+				reg = <0x2b>;
+				def-addr = <0x1a>;
+				mclk = "extperiph1";
+				clocks = <&bpmp 36U>, <&bpmp 36U>;
+				clock-names = "extperiph1","pllp_grtba";
+				nvidia,isp-device = <&isp2_a>;
+				nvidia,gmsl-ser-device = <&ser2_a>;
+				nvidia,gmsl-dser-device = <&dserb>;
+				physical_w = "15.0";
+				physical_h = "12.5";
+				sensor_model = "imx490";
+				fsync-mode = "false";
+				distortion-correction = "false";
+				auto-exposure = "true";
+				post_crop_frame_drop = "0";
+				use_decibel_gain = "true";
+				use_sensor_mode_id = "true";
+				reg_mux = <1>;
+				
+				/* mode IMX490_MODE_2880X1860_CROP_30FPS */
+				mode0 {
+					num_lanes = "4";
+					vc_id = "0";
+					tegra_sinterface = "serial_g";
+					mclk_khz = "24000";
+					discontinuous_clk = "no";
+					dpcm_enable = "false";
+					phy_mode = "DPHY";
+					cil_settletime = "0";
+					dynamic_pixel_bit_depth = "16";
+					csi_pixel_bit_depth = "16";
+					mode_type = "yuv";
+					pixel_phase = "uyvy";
+					active_w = "2880";
+					active_h = "1860";
+					readout_orientation = "0";
+					line_length = "2250";
+					inherent_gain = "1";
+					pix_clk_hz = "757";
+					serdes_pix_clk_hz = "350000000";
+					gain_factor = "10";
+					min_gain_val = "0";
+					max_gain_val = "300";
+					step_gain_val = "3";
+					default_gain = "0";
+					min_hdr_ratio = "1";
+					max_hdr_ratio = "1";
+					framerate_factor = "1000000";
+					min_framerate = "30000000";
+					max_framerate = "30000000";
+					step_framerate = "1";
+					default_framerate = "30000000";
+					exposure_factor = "1000000";
+					min_exp_time = "24";
+					max_exp_time = "33333";
+					step_exp_time = "1";
+					default_exp_time = "33333";
+					embedded_metadata_height = "0";
+				};
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						reg = <0>;
+
+						cam_out2: endpoint {
+							vc-id = <0>;
+							port-index = <4>;
+							bus-width = <4>;
+							remote-endpoint = <&csi_in2>;
+						};
+					};
+				};
+
+				gmsl-link {
+					src-csi-port = "b";
+					dst-csi-port = "a";
+					serdes-csi-link = "a";
+					csi-mode = "1x4";
+					st-vc = <0>;
+					vc-id = <0>;
+					num-lanes = <4>;
+					streams = "ued-u1","yuv8";
+				};
+			};
+		};
+	};
+
+	fragment@85 {
+		target-path = "/bus@0/i2c@31e0000/tca9544@72/i2c@0";
+
+		__overlay__ {
+			status = "okay";
+			reg = <0>;
+			i2c-mux,deselect-on-exit;
+
+			ser1_b: max9295_g@60 {
+				status = "okay";
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x60>;
+				nvidia,gmsl-dser-device = <&dsera>;
+				vc-id = <1>;
+			};
+
+			isp1_b: gw5300_g@6f {
+				compatible = "nvidia,tier4_gw5300";
+				status = "okay";
+				reg = <0x6f>;
+			};
+
+			imx490_g@2c {
+				status = "okay";
+				compatible = "nvidia,tier4_imx490";
+				reg = <0x2c>;
+				def-addr = <0x1a>;
+				mclk = "extperiph1";
+				clocks = <&bpmp 36U>, <&bpmp 36U>;
+				clock-names = "extperiph1","pllp_grtba";
+				nvidia,isp-device = <&isp1_b>;
+				nvidia,gmsl-ser-device = <&ser1_b>;
+				nvidia,gmsl-dser-device = <&dsera>;
+				physical_w = "15.0";
+				physical_h = "12.5";
+				sensor_model = "imx490";
+				fsync-mode = "false";
+				distortion-correction = "false";
+				auto-exposure = "true";
+				post_crop_frame_drop = "0";
+				use_decibel_gain = "true";
+				use_sensor_mode_id = "true";
+				reg_mux = <0>;
+				
+				/* mode IMX490_MODE_2880X1860_CROP_30FPS */
+				mode0 {
+					num_lanes = "4";
+					vc_id = "0";
+					tegra_sinterface = "serial_g";
+					mclk_khz = "24000";
+					discontinuous_clk = "no";
+					dpcm_enable = "false";
+					phy_mode = "DPHY";
+					cil_settletime = "0";
+					dynamic_pixel_bit_depth = "16";
+					csi_pixel_bit_depth = "16";
+					mode_type = "yuv";
+					pixel_phase = "uyvy";
+					active_w = "2880";
+					active_h = "1860";
+					readout_orientation = "0";
+					line_length = "2250";
+					inherent_gain = "1";
+					pix_clk_hz = "757";
+					serdes_pix_clk_hz = "350000000";
+					gain_factor = "10";
+					min_gain_val = "0";
+					max_gain_val = "300";
+					step_gain_val = "3";
+					default_gain = "0";
+					min_hdr_ratio = "1";
+					max_hdr_ratio = "1";
+					framerate_factor = "1000000";
+					min_framerate = "30000000";
+					max_framerate = "30000000";
+					step_framerate = "1";
+					default_framerate = "30000000";
+					exposure_factor = "1000000";
+					min_exp_time = "24";
+					max_exp_time = "33333";
+					step_exp_time = "1";
+					default_exp_time = "33333";
+					embedded_metadata_height = "0";
+				};
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						reg = <0>;
+
+						cam_out1: endpoint {
+							vc-id = <1>;
+							port-index = <6>;
+							bus-width = <4>;
+							remote-endpoint = <&csi_in1>;
+						};
+					};
+				};
+
+				gmsl-link {
+					src-csi-port = "b";
+					dst-csi-port = "a";
+					serdes-csi-link = "b";
+					csi-mode = "1x4";
+					st-vc = <1>;
+					vc-id = <1>;
+					num-lanes = <4>;
+					streams = "ued-u1","yuv8";
+				};
+			};
+
+			ser0_prim: max9295_prim@62 {
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x62>;
+				is-prim-ser;
+				status = "okay";
+			};
+
+			ser0_a: max9295_h@42 {
+				status = "okay";
+				compatible = "nvidia,tier4_max9295";
+				reg = <0x42>;
+				nvidia,gmsl-dser-device = <&dsera>;
+				vc-id = <0>;
+			};
+
+			isp0_prim: gw5300_prim@6d {
+				status = "okay";
+				compatible = "nvidia,tier4_gw5300";
+				reg = <0x6d>;
+				is-prim-isp;
+			};
+
+			isp0_a: gw5300_h@6e {
+				compatible = "nvidia,tier4_gw5300";
+				status = "okay";
+				reg = <0x6e>;
+			};
+
+			imx490_h@2b {
+				status = "okay";
+				compatible = "nvidia,tier4_imx490";
+				reg = <0x2b>;
+				def-addr = <0x1a>;
+				mclk = "extperiph1";
+				clocks = <&bpmp 36U>, <&bpmp 36U>;
+				clock-names = "extperiph1","pllp_grtba";
+				nvidia,isp-device = <&isp0_a>;
+				nvidia,gmsl-ser-device = <&ser0_a>;
+				nvidia,gmsl-dser-device = <&dsera>;
+				physical_w = "15.0";
+				physical_h = "12.5";
+				sensor_model = "imx490";
+				fsync-mode = "false";
+				distortion-correction = "false";
+				auto-exposure = "true";
+				post_crop_frame_drop = "0";
+				use_decibel_gain = "true";
+				use_sensor_mode_id = "true";
+				reg_mux = <0>;
+				
+				/* mode IMX490_MODE_2880X1860_CROP_30FPS */
+				mode0 {
+					num_lanes = "4";
+					vc_id = "0";
+					tegra_sinterface = "serial_g";
+					mclk_khz = "24000";
+					discontinuous_clk = "no";
+					dpcm_enable = "false";
+					phy_mode = "DPHY";
+					cil_settletime = "0";
+					dynamic_pixel_bit_depth = "16";
+					csi_pixel_bit_depth = "16";
+					mode_type = "yuv";
+					pixel_phase = "uyvy";
+					active_w = "2880";
+					active_h = "1860";
+					readout_orientation = "0";
+					line_length = "2250";
+					inherent_gain = "1";
+					pix_clk_hz = "757";
+					serdes_pix_clk_hz = "350000000";
+					gain_factor = "10";
+					min_gain_val = "0";
+					max_gain_val = "300";
+					step_gain_val = "3";
+					default_gain = "0";
+					min_hdr_ratio = "1";
+					max_hdr_ratio = "1";
+					framerate_factor = "1000000";
+					min_framerate = "30000000";
+					max_framerate = "30000000";
+					step_framerate = "1";
+					default_framerate = "30000000";
+					exposure_factor = "1000000";
+					min_exp_time = "24";
+					max_exp_time = "33333";
+					step_exp_time = "1";
+					default_exp_time = "33333";
+					embedded_metadata_height = "0";
+				};
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						reg = <0>;
+
+						cam_out0: endpoint {
+							vc-id = <0>;
+							port-index = <6>;
+							bus-width = <4>;
+							remote-endpoint = <&csi_in0>;
+						};
+					};
+				};
+
+				gmsl-link {
+					src-csi-port = "b";
+					dst-csi-port = "a";
+					serdes-csi-link = "a";
+					csi-mode = "1x4";
+					st-vc = <0>;
+					vc-id = <0>;
+					num-lanes = <4>;
+					streams = "ued-u1","yuv8";
+				};
+			};
+		};
+	};
+
+	fragment@59 {
+		target = <&dsera>;
+
+		__overlay__ {
+			status = "okay";
+			compatible = "nvidia,tier4_max9296";
+			reg = <0x48>;
+			csi-mode = "2x4";
+			max-src = <2>;
+			clk-mhz = <2000>;
+			reset-gpios = <&tca9539_74 0 0>;
+		};
+	};
+
+	fragment@60 {
+		target = <&dserb>;
+
+		__overlay__ {
+			status = "okay";
+			compatible = "nvidia,tier4_max9296";
+			reg = <0x48>;
+			csi-mode = "2x4";
+			max-src = <2>;
+			clk-mhz = <2000>;
+			reset-gpios = <&tca9539_74 2 0>;
+		};
+	};
+
+	fragment@61 {
+		target = <&dserc>;
+
+		__overlay__ {
+			status = "okay";
+			compatible = "nvidia,tier4_max9296";
+			reg = <0x48>;
+			csi-mode = "2x4";
+			max-src = <2>;
+			clk-mhz = <2000>;
+			reset-gpios = <&tca9539_74 4 0>;
+		};
+	};
+
+	fragment@62 {
+		target = <&dserd>;
+
+		__overlay__ {
+			status = "okay";
+			compatible = "nvidia,tier4_max9296";
+			reg = <0x48>;
+			csi-mode = "2x4";
+			max-src = <2>;
+			clk-mhz = <2000>;
+			reset-gpios = <&tca9539_74 6 0>;
+		};
+	};
+
+	fragment@86 {
+		target-path = "/bus@0/i2c@31e0000/";
+
+		__overlay__ {
+
+			tca9544@72 {
+				status = "okay";
+				compatible = "nxp,pca9544";
+				reg = <0x72>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				vcc-supply = <&vdd_1v8_sys>;
+				vcc_lp = "vcc";
+				skip_mux_detect = "yes";
+				force_bus_start = <40>;
+
+				i2c@0 {
+					status = "okay";
+					reg = <0>;
+					i2c-mux,deselect-on-exit;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					dsera: max9296@48 {
+						status = "okay";
+						compatible = "nvidia,tier4_max9296";
+						reg = <0x48>;
+						csi-mode = "2x4";
+						max-src = <2>;
+						clk-mhz = <2000>;
+					};
+				};
+
+				i2c@1 {
+					status = "okay";
+					reg = <1>;
+					i2c-mux,deselect-on-exit;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					dserb: max9296@48 {
+						status = "okay";
+						compatible = "nvidia,tier4_max9296";
+						reg = <0x48>;
+						csi-mode = "2x4";
+						max-src = <2>;
+						clk-mhz = <2000>;
+					};
+				};
+
+				i2c@2 {
+					status = "okay";
+					reg = <2>;
+					i2c-mux,deselect-on-exit;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					dserc: max9296@48 {
+						status = "okay";
+						compatible = "nvidia,tier4_max9296";
+						reg = <0x48>;
+						csi-mode = "2x4";
+						max-src = <2>;
+						clk-mhz = <2000>;
+					};
+				};
+
+				i2c@3 {
+					status = "okay";
+					reg = <3>;
+					i2c-mux,deselect-on-exit;
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					dserd: max9296@48 {
+						status = "okay";
+						compatible = "nvidia,tier4_max9296";
+						reg = <0x48>;
+						csi-mode = "2x4";
+						max-src = <2>;
+						clk-mhz = <2000>;
+					};
+				};
+			};
+		};
+	};
+
+	fragment@87 {
+		target-path = "/bus@0/i2c@3180000";
+
+		__overlay__ {
+			status = "okay";
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			tca9539_74: tca9539@74 {
+				compatible = "ti,tca9539";
+				gpio-controller;
+				#gpio-cells = <2>;
+				ngpios = <16>;
+				reg = <0x74>;
+				status = "okay";
+
+				tca9539_74_outlow {
+					status = "okay";
+					gpio-hog;
+					output-low;
+				};
+
+				ca9539_74_outhigh {
+					status = "disabled";
+				};
+
+				tca9539_74_input {
+					status = "disabled";
+				};
+			};
+		};
+	};
+};
+
+/* Generated by TIER IV camera devicetree overlay generation script */
+
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+/ {
+	fragment-camera-module@0 {
+		target-path = "/";
+		__overlay__ {
+			/* all cameras are disabled by default */
+			capture_vi_base: tegra-capture-vi {
+				ports {
+					vi_port0: port@0 {
+						status = "disabled";
+						vi_in0: endpoint {
+							vc-id = <0>;
+							status = "disabled";
+						};
+					};
+					vi_port1: port@1 {
+						status = "disabled";
+						vi_in1: endpoint {
+							vc-id = <0>;
+							status = "disabled";
+						};
+					};
+					vi_port2: port@2 {
+						status = "disabled";
+						vi_in2: endpoint {
+							vc-id = <0>;
+							status = "disabled";
+						};
+					};
+					vi_port3: port@3 {
+						status = "disabled";
+						vi_in3: endpoint {
+							vc-id = <0>;
+							status = "disabled";
+						};
+					};
+					vi_port4: port@4 {
+						status = "disabled";
+						vi_in4: endpoint {
+							vc-id = <0>;
+							status = "disabled";
+						};
+					};
+					vi_port5: port@5 {
+						status = "disabled";
+						vi_in5: endpoint {
+							vc-id = <0>;
+							status = "disabled";
+						};
+					};
+					vi_port6: port@6 {
+						status = "disabled";
+						vi_in6: endpoint {
+							vc-id = <0>;
+							status = "disabled";
+						};
+					};
+					vi_port7: port@7 {
+						status = "disabled";
+						vi_in7: endpoint {
+							vc-id = <0>;
+							status = "disabled";
+						};
+					};
+				};
+			};
+
+			tcp: tegra-camera-platform {
+				compatible = "nvidia, tegra-camera-platform";
+				/**
+				* tpg_max_iso = <>;
+				* Max iso bw for 6 streams of tpg
+				* streams * nvcsi_freq * PG_bitrate / RG10 * BPP
+				* 6 * 102Mhz * 32 bits/ 10 bits * 2 Bps
+				* = 3916.8 MBps
+				*/
+				tpg_max_iso = <3916800>;
+				modules {
+					cam_module0: module0 {
+						status = "disabled";
+						cam_module0_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module0_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module1: module1 {
+						status = "disabled";
+						cam_module1_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module1_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module2: module2 {
+						status = "disabled";
+						cam_module2_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module2_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module3: module3 {
+						status = "disabled";
+						cam_module3_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module3_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module4: module4 {
+						status = "disabled";
+						cam_module4_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module4_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module5: module5 {
+						status = "disabled";
+						cam_module5_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module5_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module6: module6 {
+						status = "disabled";
+						cam_module6_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module6_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module7: module7 {
+						status = "disabled";
+						cam_module7_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module7_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+				};
+			};
+
+			bus@0 {
+				host1x@13e00000 {
+					csi_base: nvcsi@15a00000 {
+						num-tpg-channels = <36>;
+						csi_chan0: channel@0 {
+							status = "disabled";
+							ports {
+								csi_chan0_port0: port@0 {
+									status = "disabled";
+									csi_in0: endpoint@0 {
+										status = "disabled";
+									};
+								};
+								csi_chan0_port1: port@1 {
+									status = "disabled";
+									csi_out0: endpoint@1 {
+										status = "disabled";
+									};
+								};
+							};
+						};
+						csi_chan1: channel@1 {
+							status = "disabled";
+							ports {
+								csi_chan1_port0: port@0 {
+									status = "disabled";
+									csi_in1: endpoint@2 {
+										status = "disabled";
+									};
+								};
+								csi_chan1_port1: port@1 {
+									status = "disabled";
+									csi_out1: endpoint@3 {
+										status = "disabled";
+									};
+								};
+							};
+						};
+						csi_chan2: channel@2 {
+							status = "disabled";
+							ports {
+								csi_chan2_port0: port@0 {
+									status = "disabled";
+									csi_in2: endpoint@4 {
+										status = "disabled";
+									};
+								};
+								csi_chan2_port1: port@1 {
+									status = "disabled";
+									csi_out2: endpoint@5 {
+										status = "disabled";
+									};
+								};
+							};
+						};
+						csi_chan3: channel@3 {
+							status = "disabled";
+							ports {
+								csi_chan3_port0: port@0 {
+									status = "disabled";
+									csi_in3: endpoint@6 {
+										status = "disabled";
+									};
+								};
+								csi_chan3_port1: port@1 {
+									status = "disabled";
+									csi_out3: endpoint@7 {
+										status = "disabled";
+									};
+								};
+							};
+						};
+						csi_chan4: channel@4 {
+							status = "disabled";
+							ports {
+								csi_chan4_port0: port@0 {
+									status = "disabled";
+									csi_in4: endpoint@8 {
+										status = "disabled";
+									};
+								};
+								csi_chan4_port1: port@1 {
+									status = "disabled";
+									csi_out4: endpoint@9 {
+										status = "disabled";
+									};
+								};
+							};
+						};
+						csi_chan5: channel@5 {
+							status = "disabled";
+							ports {
+								csi_chan5_port0: port@0 {
+									status = "disabled";
+									csi_in5: endpoint@10 {
+										status = "disabled";
+									};
+								};
+								csi_chan5_port1: port@1 {
+									status = "disabled";
+									csi_out5: endpoint@11 {
+										status = "disabled";
+									};
+								};
+							};
+						};
+						csi_chan6: channel@6 {
+							status = "disabled";
+							ports {
+								csi_chan6_port0: port@0 {
+									status = "disabled";
+									csi_in6: endpoint@10 {
+										status = "disabled";
+									};
+								};
+								csi_chan6_port1: port@1 {
+									status = "disabled";
+									csi_out6: endpoint@11 {
+										status = "disabled";
+									};
+								};
+							};
+						};
+						csi_chan7: channel@7 {
+							status = "disabled";
+							ports {
+								csi_chan7_port0: port@0 {
+									status = "disabled";
+									csi_in7: endpoint@10 {
+										status = "disabled";
+									};
+								};
+								csi_chan7_port1: port@1 {
+									status = "disabled";
+									csi_out7: endpoint@11 {
+										status = "disabled";
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};

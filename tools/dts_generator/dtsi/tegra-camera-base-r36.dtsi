@@ -1,0 +1,344 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// tegra-camera-base-r36.dtsi
+/ {
+	fragment-camera-module@0 {
+		target-path = "/tegra-capture-vi";
+		__overlay__ {
+			/* all cameras are disabled by default */
+			ports {
+				vi_port0: port@0 {
+					reg = <0>;
+					status = "disabled";
+					vi_in0: endpoint {
+						vc-id = <0>;
+						status = "disabled";
+					};
+				};
+				vi_port1: port@1 {
+					reg = <1>;
+					status = "disabled";
+					vi_in1: endpoint {
+						vc-id = <0>;
+						status = "disabled";
+					};
+				};
+				vi_port2: port@2 {
+					reg = <2>;
+					status = "disabled";
+					vi_in2: endpoint {
+						vc-id = <0>;
+						status = "disabled";
+					};
+				};
+				vi_port3: port@3 {
+					reg = <3>;
+					status = "disabled";
+					vi_in3: endpoint {
+						vc-id = <0>;
+						status = "disabled";
+					};
+				};
+				vi_port4: port@4 {
+					reg = <4>;
+					status = "disabled";
+					vi_in4: endpoint {
+						vc-id = <0>;
+						status = "disabled";
+					};
+				};
+				vi_port5: port@5 {
+					reg = <5>;
+					status = "disabled";
+					vi_in5: endpoint {
+						vc-id = <0>;
+						status = "disabled";
+					};
+				};
+				vi_port6: port@6 {
+					reg = <6>;
+					status = "disabled";
+					vi_in6: endpoint {
+						vc-id = <0>;
+						status = "disabled";
+					};
+				};
+				vi_port7: port@7 {
+					reg = <7>;
+					status = "disabled";
+					vi_in7: endpoint {
+						vc-id = <0>;
+						status = "disabled";
+					};
+				};
+			};
+		};
+	};
+
+	fragment-camera-module@1 {
+		target-path = "/";
+		__overlay__ {
+			tcp: tegra-camera-platform {
+				compatible = "nvidia, tegra-camera-platform";
+				/**
+				* tpg_max_iso = <>;
+				* Max iso bw for 6 streams of tpg
+				* streams * nvcsi_freq * PG_bitrate / RG10 * BPP
+				* 6 * 102Mhz * 32 bits/ 10 bits * 2 Bps
+				* = 3916.8 MBps
+				*/
+				tpg_max_iso = <3916800>;
+				modules {
+					cam_module0: module0 {
+						status = "disabled";
+						cam_module0_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module0_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module1: module1 {
+						status = "disabled";
+						cam_module1_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module1_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module2: module2 {
+						status = "disabled";
+						cam_module2_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module2_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module3: module3 {
+						status = "disabled";
+						cam_module3_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module3_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module4: module4 {
+						status = "disabled";
+						cam_module4_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module4_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module5: module5 {
+						status = "disabled";
+						cam_module5_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module5_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module6: module6 {
+						status = "disabled";
+						cam_module6_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module6_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+					cam_module7: module7 {
+						status = "disabled";
+						cam_module7_drivernode0: drivernode0 {
+							status = "disabled";
+						};
+						cam_module7_drivernode1: drivernode1 {
+							status = "disabled";
+							pcl_id = "v4l2_lens";
+						};
+					};
+				};
+			};
+		};
+	};
+
+	fragment-camera-module@2 {
+		target-path = "/bus@0/host1x@13e00000/nvcsi@15a00000";
+		__overlay__ {
+			num-tpg-channels = <36>;
+			csi_chan0: channel@0 {
+				reg = <0>;
+				status = "disabled";
+				ports {
+					csi_chan0_port0: port@0 {
+						reg = <0>;
+						status = "disabled";
+						csi_in0: endpoint@0 {
+							status = "disabled";
+						};
+					};
+					csi_chan0_port1: port@1 {
+						reg = <1>;
+						status = "disabled";
+						csi_out0: endpoint@1 {
+							status = "disabled";
+						};
+					};
+				};
+			};
+			csi_chan1: channel@1 {
+				reg = <1>;
+				status = "disabled";
+				ports {
+					csi_chan1_port0: port@0 {
+						reg = <0>;
+						status = "disabled";
+						csi_in1: endpoint@2 {
+							status = "disabled";
+						};
+					};
+					csi_chan1_port1: port@1 {
+						reg = <1>;
+						status = "disabled";
+						csi_out1: endpoint@3 {
+							status = "disabled";
+						};
+					};
+				};
+			};
+			csi_chan2: channel@2 {
+				reg = <2>;
+				status = "disabled";
+				ports {
+					csi_chan2_port0: port@0 {
+						reg = <0>;
+						status = "disabled";
+						csi_in2: endpoint@4 {
+							status = "disabled";
+						};
+					};
+					csi_chan2_port1: port@1 {
+						reg = <1>;
+						status = "disabled";
+						csi_out2: endpoint@5 {
+							status = "disabled";
+						};
+					};
+				};
+			};
+			csi_chan3: channel@3 {
+				reg = <3>;
+				status = "disabled";
+				ports {
+					csi_chan3_port0: port@0 {
+						reg = <0>;
+						status = "disabled";
+						csi_in3: endpoint@6 {
+							status = "disabled";
+						};
+					};
+					csi_chan3_port1: port@1 {
+						reg = <1>;
+						status = "disabled";
+						csi_out3: endpoint@7 {
+							status = "disabled";
+						};
+					};
+				};
+			};
+			csi_chan4: channel@4 {
+				reg = <4>;
+				status = "disabled";
+				ports {
+					csi_chan4_port0: port@0 {
+						reg = <0>;
+						status = "disabled";
+						csi_in4: endpoint@8 {
+							status = "disabled";
+						};
+					};
+					csi_chan4_port1: port@1 {
+						reg = <1>;
+						status = "disabled";
+						csi_out4: endpoint@9 {
+							status = "disabled";
+						};
+					};
+				};
+			};
+			csi_chan5: channel@5 {
+				reg = <5>;
+				status = "disabled";
+				ports {
+					csi_chan5_port0: port@0 {
+						reg = <0>;
+						status = "disabled";
+						csi_in5: endpoint@10 {
+							status = "disabled";
+						};
+					};
+					csi_chan5_port1: port@1 {
+						reg = <1>;
+						status = "disabled";
+						csi_out5: endpoint@11 {
+							status = "disabled";
+						};
+					};
+				};
+			};
+			csi_chan6: channel@6 {
+				reg = <6>;
+				status = "disabled";
+				ports {
+					csi_chan6_port0: port@0 {
+						reg = <0>;
+						status = "disabled";
+						csi_in6: endpoint@12 {
+							status = "disabled";
+						};
+					};
+					csi_chan6_port1: port@1 {
+						reg = <1>;
+						status = "disabled";
+						csi_out6: endpoint@13 {
+							status = "disabled";
+						};
+					};
+				};
+			};
+			csi_chan7: channel@7 {
+				reg = <7>;
+				status = "disabled";
+				ports {
+					csi_chan7_port0: port@0 {
+						reg = <0>;
+						status = "disabled";
+						csi_in7: endpoint@14 {
+							status = "disabled";
+						};
+					};
+					csi_chan7_port1: port@1 {
+						reg = <1>;
+						status = "disabled";
+						csi_out7: endpoint@15 {
+							status = "disabled";
+						};
+					};
+				};
+			};
+		};
+	};
+};
+// tegra-camera-base-r36.dtsi

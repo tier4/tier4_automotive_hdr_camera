@@ -1,0 +1,1 @@
+ACTION=="add", SUBSYSTEM=="video4linux", KERNEL=="video*", ATTR{name}=="?*tier4?*", RUN+="/usr/bin/tier4-create-camera-symlink.sh $devnode"

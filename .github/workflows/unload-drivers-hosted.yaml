@@ -1,0 +1,16 @@
+name: Unload camera drivers
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: false
+        type: string
+
+jobs:
+  unload-camera-drivers:
+    runs-on: [self-hosted, linux, ARM64, "${{ inputs.platform }}"]
+    timeout-minutes: 2
+    steps:
+      - name: Unload camera modules
+        run: sudo modprobe -r tier4-imx728
