@@ -1,16 +1,89 @@
 # TIER IV Automotive HDR Camera Device Driver
-This repository contains the device driver for the [TIER IV Automotive HDR Camera C1, C2, and C3](https://sensor.tier4.jp/automotive-hdr-camera). 
 
-If you want to use the official driver, please refer to the [Installation and Usage section](#installation-and-usage) and proceed with the installation.
+This repository contains the device driver for the [TIER IV Automotive HDR Camera C1, C2, and C3](https://edge.auto/automotive-camera). 
 
-If you want to modify the driver, please refer to the [How to create a package from source section](#create-debian-dkms-package).
+The current implementation supports only Jetson platforms. 
 
-For the simple image parameter tuning tool(t4cam-ctrl), please refer to the documentation here [t4cam-ctrl](https://tier4.github.io/edge-auto-docs/user_manual/camera-control-tool-user-manual.html).
+## Installation
 
-## Installation and Usage
+You can install the driver by installing the deb package which you can download from the [release page](https://github.com/tier4/tier4_automotive_hdr_camera/releases).
 
-1. Download the latest release of the driver from the [releases page](https://github.com/tier4/tier4_automotive_hdr_camera/releases).
-2. Follow the installation instructions provided in the [quickstart guide](https://tier4.github.io/edge-auto-docs/getting_started/index.html).
+The deb package installs the DKMS source tree for the driver and build it with DKMS.
+It will also generate the appropriate devicetree overlays if it supports the board you are using.
+
+You can also follow the installation instructions provided in the [quickstart guide](https://tier4.github.io/edge-auto-docs/getting_started/index.html).
+
+## How to create a deb package from source
+
+### Preparation
+
+```
+$ sudo apt update
+$ sudo apt install make build-essential debhelper debmake devscripts dkms 
+```
+
+### Create a debian-dkms package
+
+```
+$ cd pkg/
+$ ./create_deb_pkg.sh
+```
+
+You can confirm the package file with the following command.
+
+```
+$ ls ../*deb
+```
+
+## Building the camera device driver
+
+Although the driver deb package makes use of DKMS to build and install the camera device driver you can also build it with the simple Makefile.
+
+```
+$ cd src/tier4-camera-gmsl/
+$ make -f Makefile.dkms
+```
+
+Now you will see a bunch of `.ko` files.
+
+## Loading the driver
+
+### modprobe
+
+It automatically handles the dependency of the device driver modules.
+
+1. Make sure you are using the appropriate devicetree overlay for 
+2. `sudo modprobe $CAMERA_DRIVER`
+   1. For C1, $CAMERA_DRIVER = tier4-isx021
+   2. For C2, $CAMERA_DRIVER = tier4-imx490
+   3. For C3, $CAMERA_DRIVER = tier4-imx728
+
+### Loading manually
+
+Use `insmod` to load the individual modules with the correct order of loading.
+
+For the order of loading read the following section.
+
+## Dependency of the device driver modules
+
+![Driver module depenendecy graph](./img/module-graph.png)
+
+## Supported hardware
+
+* Jetson AGX Orin
+  * NVIDIA Jetson AGX Orin devkit
+    * L4T R35, R36
+  * Connect Tech Anvil
+    * L4T R35.4.1, R36.4
+  * ADLINK ROSCube RQX-59G
+    * L4T R35
+  * Vecow EAC-5000
+    * L4T R35.3
+* Jetson AGX Xavier
+  * NVIDIA Jetson AGX Xavier devkit
+    * L4T R35
+  * ADLINK ROSCube RQX-58G
+    * L4T R32.6.1, R35.4.1
 
 ### Note for Vecow EAC-5000 / Connect Tech Anvil users:
 
@@ -23,72 +96,26 @@ You can download the deb package and build kernel module on the target ECU.
 The device type (i.e., C1 or C2) assignment is fixed at every GMSL2 port.
 The following table shows the default assignment:
 
-| overlay command \                                                     | GMSL2 port No. | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  |
-|-----------------------------------------------------------------------|----------------|----|----|----|----|----|----|----|----|
-| `TIERIV(Tier4) ISX021 GMSL2 Camera Device Tree Overlay`               |                | C1 | C1 | C1 | C1 | C1 | C1 | C1 | C1 |
-| `TIERIV(Tier4) IMX490 GMSL2 Camera Device Tree Overlay`               |                | C2 | C2 | C2 | C2 | C2 | C2 | C2 | C2 |
-| `TIERIV(Tier4) IMX728 GMSL2 Camera Device Tree Overlay`               |                | C3 | C3 | C3 | C3 | C3 | C3 | C3 | C3 |
-| `TIERIV(Tier4) ISX021 IMX490 GMSL2 Camera Device Tree Overlay`        |                | C1 | C1 | C2 | C2 | C1 | C1 | C2 | C2 |
-| `TIERIV(Tier4) ISX021 IMX490 IMX728 GMSL2 Camera Device Tree Overlay` |                | C1 | C1 | C2 | C2 | C3 | C3 | C3 | C3 |
+| overlay command                                              | GMSL2 port No. | 1    | 2    | 3    | 4    | 5    | 6    | 7    | 8    |
+| ------------------------------------------------------------ | -------------- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| `TIERIV(Tier4) ISX021 GMSL2 Camera Device Tree Overlay`      |                | C1   | C1   | C1   | C1   | C1   | C1   | C1   | C1   |
+| `TIERIV(Tier4) IMX490 GMSL2 Camera Device Tree Overlay`      |                | C2   | C2   | C2   | C2   | C2   | C2   | C2   | C2   |
+| `TIERIV(Tier4) IMX728 GMSL2 Camera Device Tree Overlay`      |                | C3   | C3   | C3   | C3   | C3   | C3   | C3   | C3   |
+| `TIERIV(Tier4) ISX021 IMX490 GMSL2 Camera Device Tree Overlay` |                | C1   | C1   | C2   | C2   | C1   | C1   | C2   | C2   |
+| `TIERIV(Tier4) ISX021 IMX490 IMX728 GMSL2 Camera Device Tree Overlay` |                | C1   | C1   | C2   | C2   | C3   | C3   | C3   | C3   |
 
-(e.g., If user executes `$ sudo /opt/nvidia/jetson-io/config-by-hardware.py -n 2="TIERIV ISX021 GMSL2 Camera Device Tree Overlay"`
-on the driver installation process, all ports are assigned for C1 cameras. Please see [drivers/README.md](drivers/README.md#combine-device-tree-overlaydtbo-with-original-dtb) for the detail of the overlay command.)
+e.g., If user executes `$ sudo /opt/nvidia/jetson-io/config-by-hardware.py -n 2="TIERIV ISX021 GMSL2 Camera Device Tree Overlay"`
+on the driver installation process, all ports are assigned for C1 cameras.
 
-This assignment can be changed by the following steps:
+## Porting the TIER IV automotive camera driver to your board
 
-- Generate a `dts` file to describe user desired assignment
-    ```bash
-    $ cd drivers/tools/
-    # Specify device type assignment from port #1 to #8 one by one
-    $ python3 make_overlay_dbt.py c1 c1 c1 c1 c2 c2 c2 c2
-    ```
-    - Port #(2n-1) and #(2n), where n = [1, 2, 3, 4], must be the same assignment. If invalid assignments are specified, the script returns errors, otherwise a dts file will be created.
-    - By the above example, a file named `tier4-isx021-imx490-c1-c1-c2-c2-device-tree-overlay.dts` will be created.
+The camera driver itself will work out of the box if you have done the following items.
 
-- Generate `dtbo` from `dts`
-    ```bash
-    $ dtc -O dtb -o ${OVERLAY_DTBO_FILE} -@ ${OVERLAY_DTS_FILE}
-    ```
-    - `${OVERLAY_DTBO_FILE}` indicates the string that file name extension is replaced from `dts` to `dtbo`.
-       - e.g., `tier4-isx021-imx490-c1-c1-c2-c2-device-tree-overlay.dtbo`
-    - `${OVERLAY_DTS_FILE}` is the dts file generated at the above step.
-
-- Copy the result to appropriate directory and run configure
-    ```bash
-    $ sudo cp ${OVERLAY_DTBO_FILE} /boot/
-    $ sudo fdtoverlay \
-        -o /boot/kernel_tegra194-rqx-58g-user-custom.dtb \
-        -i /boot/dtb/kernel_tegra194-rqx-58g.dtb \
-        /boot/${OVERLAY_DTBO_FILE}
-    ```
-- Shutdown and reboot the system
-    ```bash
-    $ sudo shutdown -h now
-    ```
-    Then, reboot (turn on) the system manually.
-
-
-## How to create a package from source 
-
-### Preparation
-
-```
-$> sudo apt update
-$> sudo apt install make build-essential debhelper debmake devscripts dkms 
-```
-
-### Create debian-dkms package
-
-```
-$> dpkg-buildpackage -b -rfakeroot -us -uc
-```
-
-You can confirm the package file with the following command.
-```
-$> ls ../*deb
-```
+* Create the camera devicetree overlay for your board
+* Use the appropriate values for properties of the VI node in devicetree overlay
 
 ## Contribution
 
 We welcome contributions to the Automotive HDR Camera Device Driver. 
 If you have a bug fix or new feature that you would like to contribute, please submit an issue or a pull request.
+

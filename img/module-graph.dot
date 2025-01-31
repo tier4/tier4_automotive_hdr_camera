@@ -1,0 +1,21 @@
+digraph graph_name {
+    graph [dpi = 300, ratio = 0.5]
+
+    tier4_imx728 [label = "tier4-imx728"];
+    tier4_imx490 [label = "tier4-imx490"];
+    tier4_isx021 [label = "tier4-isx021"];
+    tier4_gw5300 [label = "tier4-gw5300"];
+    tier4_max9296 [label = "tier4-max9296"];
+    tier4_max9295 [label = "tier4-max9295"];
+    tier4_fpga [label = "tier4-fpga"];
+
+    tier4_imx728 -> tier4_gw5300;
+    tier4_imx728 -> tier4_isx021;
+
+    tier4_imx490 -> tier4_gw5300;
+    tier4_imx490 -> tier4_isx021;
+
+    tier4_isx021 -> tier4_max9296;
+    tier4_isx021 -> tier4_max9295;
+    tier4_isx021 -> tier4_fpga;
+}
