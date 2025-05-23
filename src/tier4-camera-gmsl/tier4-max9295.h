@@ -123,4 +123,8 @@ int tier4_max9295_pre_setup_streaming(struct device *dev);
  */
 int tier4_max9295_setup_streaming(struct device *dev);
 
+void tier4_max9295_set_v4l2_subdev(struct device *dev,
+		struct v4l2_subdev *subdev);
+void tier4_max9295_unset_v4l2_subdev(struct device *dev);
+
 #endif // __TIER4_MAX9295_H__

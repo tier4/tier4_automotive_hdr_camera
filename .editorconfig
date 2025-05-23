@@ -8,6 +8,7 @@ end_of_line = lf
 insert_final_newline = true
 indent_style = tab
 indent_size = 8
+max_line_length = 80
 
 [*.{json,py,rs}]
 charset = utf-8

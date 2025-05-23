@@ -815,6 +815,98 @@ error:
 }
 EXPORT_SYMBOL(tier4_gw5300_c3_setup_sensor_mode);
 
+
+static u8 c2_pseudo_error_0[] = {
+	0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+	0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00,
+	0x00, 0xde, 0xc0, 0x00, 0x00, 0x01, 0x00, 0x00,
+	0x00, 0x02, 0x01, 0x00
+};
+
+static u8 c2_pseudo_error_1[] = {
+	0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+	0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00,
+	0x00, 0xdf, 0xc0, 0x00, 0x00, 0x01, 0x00, 0x00,
+	0x00, 0x02, 0x01, 0x00
+};
+
+static u8 c2_pseudo_error_2[] = {
+	0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+	0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00,
+	0x00, 0x90, 0xc0, 0x00, 0x00, 0x01, 0x00, 0x00,
+	0x00, 0x02, 0x01, 0x00
+};
+
+static u8 c2_pseudo_error_3[] = {
+	0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+	0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00,
+	0x00, 0xa8, 0xc0, 0x00, 0x00, 0x01, 0x00, 0x00,
+	0x00, 0x02, 0x01, 0x00
+};
+
+static u8 c2_pseudo_error_4[] = {
+	0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+	0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00,
+	0x00, 0xc0, 0xc0, 0x00, 0x00, 0x01, 0x00, 0x00,
+	0x00, 0x02, 0x01, 0x00
+};
+
+int tier4_gw5300_c2_test_hw_fault(struct device *dev, bool enable)
+{
+	int err;
+	u8 buf[6];
+
+	if (!enable) {
+		c2_pseudo_error_4[sizeof (c2_pseudo_error_4) - 1] = 0;
+		c2_pseudo_error_4[sizeof (c2_pseudo_error_4) - 1] =
+			calcCheckSum(c2_pseudo_error_4, sizeof (c2_pseudo_error_4));
+
+		msleep(20);
+		err = tier4_gw5300_send_and_recv_msg(dev, c2_pseudo_error_4,
+				sizeof(c2_pseudo_error_4), buf, sizeof(buf));
+		return err < 0 ? err : 0;
+	}
+
+	c2_pseudo_error_0[sizeof (c2_pseudo_error_0) - 1] = 0;
+	c2_pseudo_error_1[sizeof (c2_pseudo_error_1) - 1] = 0;
+	c2_pseudo_error_2[sizeof (c2_pseudo_error_2) - 1] = 0;
+	c2_pseudo_error_3[sizeof (c2_pseudo_error_3) - 1] = 0;
+
+	c2_pseudo_error_0[sizeof (c2_pseudo_error_0) - 1] =
+		calcCheckSum(c2_pseudo_error_0, sizeof (c2_pseudo_error_0));
+	c2_pseudo_error_1[sizeof (c2_pseudo_error_1) - 1] =
+		calcCheckSum(c2_pseudo_error_1, sizeof (c2_pseudo_error_1));
+	c2_pseudo_error_2[sizeof (c2_pseudo_error_2) - 1] =
+		calcCheckSum(c2_pseudo_error_2, sizeof (c2_pseudo_error_2));
+	c2_pseudo_error_3[sizeof (c2_pseudo_error_3) - 1] =
+		calcCheckSum(c2_pseudo_error_3, sizeof (c2_pseudo_error_3));
+
+	msleep(20);
+	err = tier4_gw5300_send_and_recv_msg(dev, c2_pseudo_error_0,
+			sizeof(c2_pseudo_error_0), buf, sizeof(buf));
+	if (err < 0)
+		return err;
+
+	msleep(20);
+	err = tier4_gw5300_send_and_recv_msg(dev, c2_pseudo_error_1,
+			sizeof(c2_pseudo_error_1), buf, sizeof(buf));
+	if (err < 0)
+		return err;
+
+	msleep(20);
+	err = tier4_gw5300_send_and_recv_msg(dev, c2_pseudo_error_2,
+			sizeof(c2_pseudo_error_2), buf, sizeof(buf));
+	if (err < 0)
+		return err;
+
+	msleep(20);
+	err = tier4_gw5300_send_and_recv_msg(dev, c2_pseudo_error_3,
+			sizeof(c2_pseudo_error_3), buf, sizeof(buf));
+
+	return err < 0 ? err : 0;
+}
+EXPORT_SYMBOL(tier4_gw5300_c2_test_hw_fault);
+
 static int tier4_gw5300_probe(struct i2c_client *client,
 			      const struct i2c_device_id *id)
 {

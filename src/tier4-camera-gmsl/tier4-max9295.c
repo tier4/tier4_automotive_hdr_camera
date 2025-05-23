@@ -24,7 +24,7 @@
 #include "tier4-max9295.h"
 #include "tier4-gmsl-link.h"
 
-#define MAX9295_SHOW_I2C_WRITE_MSG 1
+#define MAX9295_SHOW_I2C_WRITE_MSG 0
 
 /* register specifics */
 
@@ -50,7 +50,8 @@
 #define MAX9295_GPIO_3_GPIO_RX_ID_ADDR 0x02C9
 #define MAX9295_GPIO_4_ADDR 0x02CA
 #define MAX9295_GPIO_5_ADDR 0x02CD
-
+#define MAX9295_GPIO_6_ADDR 0x02D0
+#define MAX9295_GPIO_7_ADDR 0x02D3
 #define MAX9295_GPIO_8_ADDR 0x02D6
 
 #define MAX9295_CSI_PORT_SEL_ADDR 0x0308
@@ -140,6 +141,12 @@ struct tier4_max9295 {
 	/* primary serializer properties */
 	__u32 def_addr;
 	__u32 pst2_ref;
+
+	atomic_t work_canceled;
+	bool last_fault_state;
+	struct timer_list hw_monitor_timer;
+	struct work_struct hw_monitor_work;
+	struct v4l2_subdev *subdev;
 };
 
 #define MAX_CHANNEL_NUM 8
@@ -156,32 +163,20 @@ struct map_ctx {
 	u8 st_id;
 };
 
-#if 0
+#if 1
 
 static int tier4_max9295_read_reg(struct device *dev, u16 addr, u8 *val)
 {
     int err = 0;
     u32 reg_val = 0;
     struct tier4_max9295 *priv = dev_get_drvdata(dev);
-    char str_bus_num[4], str_sl_addr[4];
-    int len = 0;
-
-    memset(str_bus_num,0,4);
-    memset(str_sl_addr,0,4);
 
     err = regmap_read(priv->regmap, addr, &reg_val);
 
     *val = reg_val & 0xFF;
 
-    dev_info(dev,  "[%s ] : Max9295 I2C Read at 0x%04X=[0x%02X].\n", __func__, addr, *val );
+    //dev_info(dev,  "[%s ] : Max9295 I2C Read at 0x%04X=[0x%02X].\n", __func__, addr, *val );
 
-    if (( err == 0 ) && ( dev != NULL ) ) {
-        len = strlen(dev->kobj.name);
-        if (dev) {
-            strncpy(str_bus_num, &dev->kobj.name[0], 2);
-            strncpy(str_sl_addr, &dev->kobj.name[len-2], 2);
-        }
-    }
     return err;
 }
 #endif
@@ -436,6 +431,27 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id,
 }
 EXPORT_SYMBOL(tier4_max9295_control_sensor_power_seq);
 
+void tier4_max9295_set_v4l2_subdev(struct device *dev,
+					struct v4l2_subdev *subdev)
+{
+	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+
+	mutex_lock(&priv->lock);
+	priv->subdev = subdev;
+	mutex_unlock(&priv->lock);
+}
+EXPORT_SYMBOL(tier4_max9295_set_v4l2_subdev);
+
+void tier4_max9295_unset_v4l2_subdev(struct device *dev)
+{
+	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+
+	mutex_lock(&priv->lock);
+	priv->subdev = NULL;
+	mutex_unlock(&priv->lock);
+}
+EXPORT_SYMBOL(tier4_max9295_unset_v4l2_subdev);
+
 int tier4_max9295_setup_gpo(struct device *dev)
 {
 	int err = 0;
@@ -656,10 +672,113 @@ error:
 }
 EXPORT_SYMBOL(tier4_max9295_sdev_unpair);
 
+
+static ssize_t
+mfp7_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	u8 val;
+	int err;
+	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+
+	mutex_lock(&priv->lock);
+	err = tier4_max9295_read_reg(dev, MAX9295_GPIO_7_ADDR, &val);
+	mutex_unlock(&priv->lock);
+
+	return err ? err : sprintf(buf, "%x\n", val);
+}
+
+static ssize_t
+mfp7_store(struct device *dev, struct device_attribute *attr,
+			const char *buf, size_t count)
+{
+	long long res;
+	int err;
+	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+
+	err = kstrtoull(buf, 16, &res);
+	if (err)
+		return err;
+
+	mutex_lock(&priv->lock);
+	err = tier4_max9295_write_reg(dev, MAX9295_GPIO_7_ADDR, res);
+	mutex_unlock(&priv->lock);
+
+	return err ? err : count;
+}
+static DEVICE_ATTR_RW(mfp7);
+
+static void hw_monitor_timer_callback(struct timer_list *timer)
+{
+	struct tier4_max9295 *priv =
+		container_of(timer, struct tier4_max9295, hw_monitor_timer);
+
+	if (!atomic_read(&priv->work_canceled))
+		schedule_work(&priv->hw_monitor_work);
+}
+
+static void tier4_max9295_check_sensor_error(struct work_struct *work)
+{
+	u8 val;
+	int err = 0;
+	char camera_id[10 + V4L2_DEVICE_NAME_SIZE] = {0};
+	char major[32], minor[32];
+	char fusa_hw_fault[32];
+	char *envp[] = {
+		camera_id,
+		major,
+		minor,
+		fusa_hw_fault,
+		NULL
+	};
+	bool fault_state;
+
+	struct tier4_max9295 *priv =
+		container_of(work, struct tier4_max9295, hw_monitor_work);
+	struct device *dev = &priv->i2c_client->dev;
+	struct v4l2_subdev *subdev = priv->subdev;
+
+	if (atomic_read(&priv->work_canceled))
+		return;
+
+	mod_timer(&priv->hw_monitor_timer, jiffies + (HZ / 10));
+
+	if (!subdev)
+		return;
+
+	mutex_lock(&priv->lock);
+	err = tier4_max9295_read_reg(dev, MAX9295_GPIO_7_ADDR, &val);
+	if (err) {
+		dev_err(dev, "failed to read the MFP7 pin: %d\n", err);
+		mutex_unlock(&priv->lock);
+		return;
+	}
+
+	fault_state = !(val & 0x08);
+	if (priv->last_fault_state == fault_state) {
+		mutex_unlock(&priv->lock);
+		return;
+	}
+
+	priv->last_fault_state = fault_state;
+	mutex_unlock(&priv->lock);
+
+	dev_err_ratelimited(dev, "hardware fault of the image sensor %s\n",
+			fault_state ? "detected" : "cleared");
+
+	snprintf(camera_id, sizeof camera_id, "CAMERA_ID=%s", subdev->name);
+	snprintf(major, sizeof major, "SUBDEV_MAJOR=%d",
+			MAJOR(subdev->devnode->dev.devt));
+	snprintf(minor, sizeof minor, "SUBDEV_MINOR=%d",
+			MINOR(subdev->devnode->cdev->dev));
+	snprintf(fusa_hw_fault, sizeof fusa_hw_fault, "FUSA_HW_FAULT=%d",
+			fault_state);
+	kobject_uevent_env(&subdev->v4l2_dev->dev->kobj, KOBJ_CHANGE, envp);
+}
+
 static struct regmap_config tier4_max9295_regmap_config = {
 	.reg_bits = 16,
 	.val_bits = 8,
-	.cache_type = REGCACHE_RBTREE,
+	.cache_type = REGCACHE_NONE,
 };
 
 static int tier4_max9295_probe(struct i2c_client *client,
@@ -672,6 +791,7 @@ static int tier4_max9295_probe(struct i2c_client *client,
 	dev_info(&client->dev, "[%s] : probing GMSL Serializer\n", __func__);
 
 	priv = devm_kzalloc(&client->dev, sizeof(*priv), GFP_KERNEL);
+	dev_set_drvdata(&client->dev, priv);
 	priv->i2c_client = client;
 	priv->regmap = devm_regmap_init_i2c(priv->i2c_client,
 					    &tier4_max9295_regmap_config);
@@ -709,7 +829,15 @@ static int tier4_max9295_probe(struct i2c_client *client,
 		channel_count_isx021++;
 	}
 
-	dev_set_drvdata(&client->dev, priv);
+	device_create_file(&client->dev, &dev_attr_mfp7);
+
+	atomic_set(&priv->work_canceled, 0);
+	priv->last_fault_state = false;
+	INIT_WORK(&priv->hw_monitor_work, tier4_max9295_check_sensor_error);
+
+	timer_setup(&priv->hw_monitor_timer, hw_monitor_timer_callback,
+			TIMER_PINNED | TIMER_IRQSAFE);
+	mod_timer(&priv->hw_monitor_timer, jiffies + (HZ / 10));
 
 	/* dev communication gets validated when GMSL link setup is done */
 	dev_info(&client->dev, "[%s] :  Probing succeeded\n", __func__);
@@ -719,15 +847,18 @@ static int tier4_max9295_probe(struct i2c_client *client,
 
 static int tier4_max9295_remove(struct i2c_client *client)
 {
-	struct tier4_max9295 *priv;
+	struct tier4_max9295 *priv = dev_get_drvdata(&client->dev);
+
+	atomic_set(&priv->work_canceled, 1);
+	del_timer_sync(&priv->hw_monitor_timer);
+	cancel_work_sync(&priv->hw_monitor_work);
+
+	device_remove_file(&client->dev, &dev_attr_mfp7);
 
 	if (channel_count_isx021 > 0)
 		channel_count_isx021--;
 
-	if (client != NULL) {
-		priv = dev_get_drvdata(&client->dev);
-		mutex_destroy(&priv->lock);
-	}
+	mutex_destroy(&priv->lock);
 
 	return 0;
 }

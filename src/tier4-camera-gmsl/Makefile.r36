@@ -17,13 +17,13 @@ clean:
 	$(MAKE) -C $(KDIR) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) M=$(PWD) clean
 
 load: modules unload
-	sudo insmod drivers/src/tier4-fpga.ko
-	sudo insmod drivers/src/tier4-max9295.ko
-	sudo insmod drivers/src/tier4-max9296.ko
-	sudo insmod drivers/src/tier4-gw5300.ko
-	sudo insmod drivers/src/tier4-isx021.ko
-	sudo insmod drivers/src/tier4-imx490.ko
-	sudo insmod drivers/src/tier4-imx728.ko
+	sudo insmod tier4-fpga.ko
+	sudo insmod tier4-max9295.ko
+	sudo insmod tier4-max9296.ko
+	sudo insmod tier4-gw5300.ko
+	sudo insmod tier4-isx021.ko
+	sudo insmod tier4-imx490.ko
+	sudo insmod tier4-imx728.ko
 
 unload:
 	sudo rmmod tier4-imx728 || true

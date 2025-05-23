@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "linux/types.h"
 #include <linux/device.h>
 #include <linux/fs.h>
 #include <linux/gpio.h>
@@ -226,6 +227,12 @@ MODULE_SOFTDEP("pre: tier4_fpga");
 #define TIER4_ISX021_REG_92_ADDR 92
 #define TIER4_ISX021_REG_93_ADDR 93
 
+#define TIER4_ISX021_REG_94_ADDR 94
+#define TIER4_ISX021_REG_95_ADDR 95
+#define TIER4_ISX021_REG_96_ADDR 96
+#define TIER4_ISX021_REG_97_ADDR 97
+#define TIER4_ISX021_REG_98_ADDR 98
+
 // --- End of  Register definition ------------------------
 
 #define MAX_NUM_OF_REG (100)
@@ -350,12 +357,12 @@ struct tier4_isx021 {
 	int trigger_mode;
 	bool inhibit_fpga_access;
 	int enable_embedded_data; // 0:disable all embedded data 1: enable front embedded data 2:enable rear embedded data 3: enable front and rear embedded data
+	atomic_t test_hw_fault;
 };
 
 static const struct regmap_config tier4_sensor_regmap_config = {
 	.reg_bits = 16,
 	.val_bits = 8,
-	//.cache_type = REGCACHE_RBTREE,
 	.cache_type = REGCACHE_NONE,
 };
 
@@ -632,6 +639,92 @@ static int tier4_isx021_write_reg(struct camera_common_data *s_data, u16 addr,
 #endif // ifndef USE_I2C_TRANSFER
 
 // ------------------------------------------------------------------
+
+static int tier4_isx021_write_reg_raw(struct camera_common_data *s_data, u16 addr,
+				  u8 val)
+{
+	int err = 0;
+
+	usleep_range(TIME_1_MS * 50, PLUS_10(TIME_1_MS * 50));
+	err = regmap_write(s_data->regmap, addr, val);
+	if (err) {
+		dev_err(s_data->dev,
+			"[%s] : I2C write register failed at %d(0x%04X)=[0x%02X]\n",
+			__func__, addr, addr, val);
+	}
+	return err;
+}
+
+static ssize_t
+test_hw_fault_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct camera_common_data *s_data = to_camera_common_data(dev);
+	struct tier4_isx021 *priv = s_data->priv;
+
+	return sprintf(buf, "%d\n", atomic_read(&priv->test_hw_fault));
+}
+
+static ssize_t
+test_hw_fault_store(struct device *dev, struct device_attribute *attr,
+			const char *buf, size_t count)
+{
+	struct camera_common_data *s_data = to_camera_common_data(dev);
+	struct tier4_isx021 *priv = s_data->priv;
+	long long enable_test;
+	int err;
+
+	dev_info(dev, "%s: setting sensor pseudo error state: %s\n",
+			__func__, buf);
+
+	err = kstrtoull(buf, 10, &enable_test);
+	if (err)
+		return err;
+	atomic_set(&priv->test_hw_fault, enable_test);
+
+	tier4_isx021_sensor_mutex_lock();
+
+	msleep(100);
+	err = tier4_isx021_write_reg_raw(priv->s_data,
+			TIER4_ISX021_REG_95_ADDR, 0x5a);
+	if (err)
+		goto err;
+
+	msleep(100);
+	err = tier4_isx021_write_reg_raw(priv->s_data,
+			TIER4_ISX021_REG_96_ADDR, 0x01);
+	if (err)
+		goto err;
+
+	msleep(100);
+	err = tier4_isx021_write_reg_raw(priv->s_data,
+			TIER4_ISX021_REG_97_ADDR, enable_test ? 0x01 : 0x00);
+	if (err)
+		goto err;
+
+	if (!enable_test) {
+		msleep(100);
+		err = tier4_isx021_write_reg_raw(priv->s_data,
+				TIER4_ISX021_REG_98_ADDR, 0x01);
+		if (err)
+			goto err;
+	}
+
+	msleep(100);
+	err = tier4_isx021_write_reg_raw(priv->s_data, TIER4_ISX021_REG_94_ADDR, 0x01);
+	if (err)
+		goto err;
+
+err:
+	tier4_isx021_sensor_mutex_unlock();
+
+	if (err)
+		dev_err(dev, "%s: failed to enable pseudo error: %d\n",
+				__func__, err);
+
+	return err ? err : count;
+}
+static DEVICE_ATTR_RW(test_hw_fault);
+
 
 static int
 tier4_isx021_write_mode_set_f_lock_register(struct camera_common_data *s_data,
@@ -1951,6 +2044,7 @@ static int tier4_isx021_start_one_streaming(struct tegracam_device *tc_dev)
 			__func__);
 		goto exit;
 	}
+
 	if (enable_auto_exposure == 1) {
 		priv->auto_exposure = true;
 		dev_info(dev, "[%s] : Parameter[enable_auto_exposure] = 1.\n",
@@ -2758,6 +2852,7 @@ static int tier4_isx021_probe(struct i2c_client *client,
 	}
 
 	priv->i2c_client = tc_dev->client = client;
+	atomic_set(&priv->test_hw_fault, 0);
 
 	tc_dev->dev = dev;
 
@@ -2892,6 +2987,9 @@ static int tier4_isx021_probe(struct i2c_client *client,
 		goto err_tegracam_v4l2_unreg;
 	}
 
+	device_create_file(&client->dev, &dev_attr_test_hw_fault);
+	tier4_max9295_set_v4l2_subdev(priv->ser_dev, priv->subdev);
+
 	dev_info(&client->dev, "Detected ISX021 sensor.\n");
 
 	wst_priv[camera_channel_count].p_client = client;
@@ -2932,6 +3030,9 @@ static int tier4_isx021_remove(struct i2c_client *client)
 {
 	struct camera_common_data *s_data = to_camera_common_data(&client->dev);
 	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
+
+	tier4_max9295_unset_v4l2_subdev(priv->ser_dev);
+	device_remove_file(&client->dev, &dev_attr_test_hw_fault);
 
 	tier4_isx021_shutdown(client);
 
