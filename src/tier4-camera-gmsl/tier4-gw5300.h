@@ -21,6 +21,8 @@
 
 #define __TIER4_GW5300_H__
 
+#include <linux/device.h>
+
 #define GW5300_MASTER_MODE_10FPS 0
 #define GW5300_SLAVE_MODE_10FPS 1
 #define GW5300_MASTER_MODE_20FPS 2
@@ -117,5 +119,7 @@ int tier4_gw5300_c3_set_distortion_correction(struct device *dev, bool val);
 int tier4_gw5300_c3_set_auto_exposure(struct device *dev, bool val);
 
 int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size);
+
+int tier4_gw5300_c2_test_hw_fault(struct device *dev, bool enable);
 
 #endif /* __TIER4_GW5300_H__ */

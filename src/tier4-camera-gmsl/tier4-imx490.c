@@ -123,12 +123,13 @@ struct tier4_imx490 {
 	bool auto_exposure;
 	bool inhibit_fpga_access;
 	struct device *fpga_dev;
+	atomic_t test_hw_fault;
 };
 
 static const struct regmap_config tier4_sensor_regmap_config = {
 	.reg_bits = 16,
 	.val_bits = 8,
-	.cache_type = REGCACHE_RBTREE,
+	.cache_type = REGCACHE_NONE,
 };
 
 struct st_priv {
@@ -218,6 +219,44 @@ static int tier4_imx490_write_reg(struct camera_common_data *s_data, u16 addr,
 }
 
 // ------------------------------------------------
+
+static ssize_t
+test_hw_fault_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct camera_common_data *s_data = to_camera_common_data(dev);
+	struct tier4_imx490 *priv = s_data->priv;
+
+	return sprintf(buf, "%d\n", atomic_read(&priv->test_hw_fault));
+}
+
+static ssize_t
+test_hw_fault_store(struct device *dev, struct device_attribute *attr,
+			const char *buf, size_t count)
+{
+	struct camera_common_data *s_data = to_camera_common_data(dev);
+	struct tier4_imx490 *priv = s_data->priv;
+	long long enable_test;
+	int err;
+
+	dev_info(dev, "%s: setting sensor pseudo error state: %s\n",
+			__func__, buf);
+
+	err = kstrtoull(buf, 10, &enable_test);
+	if (err)
+		return err;
+	atomic_set(&priv->test_hw_fault, enable_test);
+
+	mutex_lock(&tier4_imx490_lock);
+	err = tier4_gw5300_c2_test_hw_fault(priv->isp_dev, enable_test);
+	mutex_unlock(&tier4_imx490_lock);
+
+	if (err)
+		dev_err(dev, "%s: failed to enable pseudo error: %d\n",
+				__func__, err);
+
+	return err ? err : count;
+}
+static DEVICE_ATTR_RW(test_hw_fault);
 
 static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv,
 					       int mode)
@@ -1688,6 +1727,9 @@ static int tier4_imx490_probe(struct i2c_client *client,
 		goto err_max9296_unreg;
 	}
 
+	device_create_file(&client->dev, &dev_attr_test_hw_fault);
+	tier4_max9295_set_v4l2_subdev(priv->ser_dev, priv->subdev);
+
 	wst_priv[camera_channel_count].p_client = client;
 	wst_priv[camera_channel_count].p_priv = priv;
 	wst_priv[camera_channel_count].p_tc_dev = tc_dev;
@@ -1724,6 +1766,9 @@ static int tier4_imx490_remove(struct i2c_client *client)
 {
 	struct camera_common_data *s_data = to_camera_common_data(&client->dev);
 	struct tier4_imx490 *priv = (struct tier4_imx490 *)s_data->priv;
+
+	tier4_max9295_unset_v4l2_subdev(priv->ser_dev);
+	device_remove_file(&client->dev, &dev_attr_test_hw_fault);
 
 	tier4_imx490_shutdown(client);
 
