@@ -421,7 +421,7 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id,
 
 	if (err) {
 		dev_err(dev,
-			"[%s] : Ppower on/off Camera Sensor or ISP failed.\n",
+			"[%s] : Power on/off Camera Sensor or ISP failed.\n",
 			__func__);
 	}
 
