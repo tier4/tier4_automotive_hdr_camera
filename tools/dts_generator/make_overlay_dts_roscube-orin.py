@@ -2311,14 +2311,12 @@ str_i2c_imx728_n_p2 = """
           pixel_phase = "uyvy";
 
           active_w = "3840";
-          //active_h = "2162";
-          active_h = "2163";
-          //active_h = "2160";
+          active_h = "2160";
           readout_orientation = "0";
           line_length = "4050";
           inherent_gain = "1";
           pix_clk_hz = "23328000";
-          serdes_pix_clk_hz = "250000000";
+          serdes_pix_clk_hz = "375000000";
 
           gain_factor = "10";
           min_gain_val = "0";   /* dB  */
@@ -2338,7 +2336,6 @@ str_i2c_imx728_n_p2 = """
           step_exp_time = "1";
           default_exp_time = "33333";/* us */
           embedded_metadata_height = "0";
-          //embedded_metadata_height = "3";
         };
 """
 
