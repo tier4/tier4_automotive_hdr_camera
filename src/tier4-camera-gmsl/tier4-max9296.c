@@ -35,7 +35,7 @@ struct tier4_max9296_source_ctx {
 
 #define _USE_CHECK_LINK_LOCKED_ 1
 
-#define MAX9296_SHOW_I2C_WRITE_MSG 1
+#define MAX9296_SHOW_I2C_WRITE_MSG 0
 
 /* register specifics */
 
@@ -504,13 +504,15 @@ int tier4_max9296_setup_control(struct device *dev, struct device *s_dev)
 		goto error;
 	}
 
-	if (priv->sources[i].g_ctx->serdev_found) {
+    if (!priv->sources[i].g_ctx->serdev_found) {
+		goto SER_NOT_FOUND;
+    } else {
 		priv->num_src_found++;
 		priv->src_link = priv->sources[i].g_ctx->serdes_csi_link;
 	}
 
 	/* Enable splitter mode */
-	if ((priv->max_src > 1U) && (priv->num_src_found > 0U) &&
+	if ((priv->max_src > 1U) && (priv->num_src_found > 1U) &&
 	    (priv->splitter_enabled == false)) {
 		tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x03);
 		tier4_max9296_write_reg(dev, MAX9296_CTRL0_ADDR, 0x23);
@@ -537,19 +539,17 @@ int tier4_max9296_setup_control(struct device *dev, struct device *s_dev)
 	}
 #endif
 
-	if (!priv->splitter_enabled) {
-		tier4_max9296_write_reg(dev, MAX9296_PWDN_PHYS_ADDR,
-					MAX9296_ALLPHYS_NOSTDBY);
-		priv->splitter_enabled = true;
-	}
-	priv->link_setup = true;
+SER_NOT_FOUND:
 
 	priv->sdev_ref++;
 
-	/* Reset splitter mode if all devices are not found */
+  /* Reset link if any device is not found */
 	if ((priv->sdev_ref == priv->max_src) &&
-	    (priv->splitter_enabled == true) && (priv->num_src_found > 0U) &&
-	    (priv->num_src_found < priv->max_src)) {
+      (priv->num_src_found > 0U) &&
+      (priv->num_src_found < priv->max_src))
+  {
+    // if Link B is not found, the MAX9296 priv->src_link will stay as Link A
+    // so we can restore the MAX9296 link to Link A
 		err = tier4_max9296_write_link(dev, priv->src_link);
 		if (err)
 			goto error;
@@ -689,6 +689,7 @@ int tier4_max9296_sdev_unregister(struct device *dev, struct device *s_dev)
 	struct tier4_max9296 *priv = NULL;
 	int err = 0;
 	int i = 0;
+    bool found = false;
 
 	if (!dev || !s_dev) {
 		dev_err(dev, "[%s] : Invalid input params\n", __func__);
@@ -704,15 +705,17 @@ int tier4_max9296_sdev_unregister(struct device *dev, struct device *s_dev)
 		goto error;
 	}
 
+	found = false;
 	for (i = 0; i < priv->num_src; i++) {
 		if (s_dev == priv->sources[i].g_ctx->s_dev) {
 			priv->sources[i].g_ctx = NULL;
 			priv->num_src--;
+			found = true;
 			break;
 		}
 	}
 
-	if (i == priv->num_src) {
+	if (!found) {
 		dev_err(dev, "[%s] : Requested device not found\n", __func__);
 		err = -EINVAL;
 		goto error;

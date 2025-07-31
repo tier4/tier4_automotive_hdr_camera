@@ -1122,11 +1122,16 @@ static int tier4_isx021_gmsl_serdes_setup(struct tier4_isx021 *priv)
 
 	err = tier4_max9295_setup_control(priv->ser_dev);
 
-	/* proceed even if ser setup failed, to setup deser correctly */
 	if (err) {
 		dev_err(dev, "[%s] : Setup for GMSL Serializer failed.\n",
 			__func__);
-		goto error;
+
+		/* 
+	      No "goto error" here, instead, go into tier4_max9296_setup_control()
+	      proceed even if ser setup failed, to setup deser correctly
+	      So that if MAX9296 Link B is not found, it will set back to Link A 
+	    */
+		// goto error;
 	}
 
 	des_err = tier4_max9296_setup_control(priv->dser_dev,
@@ -1204,7 +1209,7 @@ static int tier4_isx021_power_off(struct camera_common_data *s_data)
 	struct camera_common_power_rail *pw = s_data->power;
 	struct camera_common_pdata *pdata = s_data->pdata;
 	struct device *dev = s_data->dev;
-
+	
 	if (pdata && pdata->power_off) {
 		err = pdata->power_off(pw);
 

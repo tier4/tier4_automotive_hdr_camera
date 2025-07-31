@@ -427,10 +427,16 @@ static int tier4_imx490_gmsl_serdes_setup(struct tier4_imx490 *priv)
 
 	err = tier4_max9295_setup_control(priv->ser_dev);
 
-	/* proceed even if ser setup failed, to setup deser correctly */
 	if (err) {
-		dev_err(dev, "[%s] : GMSL serializer setup failed\n", __func__);
-		goto error;
+		dev_err(dev, "[%s] : Setup for GMSL Serializer failed.\n",
+			__func__);
+
+		/* 
+	      No "goto error" here, instead, go into tier4_max9296_setup_control()
+	      proceed even if ser setup failed, to setup deser correctly
+	      So that if MAX9296 Link B is not found, it will set back to Link A 
+	    */
+		// goto error;
 	}
 
 	des_err = tier4_max9296_setup_control(priv->dser_dev,
