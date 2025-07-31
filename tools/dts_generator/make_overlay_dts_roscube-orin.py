@@ -1519,6 +1519,7 @@ str_i2c_isx021_n_p1 = """
         nvidia,gmsl-ser-device = <&max9295_ser_a>;
         nvidia,gmsl-dser-device = <&dser_0>;
         nvidia,fpga-device  = <&t4_fpga>;
+        nvidia,cam-power-protector  = <&max20089_a>;
 
         // common modul;e
         compatible = \"nvidia,tier4_isx021\";
@@ -1541,12 +1542,14 @@ str_i2c_isx021_2_p1 = (
     str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_c@1d")
     .replace("max9295_ser_a", "max9295_ser_c")
     .replace("&dser_0", "&dser_1")
+    .replace("max20089_a", "max20089_b")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_isx021_3_p1 = (
     str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_d@1e")
     .replace("max9295_ser_a", "max9295_ser_d")
     .replace("&dser_0", "&dser_1")
+    .replace("max20089_a", "max20089_b")
     .replace("reg = <0x1d>", "reg = <0x1e>")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
@@ -1554,12 +1557,14 @@ str_i2c_isx021_4_p1 = (
     str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_e@1d")
     .replace("max9295_ser_a", "max9295_ser_e")
     .replace("&dser_0", "&dser_2")
+    .replace("max20089_a", "max20089_c")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_isx021_5_p1 = (
     str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_f@1e")
     .replace("max9295_ser_a", "max9295_ser_f")
     .replace("&dser_0", "&dser_2")
+    .replace("max20089_a", "max20089_c")
     .replace("reg = <0x1d>", "reg = <0x1e>")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
@@ -1567,12 +1572,14 @@ str_i2c_isx021_6_p1 = (
     str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_g@1d")
     .replace("max9295_ser_a", "max9295_ser_g")
     .replace("&dser_0", "&dser_3")
+    .replace("max20089_a", "max20089_d")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 str_i2c_isx021_7_p1 = (
     str_i2c_isx021_n_p1.replace("isx021_a@1d", "isx021_h@1e")
     .replace("max9295_ser_a", "max9295_ser_h")
     .replace("&dser_0", "&dser_3")
+    .replace("max20089_a", "max20089_d")
     .replace("reg = <0x1d>", "reg = <0x1e>")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
@@ -1924,6 +1931,7 @@ str_i2c_imx490_n_p1 = """
         nvidia,gmsl-ser-device = <&max9295_ser_a>;
         nvidia,gmsl-dser-device = <&dser_0>;
         nvidia,fpga-device  = <&t4_fpga>;
+        nvidia,cam-power-protector  = <&max20089_a>;
 
         reg = <0x2b>;
 
@@ -1945,6 +1953,7 @@ str_i2c_imx490_2_p1 = (
     .replace("&max9295_ser_a", "&max9295_ser_c")
     .replace("isp_a", "isp_c")
     .replace("&dser_0", "&dser_1")
+    .replace("max20089_a", "max20089_b")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_imx490_3_p1 = (
@@ -1953,6 +1962,7 @@ str_i2c_imx490_3_p1 = (
     .replace("reg = <0x2b>", " reg = <0x2c>")
     .replace("isp_a", "isp_d")
     .replace("&dser_0", "&dser_1")
+    .replace("max20089_a", "max20089_b")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
@@ -1961,6 +1971,7 @@ str_i2c_imx490_4_p1 = (
     .replace("&max9295_ser_a", "&max9295_ser_e")
     .replace("isp_a", "isp_e")
     .replace("&dser_0", "&dser_2")
+    .replace("max20089_a", "max20089_c")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx490_5_p1 = (
@@ -1969,6 +1980,7 @@ str_i2c_imx490_5_p1 = (
     .replace("reg = <0x2b>", " reg = <0x2c>")
     .replace("isp_a", "isp_f")
     .replace("&dser_0", "&dser_2")
+    .replace("max20089_a", "max20089_c")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
@@ -1977,6 +1989,7 @@ str_i2c_imx490_6_p1 = (
     .replace("&max9295_ser_a", "&max9295_ser_g")
     .replace("isp_a", "isp_g")
     .replace("&dser_0", "&dser_3")
+    .replace("max20089_a", "max20089_d")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 str_i2c_imx490_7_p1 = (
@@ -1985,6 +1998,7 @@ str_i2c_imx490_7_p1 = (
     .replace("reg = <0x2b>", " reg = <0x2c>")
     .replace("isp_a", "isp_h")
     .replace("&dser_0", "&dser_3")
+    .replace("max20089_a", "max20089_d")
     .replace("reg = <0x2b>", "reg = <0x2c>")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
@@ -2209,6 +2223,7 @@ str_i2c_imx728_n_p1 = """
         nvidia,gmsl-ser-device = <&max9295_ser_a>;
         nvidia,gmsl-dser-device = <&dser_0>;
         nvidia,fpga-device  = <&t4_fpga>;
+        nvidia,cam-power-protector  = <&max20089_a>;
 
         reg = <0x3b>;
 
@@ -2230,6 +2245,7 @@ str_i2c_imx728_2_p1 = (
     .replace("&max9295_ser_a", "&max9295_ser_c")
     .replace("isp_a_1", "isp_c_1")
     .replace("&dser_0", "&dser_1")
+    .replace("max20089_a", "max20089_b")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
 str_i2c_imx728_3_p1 = (
@@ -2238,6 +2254,7 @@ str_i2c_imx728_3_p1 = (
     .replace("reg = <0x3b>", " reg = <0x3c>")
     .replace("isp_a_1", "isp_d_1")
     .replace("&dser_0", "&dser_1")
+    .replace("max20089_a", "max20089_b")
     .replace("reg = <0x3b>", "reg = <0x3c>")
     .replace("reg_mux = <0>", "reg_mux = <1>")
 )
@@ -2246,6 +2263,7 @@ str_i2c_imx728_4_p1 = (
     .replace("&max9295_ser_a", "&max9295_ser_e")
     .replace("isp_a_1", "isp_e_1")
     .replace("&dser_0", "&dser_2")
+    .replace("max20089_a", "max20089_c")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
 str_i2c_imx728_5_p1 = (
@@ -2254,6 +2272,7 @@ str_i2c_imx728_5_p1 = (
     .replace("reg = <0x2b>", " reg = <0x2c>")
     .replace("isp_a_1", "isp_f_1")
     .replace("&dser_0", "&dser_2")
+    .replace("max20089_a", "max20089_c")
     .replace("reg = <0x3b>", "reg = <0x3c>")
     .replace("reg_mux = <0>", "reg_mux = <2>")
 )
@@ -2262,6 +2281,7 @@ str_i2c_imx728_6_p1 = (
     .replace("&max9295_ser_a", "&max9295_ser_g")
     .replace("isp_a_1", "isp_g_1")
     .replace("&dser_0", "&dser_3")
+    .replace("max20089_a", "max20089_d")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
 str_i2c_imx728_7_p1 = (
@@ -2270,6 +2290,7 @@ str_i2c_imx728_7_p1 = (
     .replace("reg = <0x3b>", " reg = <0x3c>")
     .replace("isp_a_1", "isp_h_1")
     .replace("&dser_0", "&dser_3")
+    .replace("max20089_a", "max20089_d")
     .replace("reg = <0x3b>", "reg = <0x3c>")
     .replace("reg_mux = <0>", "reg_mux = <3>")
 )
@@ -2872,6 +2893,28 @@ def get_serdes_pix_clk(str_revision, str_camera_type):
 
     return str_rc
 
+# ===================  Camera Power Protector (MAX20089)  ====================
+
+str_i2c_cam_power_0 = """
+      max20089_a: max20089@28 {
+        status = "okay";
+        compatible = "maxim,max20089";
+        reg = <0x28>;
+      };
+"""
+str_i2c_cam_power_1 = (
+    str_i2c_cam_power_0.replace("max20089_a", "max20089_b")
+)
+str_i2c_cam_power_2 = (
+    str_i2c_cam_power_0.replace("max20089_a", "max20089_c")
+    .replace("max20089@28", "max20089@29")
+    .replace("<0x28>", "<0x29>")
+)
+str_i2c_cam_power_3 = (
+    str_i2c_cam_power_0.replace("max20089_a", "max20089_d")
+    .replace("max20089@28", "max20089@29")
+    .replace("<0x28>", "<0x29>")
+)
 
 # ===============================================
 # ===================  Main  ====================
@@ -3543,6 +3586,7 @@ str_i2c0 = (
     str_fragment_i2c_0
     + str_i2c_dser_0
     + str_i2c_ser_0
+    + str_i2c_cam_power_0
     + str_i2c_0_isp
     + str_camera2
     + str_camera1
@@ -3553,6 +3597,7 @@ str_i2c1 = (
     str_fragment_i2c_1
     + str_i2c_dser_1
     + str_i2c_ser_1
+    + str_i2c_cam_power_1
     + str_i2c_1_isp
     + str_camera4
     + str_camera3
@@ -3563,6 +3608,7 @@ str_i2c2 = (
     str_fragment_i2c_2
     + str_i2c_dser_2
     + str_i2c_ser_2
+    + str_i2c_cam_power_2
     + str_i2c_2_isp
     + str_camera6
     + str_camera5
@@ -3572,6 +3618,7 @@ str_i2c2 = (
 str_i2c3 = (
     str_fragment_i2c_3
     + str_i2c_dser_3
+    + str_i2c_cam_power_3
     + str_i2c_ser_3
     + str_i2c_3_isp
     + str_camera8
