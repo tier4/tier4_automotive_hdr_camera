@@ -863,6 +863,23 @@ static int tier4_max9295_remove(struct i2c_client *client)
 	return 0;
 }
 
+static void tier4_max9295_shutdown(struct i2c_client *client)
+{
+	struct tier4_max9295 *priv = dev_get_drvdata(&client->dev);
+
+	atomic_set(&priv->work_canceled, 1);
+	del_timer_sync(&priv->hw_monitor_timer);
+	cancel_work_sync(&priv->hw_monitor_work);
+
+	device_remove_file(&client->dev, &dev_attr_mfp7);
+
+	if (channel_count_isx021 > 0)
+		channel_count_isx021--;
+
+	mutex_destroy(&priv->lock);
+}
+
+
 static const struct i2c_device_id tier4_max9295_id[] = {
 	{ "tier4_max9295", 0 },
 	{},
@@ -885,6 +902,7 @@ static struct i2c_driver tier4_max9295_i2c_driver = {
     },
     .probe = tier4_max9295_probe,
     .remove = tier4_max9295_remove,
+.shutdown = tier4_max9295_shutdown,
     .id_table = tier4_max9295_id,
 };
 
