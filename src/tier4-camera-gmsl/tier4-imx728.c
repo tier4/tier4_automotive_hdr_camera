@@ -1229,29 +1229,6 @@ static int tier4_imx728_board_setup(struct tier4_imx728 *priv)
 			 __func__, enable_auto_exposure);
 	}
 
-#if 0
-    priv->g_ctx.fpga_generate_fsync = false;
-
-    if (( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER ) ||
-        ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
-
-        err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
-
-        if ( err < 0) {
-            if ( err == -EINVAL ) {
-                dev_info(dev, "[%s] : Parameter of fpga-generate-fsync does not exist.\n", __func__);
-            } else {
-                dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
-                goto error;
-            }
-        } else {
-            if (!strcmp(str_value, "true")) {
-                priv->g_ctx.fpga_generate_fsync = true;
-            }
-        }
-    }
-#endif
-
 	// For Ser node
 	ser_node = of_parse_phandle(node, "nvidia,gmsl-ser-device", 0);
 

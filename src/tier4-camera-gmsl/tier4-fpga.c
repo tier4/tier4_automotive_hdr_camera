@@ -67,11 +67,7 @@ struct tier4_fpga {
 	struct mutex lock;
 	/* FPGA slave address */
 	__u32 reg_addr;
-	//  bool generate_fsync;
 };
-
-//static int generate_fsync;
-//module_param(generate_fsync, int, S_IRUGO | S_IWUSR);
 
 static struct regmap_config tier4_fpga_regmap_config = {
 	.reg_bits = 8,
@@ -303,32 +299,32 @@ static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number,
             dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.", __func__, str_fps_camx_camy, fps, str_fps_camx_camy, freq);
         }
     } else {
-	if (trigger_mode == 1) {
-		if ((fps > 5) && (fps <= 10)) {
-			freq = fps;
-		} else {
-			freq = FREQ_10HZ;
-			dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
-				 __func__, str_fps_camx_camy, fps,
-				 str_fps_camx_camy, freq);
-		}
-	} else if (trigger_mode == 3) {
-		if ((fps > 10) && (fps <= 20)) {
-			freq = fps;
-		} else {
-			freq = FREQ_20HZ;
-			dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
-				 __func__, str_fps_camx_camy, fps,
-				 str_fps_camx_camy, freq);
-		}
-	} else if (trigger_mode == 5) {
-		if ((fps > 20) && (fps <= 30)) {
-			freq = fps;
-		} else {
-			freq = FREQ_30HZ;
-			dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
-				 __func__, str_fps_camx_camy, fps,
-				 str_fps_camx_camy, freq);
+		if (trigger_mode == 1) {
+			if ((fps > 5) && (fps <= 10)) {
+				freq = fps;
+			} else {
+				freq = FREQ_10HZ;
+				dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
+					 __func__, str_fps_camx_camy, fps,
+					 str_fps_camx_camy, freq);
+			}
+		} else if (trigger_mode == 3) {
+			if ((fps > 10) && (fps <= 20)) {
+				freq = fps;
+			} else {
+				freq = FREQ_20HZ;
+				dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
+					 __func__, str_fps_camx_camy, fps,
+					 str_fps_camx_camy, freq);
+			}
+		} else if (trigger_mode == 5) {
+			if ((fps > 20) && (fps <= 30)) {
+				freq = fps;
+			} else {
+				freq = FREQ_30HZ;
+				dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
+					 __func__, str_fps_camx_camy, fps,
+					 str_fps_camx_camy, freq);
 			}
 		}
 	}
@@ -552,7 +548,7 @@ EXPORT_SYMBOL(tier4_fpga_power_off_deserializer);
 // ---------------------------------------------------------
 
 static int tier4_fpga_probe(struct i2c_client *client,
-			    const struct i2c_device_id *id)
+ 			    const struct i2c_device_id *id)
 {
 	struct tier4_fpga *priv;
 	int err = 0;
