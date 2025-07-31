@@ -48,7 +48,7 @@ str_overlay_header_r351 = """
 /plugin/;
 
 / {
-    overlay-name = \"TIERIV ISX021 IMX490 IMX728 GMSL2 Camera Device Tree Overlay\";
+    overlay-name = \"TIERIV GMSL2 Camera Device Tree Overlay\";
     jetson-header-name = \"Jetson AGX CSI Connector\";
     compatible = \"nvidia,p3737-0000+p3701-0000\", \"nvidia,tegra234\", \"nvidia,tegra23x\";
 """
@@ -3584,6 +3584,7 @@ exist_c1_camera = 0
 exist_c2_camera = 0
 exist_c3_camera = 0
 
+str_cam_num = ""
 for i in range(8):
     if camera[i] == "C1":
         exist_c1_camera = 1
@@ -3591,6 +3592,29 @@ for i in range(8):
         exist_c2_camera = 1
     elif camera[i] == "C3":
         exist_c3_camera = 1
+    if i % 2 == 0:
+        str_cam_num += f' {camera[i]}x2'
+
+import re
+from itertools import groupby
+
+def merge_consecutive_cameras(str_cam_num):
+
+    pattern = r'(C\d+)x(\d+)'
+    matches = re.findall(pattern, str_cam_num)
+
+    if not matches:
+        return str_cam_num
+
+    result_parts = []
+
+    for model, group in groupby(matches, key=lambda x: x[0]):
+        total_count = sum(int(count) for _, count in group)
+        result_parts.append(f"{model}x{total_count}")
+
+    return " ".join(result_parts)
+
+merged_cam_num = merge_consecutive_cameras(str_cam_num)
 
 if exist_c1_camera == 1:
     str_w_camera_type += "-isx021"
@@ -3599,7 +3623,9 @@ if exist_c2_camera == 1:
 if exist_c3_camera == 1:
     str_w_camera_type += "-imx728"
 
-str_w_overlay_header1 = dict_overlay_header[str_rev_num]
+# str_w_overlay_header1 = dict_overlay_header[str_rev_num]
+str_w_overlay_header1 = dict_overlay_header[str_rev_num].replace("Device Tree Overlay", "Device Tree Overlay: " + merged_cam_num)
+
 
 if exist_c1_camera == 0:
     str_w_overlay_header2 = str_w_overlay_header1.replace(" ISX021", "")

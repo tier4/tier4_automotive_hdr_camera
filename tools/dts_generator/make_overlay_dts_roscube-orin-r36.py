@@ -3033,6 +3033,27 @@ for i in range(8):
     if i % 2 == 0:
         str_cam_num += f' {camera[i]}x2'
 
+import re
+from itertools import groupby
+
+def merge_consecutive_cameras(str_cam_num):
+
+    pattern = r'(C\d+)x(\d+)'
+    matches = re.findall(pattern, str_cam_num)
+
+    if not matches:
+        return str_cam_num
+
+    result_parts = []
+
+    for model, group in groupby(matches, key=lambda x: x[0]):
+        total_count = sum(int(count) for _, count in group)
+        result_parts.append(f"{model}x{total_count}")
+
+    return " ".join(result_parts)
+
+merged_cam_num = merge_consecutive_cameras(str_cam_num)
+
 if exist_c1_camera == 1:
     str_w_camera_type += "-isx021"
 if exist_c2_camera == 1:
@@ -3040,24 +3061,8 @@ if exist_c2_camera == 1:
 if exist_c3_camera == 1:
     str_w_camera_type += "-imx728"
 
-str_overlay_header_r364 = str_overlay_header_r364.replace("Device Tree Overlay", "Device Tree Overlay:" + str_cam_num)
-# str_w_overlay_header1 = str_overlay_header_r364
+str_overlay_header_r364 = str_overlay_header_r364.replace("Device Tree Overlay", "Device Tree Overlay: " + merged_cam_num)
 str_overlay_header = str_overlay_header_r364
-
-# if exist_c1_camera == 0:
-#     str_w_overlay_header2 = str_w_overlay_header1.replace(" ISX021", "")
-# else:
-#     str_w_overlay_header2 = str_w_overlay_header1
-
-# if exist_c2_camera == 0:
-#     str_w_overlay_header3 = str_w_overlay_header2.replace(" IMX490", "")
-# else:
-#     str_w_overlay_header3 = str_w_overlay_header2
-
-# if exist_c3_camera == 0:
-#     str_overlay_header = str_w_overlay_header3.replace(" IMX728", "")
-# else:
-#     str_overlay_header = str_w_overlay_header3
 
 str_whole_dts = (
     str_overlay_header
