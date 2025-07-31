@@ -2030,26 +2030,26 @@ str_i2c_imx490_n_p2 = """
           readout_orientation = \"0\";
           line_length = \"2250\";
           inherent_gain = \"1\";
-          pix_clk_hz = \"160704000\";
+          pix_clk_hz = \"757\";
           serdes_pix_clk_hz = \"375000000\";    // MIPI CSI clock 1500Mhz
 
-          gain_factor = \"5\";
+          gain_factor = \"10\";
           min_gain_val = \"0\";                         /* dB */
           max_gain_val = \"300\";                       /* dB */
-          step_gain_val = \"1\";                        /* 0.3 */
+          step_gain_val = \"3\";                        /* 0.3 */
           default_gain = \"0\";
           min_hdr_ratio = \"1\";
           max_hdr_ratio = \"1\";
           framerate_factor = \"1000000\";
-          min_framerate = \"0\";
-          max_framerate = \"40954095\";
+          min_framerate = \"30000000\";
+          max_framerate = \"30000000\";
           step_framerate = \"1\";
-          default_framerate = \"0\";
+          default_framerate = \"30000000\";
           exposure_factor = \"1000000\";
-          min_exp_time = \"0\";                         /* us 1 line */
-          max_exp_time = \"40954095\";
+          min_exp_time = \"24\";                         /* us 1 line */
+          max_exp_time = \"33333\";
           step_exp_time = \"1\";
-          default_exp_time = \"0\";                 /* us */
+          default_exp_time = \"33333\";                 /* us */
           embedded_metadata_height = \"0\";
         };
 """
@@ -2629,13 +2629,13 @@ def usage():
     print("**                                                                          **")
     print("**  $> make_overlay_dts_roscube-orin.py Rev Camera1 Camera2.. Camera8       **")
     print("**                                                                          **")
-    print("**     Rev: L4T Revision [ R35.4.1 ]                                        **")
+    print("**     Rev: L4T Revision [ R35.4 ]                                        **")
     print("**                                                                          **")
     print("**     CameraX : C1,C2 or C3( The camera connected to portX )               **")
     print("**     if no camera connected, specify C1                                   **")
     print("**                                                                          **")
     print("**     E.g.                                                                 **")
-    print("**    $> make_overlay_dts_roscube-ori.py R35.4.1 C1 C1 C2 C2 C3 C3 C1 C1    **")
+    print("**    $> make_overlay_dts_roscube-ori.py R35.4 C1 C1 C2 C2 C3 C3 C1 C1    **")
     print("**             ( Total number of cameras should be 8 )                      **")
     print("** Case2:                                                                   **")
     print("**                                                                          **")
@@ -2643,19 +2643,19 @@ def usage():
     print("**                                                                          **")
     print("**  Options :  Rev [ -2 | -4 | -6 | -8] [C1,C2,C3]                          **")
     print("**                                                                          **")
-    print("**     where,    Rev: L4T Revision [ R35.4.1 ]                              **")
+    print("**     where,    Rev: L4T Revision [ R35.4 ]                              **")
     print("**      ( -2,-4 are peatable, total number of Ns of -N should be 8 )        **")
     print("**                                                                          **")
     print("**     E.g.                                                                 **")
     print("**       1. All cameras are C1                                              **")
     print("**                                                                          **")
-    print("**          $> make_overlay_dts_roscube-orin.py R35.4.1 -8 C1               **")
+    print("**          $> make_overlay_dts_roscube-orin.py R35.4 -8 C1               **")
     print("**       2.                                                                 **")
     print("**        2 cameras( port 1,2 ) are C1,                                     **")
     print("**        2 cameras( port 3,4 ) are C2                                      **")
     print("**        4 cameras( port 5,6,7,8 ) are C3                                  **")
     print("**                                                                          **")
-    print("**        $> make_overlay_dts_roscube-orin.py R35.4.1 -2 C1 -2 C2 -4 C3     **")
+    print("**        $> make_overlay_dts_roscube-orin.py R35.4 -2 C1 -2 C2 -4 C3     **")
     print("**                                                                          **")
     print("** The followings should not be specified.( Mixed above 2 cases )           **")
     print("**                                                                          **")
@@ -2663,7 +2663,7 @@ def usage():
     print("**    and [C1/C2/C3] without those options are mixed.                       **")
     print("**                                                                          **")
     print("**     E.g.                                                                 **")
-    print("**       $> make_overlay_dts_roscube-orin.py R35.4.1 -4 C1 -2 C2 C1 C2      **")
+    print("**       $> make_overlay_dts_roscube-orin.py R35.4 -4 C1 -2 C2 C1 C2      **")
     print("**                                                               ~~~~~      **")
     print("******************************************************************************")
 
@@ -2894,7 +2894,7 @@ elif l4t_revision == "R35.4":
     rev_r354_exception = True
 else:
     usage()
-    print(" Error!! : 1st argument should be R35.1 or R35.2.1")
+    print(" Error!! : 1st argument should be R35.1 or R35.4")
     sys.exit()
 
 str_n_options = get_n_options(args, total_num_args)
