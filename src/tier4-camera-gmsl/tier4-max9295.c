@@ -773,8 +773,20 @@ static void tier4_max9295_check_sensor_error(struct work_struct *work)
 			fault_state ? "detected" : "cleared");
 
 	snprintf(camera_id, sizeof camera_id, "CAMERA_ID=%s", subdev->name);
+
+	if (!subdev->devnode) {
+		dev_warn(dev, "subdev->devnode is NULL\n");
+		return;
+	}
+	
 	snprintf(major, sizeof major, "SUBDEV_MAJOR=%d",
 			MAJOR(subdev->devnode->dev.devt));
+
+	if (!subdev->devnode->cdev) {
+		dev_warn(dev, "subdev->devnode->cdev is NULL\n");
+		return;
+	}
+
 	snprintf(minor, sizeof minor, "SUBDEV_MINOR=%d",
 			MINOR(subdev->devnode->cdev->dev));
 	snprintf(fusa_hw_fault, sizeof fusa_hw_fault, "FUSA_HW_FAULT=%d",
