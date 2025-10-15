@@ -19,11 +19,11 @@ class Serializer:
 
     @staticmethod
     def secondary_a(index: int, suffix: StringLike, vc_id: StringLike, dser_label: str) -> DeviceTreeNode:
-        return (DeviceTreeNode(f'max9295_{suffix}@42', label=f'ser{index}_a')
+        return (DeviceTreeNode(f'max9295_{suffix}@40', label=f'ser{index}_a')
             .properties([
                 'status = "okay"',
                 'compatible = "nvidia,tier4_max9295"',
-                'reg = <0x42>',
+                'reg = <0x40>',
                 f'nvidia,gmsl-dser-device = <&{dser_label}>',
                 f'vc-id = <{vc_id}>',
             ]))
