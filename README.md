@@ -38,12 +38,11 @@ This assignment can be changed by the following steps:
 
 - Generate a `dts` file to describe user desired assignment
     ```bash
-    $ cd drivers/tools/
+    $ cd tools/dts_generator/
     # Specify device type assignment from port #1 to #8 one by one
-    $ python3 make_overlay_dbt.py c1 c1 c1 c1 c2 c2 c2 c2
+    $ python3 make_overlay_dts_$(DEVICE_NAME).py R36.4.3 -2 c1 -4 C2 -2 C2
     ```
-    - Port #(2n-1) and #(2n), where n = [1, 2, 3, 4], must be the same assignment. If invalid assignments are specified, the script returns errors, otherwise a dts file will be created.
-    - By the above example, a file named `tier4-isx021-imx490-c1-c1-c2-c2-device-tree-overlay.dts` will be created.
+    - By the above example, a file named `tier4-isx021-imx490-device-tree-overlay-$(DEVICE_NAME).dts` will be created.
 
 - Generate `dtbo` from `dts`
     ```bash
