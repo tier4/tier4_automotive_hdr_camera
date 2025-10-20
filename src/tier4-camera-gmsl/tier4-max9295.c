@@ -378,9 +378,9 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id,
 	int err = 0;
 
 	g_ctx = priv->g_client.g_ctx;
-
+	
 #if 1
-
+	
 	msleep(200);
 
 	if (power_on == true) { // power up camera sensor
@@ -402,7 +402,7 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id,
 			msleep(100);
 		}
 		err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x10);
-	} else { // power down caemra sensor
+	} else { // power down camera sensor
 		err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
 		msleep(100);
 		if (sensor_id == SENSOR_ID_ISX021) {
@@ -421,7 +421,7 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id,
 
 	if (err) {
 		dev_err(dev,
-			"[%s] : Ppower on/off Camera Sensor or ISP failed.\n",
+			"[%s] : Power on/off Camera Sensor or ISP failed.\n",
 			__func__);
 	}
 
@@ -478,6 +478,7 @@ int tier4_max9295_setup_control(struct device *dev)
 	u32 offset1 = 0;
 	u32 offset2 = 0;
 	u32 i;
+	int retry = 2;
 
 	u8 i2c_ovrd[] = {
 		0x6B, 0x10, 0x73, 0x11, 0x7B, 0x30, 0x83, 0x30, 0x93,
@@ -498,8 +499,14 @@ int tier4_max9295_setup_control(struct device *dev)
 		goto error;
 	}
 	/* update address reassingment */
-	tier4_max9295_write_reg(&prim_priv__[g_ctx->reg_mux]->i2c_client->dev,
+	err = tier4_max9295_write_reg(&prim_priv__[g_ctx->reg_mux]->i2c_client->dev,
 				MAX9295_DEV_ADDR, (g_ctx->ser_reg << 1));
+	while (err && retry--) {
+		dev_err(dev, "[%s] : Failed to set serializer reg addr, retry=%d\n", __func__, retry);
+		msleep(100);
+		err = tier4_max9295_write_reg(&prim_priv__[g_ctx->reg_mux]->i2c_client->dev,
+				MAX9295_DEV_ADDR, (g_ctx->ser_reg << 1));
+	}
 
 	msleep(100);
 
@@ -583,7 +590,7 @@ int tier4_max9295_reset_control(struct device *dev)
 {
 	struct tier4_max9295 *priv = dev_get_drvdata(dev);
 	int err = 0;
-
+	
 	mutex_lock(&priv->lock);
 	if (!priv->g_client.g_ctx) {
 		dev_err(dev, "[%s] : No sdev client found\n", __func__);
@@ -597,8 +604,8 @@ int tier4_max9295_reset_control(struct device *dev)
 
 	tier4_max9295_write_reg(
 		dev, MAX9295_DEV_ADDR,
-		(prim_priv__[priv->g_client.g_ctx->reg_mux]->def_addr << 1));
-
+		(prim_priv__[priv->g_client.g_ctx->reg_mux]->def_addr << 1));	
+	
 	tier4_max9295_write_reg(
 		&prim_priv__[priv->g_client.g_ctx->reg_mux]->i2c_client->dev,
 		MAX9295_CTRL0_ADDR, MAX9295_RESET_ALL);
@@ -766,8 +773,20 @@ static void tier4_max9295_check_sensor_error(struct work_struct *work)
 			fault_state ? "detected" : "cleared");
 
 	snprintf(camera_id, sizeof camera_id, "CAMERA_ID=%s", subdev->name);
+
+	if (!subdev->devnode) {
+		dev_warn(dev, "subdev->devnode is NULL\n");
+		return;
+	}
+	
 	snprintf(major, sizeof major, "SUBDEV_MAJOR=%d",
 			MAJOR(subdev->devnode->dev.devt));
+
+	if (!subdev->devnode->cdev) {
+		dev_warn(dev, "subdev->devnode->cdev is NULL\n");
+		return;
+	}
+
 	snprintf(minor, sizeof minor, "SUBDEV_MINOR=%d",
 			MINOR(subdev->devnode->cdev->dev));
 	snprintf(fusa_hw_fault, sizeof fusa_hw_fault, "FUSA_HW_FAULT=%d",
@@ -863,6 +882,23 @@ static int tier4_max9295_remove(struct i2c_client *client)
 	return 0;
 }
 
+static void tier4_max9295_shutdown(struct i2c_client *client)
+{
+	struct tier4_max9295 *priv = dev_get_drvdata(&client->dev);
+
+	atomic_set(&priv->work_canceled, 1);
+	del_timer_sync(&priv->hw_monitor_timer);
+	cancel_work_sync(&priv->hw_monitor_work);
+
+	device_remove_file(&client->dev, &dev_attr_mfp7);
+
+	if (channel_count_isx021 > 0)
+		channel_count_isx021--;
+
+	mutex_destroy(&priv->lock);
+}
+
+
 static const struct i2c_device_id tier4_max9295_id[] = {
 	{ "tier4_max9295", 0 },
 	{},
@@ -885,6 +921,7 @@ static struct i2c_driver tier4_max9295_i2c_driver = {
     },
     .probe = tier4_max9295_probe,
     .remove = tier4_max9295_remove,
+    .shutdown = tier4_max9295_shutdown,
     .id_table = tier4_max9295_id,
 };
 

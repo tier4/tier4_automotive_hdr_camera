@@ -9,5 +9,5 @@ Homepage: <https://edge.auto/automotive-camera>
 Package: tier4-camera-gmsl
 Architecture: arm64
 Provides: tier4-camera-gmsl
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, v4l-utils
 Description: V4L2 camera drivers for TIER IV C1/C2/C3 cameras

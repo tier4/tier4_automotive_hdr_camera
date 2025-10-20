@@ -36,6 +36,7 @@
 #define FPGA_ENABLED 0xF0
 #define FPGA_DISABLED 0xFF
 #define NO_ERROR 0
+#define ERROR_INDEX -1
 
 #define FPGA_REG_VERSION_ADDR 0x1
 #define FPGA_REG_ENABLE_ADDR 0x4
@@ -66,11 +67,7 @@ struct tier4_fpga {
 	struct mutex lock;
 	/* FPGA slave address */
 	__u32 reg_addr;
-	//  bool generate_fsync;
 };
-
-//static int generate_fsync;
-//module_param(generate_fsync, int, S_IRUGO | S_IWUSR);
 
 static struct regmap_config tier4_fpga_regmap_config = {
 	.reg_bits = 8,
@@ -132,14 +129,14 @@ EXPORT_SYMBOL(tier4_fpga_get_fsync_mode);
 int tier4_fpga_enable_fsync_mode(struct device *dev)
 {
 	int err = 0;
-	//  u8 val = 0;
+	 u8 val = 0;
 
-	//  err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &val);
-	//  if ((val & 0xFF) == FPGA_MODE_FSYNC) {
-	//    // skip writing the same value to reg in order to save the flash write cycles
-	//    dev_info(dev, "[%s] : Keep FSYNC mode enabled.\n", __func__);
-	//    return err;
-	//  }
+	 err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &val);
+	 if ((val & 0xFF) == FPGA_MODE_FSYNC) {
+	   // skip writing the same value to reg in order to save the flash write cycles
+	   dev_info(dev, "[%s] : Keep FSYNC mode enabled.\n", __func__);
+	   return err;
+	 }
 
 	err = tier4_fpga_write_reg(dev, FPGA_REG_MODE_ADDR, FPGA_MODE_FSYNC);
 	if (err) {
@@ -158,14 +155,14 @@ EXPORT_SYMBOL(tier4_fpga_enable_fsync_mode);
 int tier4_fpga_disable_fsync_mode(struct device *dev)
 {
 	int err = 0;
-	//  u8 val = 0;
+	 u8 val = 0;
 
-	//  err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &val);
-	//  if ((val & 0xFF) == FPGA_MODE_FREE_RUN) {
-	//    // skip writing the same value to reg in order to save the flash write cycles
-	//    dev_info(dev, "[%s] : Keep FSYNC mode disabled.\n", __func__);
-	//    return err;
-	//  }
+	 err = tier4_fpga_read_reg(dev, FPGA_REG_MODE_ADDR, &val);
+	 if ((val & 0xFF) == FPGA_MODE_FREE_RUN) {
+	   // skip writing the same value to reg in order to save the flash write cycles
+	   dev_info(dev, "[%s] : Keep FSYNC mode disabled.\n", __func__);
+	   return err;
+	 }
 
 	err = tier4_fpga_write_reg(dev, FPGA_REG_MODE_ADDR, FPGA_MODE_FREE_RUN);
 	if (err) {
@@ -183,14 +180,14 @@ EXPORT_SYMBOL(tier4_fpga_disable_fsync_mode);
 int tier4_fpga_set_fsync_auto_trigger(struct device *dev)
 {
 	int err = 0;
-	//  u8 val = 0;
+	 u8 val = 0;
 
-	//  err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
-	//  if ((val & 0xFF) == FPGA_FSYNC_AUTO) {
-	//    // skip writing the same value to reg in order to save the flash write cycles
-	//    dev_info(dev, "[%s] : Keep FSYNC Auto Trigger mode.\n", __func__);
-	//    return err;
-	//  }
+	 err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
+	 if ((val & 0xFF) == FPGA_FSYNC_AUTO) {
+	   // skip writing the same value to reg in order to save the flash write cycles
+	   dev_info(dev, "[%s] : Keep FSYNC Auto Trigger mode.\n", __func__);
+	   return err;
+	 }
 
 	err = tier4_fpga_write_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR,
 				   FPGA_FSYNC_AUTO);
@@ -211,14 +208,14 @@ EXPORT_SYMBOL(tier4_fpga_set_fsync_auto_trigger);
 int tier4_fpga_set_fsync_manual_trigger(struct device *dev)
 {
 	int err = 0;
-	//  u8 val = 0;
+	 u8 val = 0;
 
-	//  err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
-	//  if ((val & 0xFF) == FPGA_FSYNC_MANUAL) {
-	//    // skip writing the same value to reg in order to save the flash write cycles
-	//    dev_info(dev, "[%s] : Keep FSYNC Auto Trigger mode.\n", __func__);
-	//    return err;
-	//  }
+	 err = tier4_fpga_read_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR, &val);
+	 if ((val & 0xFF) == FPGA_FSYNC_MANUAL) {
+	   // skip writing the same value to reg in order to save the flash write cycles
+	   dev_info(dev, "[%s] : Keep FSYNC Manual Trigger mode.\n", __func__);
+	   return err;
+	 }
 
 	err = tier4_fpga_write_reg(dev, FPGA_REG_FSYNC_TRIG_ADDR,
 				   FPGA_FSYNC_MANUAL);
@@ -264,7 +261,8 @@ int tier4_fpga_check_access(struct device *dev)
 EXPORT_SYMBOL(tier4_fpga_check_access);
 
 static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number,
-					int fps, int trigger_mode)
+					int fps, int trigger_mode,
+					__u32 sensor_id)
 {
 	int freq;
 	char str_fps_camx_camy[15] = "\0";
@@ -292,32 +290,42 @@ static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number,
 		break;
 	}
 
-	if (trigger_mode == 1) {
-		if ((fps > 5) && (fps <= 10)) {
-			freq = fps;
-		} else {
-			freq = FREQ_10HZ;
-			dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
-				 __func__, str_fps_camx_camy, fps,
-				 str_fps_camx_camy, freq);
-		}
-	} else if (trigger_mode == 3) {
-		if ((fps > 10) && (fps <= 20)) {
-			freq = fps;
-		} else {
-			freq = FREQ_20HZ;
-			dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
-				 __func__, str_fps_camx_camy, fps,
-				 str_fps_camx_camy, freq);
-		}
-	} else if (trigger_mode == 5) {
-		if ((fps > 20) && (fps <= 30)) {
-			freq = fps;
-		} else {
-			freq = FREQ_30HZ;
-			dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
-				 __func__, str_fps_camx_camy, fps,
-				 str_fps_camx_camy, freq);
+    if (sensor_id == 21) {
+        // for ISX021
+        freq = fps;
+        if (fps < 1 || fps > 30)
+        {
+            freq = FREQ_30HZ;
+            dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.", __func__, str_fps_camx_camy, fps, str_fps_camx_camy, freq);
+        }
+    } else {
+		if (trigger_mode == 1) {
+			if ((fps > 5) && (fps <= 10)) {
+				freq = fps;
+			} else {
+				freq = FREQ_10HZ;
+				dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
+					 __func__, str_fps_camx_camy, fps,
+					 str_fps_camx_camy, freq);
+			}
+		} else if (trigger_mode == 3) {
+			if ((fps > 10) && (fps <= 20)) {
+				freq = fps;
+			} else {
+				freq = FREQ_20HZ;
+				dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
+					 __func__, str_fps_camx_camy, fps,
+					 str_fps_camx_camy, freq);
+			}
+		} else if (trigger_mode == 5) {
+			if ((fps > 20) && (fps <= 30)) {
+				freq = fps;
+			} else {
+				freq = FREQ_30HZ;
+				dev_info(dev, "[%s] Invalid %s:%d, Set %s to %d.",
+					 __func__, str_fps_camx_camy, fps,
+					 str_fps_camx_camy, freq);
+			}
 		}
 	}
 
@@ -331,30 +339,30 @@ static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number,
 // --------------------------------------------
 
 int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number,
-					  int trigger_mode)
+					  int trigger_mode, __u32 sensor_id)
 {
 	int err = 0;
 	u8 val8, addr8;
 	int freq = 0;
-	// u8 read_val = 0;
+	u8 read_val = 0;
 	u8 freq_bitmask = 0x3F; // bit[0:5]
 
 	switch (des_number) {
 	case 0:
 		freq = tier4_fpga_get_fps_camx_camy(
-			dev, des_number, fps_cam1_cam2, trigger_mode);
+			dev, des_number, fps_cam1_cam2, trigger_mode, sensor_id);
 		break;
 	case 1:
 		freq = tier4_fpga_get_fps_camx_camy(
-			dev, des_number, fps_cam3_cam4, trigger_mode);
+			dev, des_number, fps_cam3_cam4, trigger_mode, sensor_id);
 		break;
 	case 2:
 		freq = tier4_fpga_get_fps_camx_camy(
-			dev, des_number, fps_cam5_cam6, trigger_mode);
+			dev, des_number, fps_cam5_cam6, trigger_mode, sensor_id);
 		break;
 	case 3:
 		freq = tier4_fpga_get_fps_camx_camy(
-			dev, des_number, fps_cam7_cam8, trigger_mode);
+			dev, des_number, fps_cam7_cam8, trigger_mode, sensor_id);
 		break;
 	default:
 		dev_err(dev, "[%s] Invalid des_number(%d)\n", __func__,
@@ -369,12 +377,12 @@ int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number,
 	dev_info(dev, "[%s] freq=%d.\n", __func__, freq);
 #endif
 
-	//  err = tier4_fpga_read_reg(dev, addr8, &read_val);
-	//  if ((read_val & freq_bitmask) == val8) {
-	//    // skip writing the same value to reg in order to save the flash write cycles
-	//    dev_info(dev, "[%s] : Keep the frequency of fsync trigger to %d\n", __func__, val8);
-	//    return err;
-	//  }
+	 err = tier4_fpga_read_reg(dev, addr8, &read_val);
+	 if ((read_val & freq_bitmask) == val8) {
+	   // skip writing the same value to reg in order to save the flash write cycles
+	   dev_info(dev, "[%s] : Keep the frequency of fsync trigger to %d\n", __func__, val8);
+	   return err;
+	 }
 
 	err = tier4_fpga_write_reg(dev, addr8, val8);
 
@@ -441,8 +449,106 @@ static int tier4_fpga_parse_dt(struct tier4_fpga *priv,
 
 // ---------------------------------------------------------
 
+int tier4_fpga_power_on_deserializer(struct device *dev, int des_number)
+{
+	int err = 0;
+	u8 val8, addr8;
+	u8 read8 = 0;
+
+	addr8 = (u8)FPGA_REG_MODE_ADDR;
+	err = tier4_fpga_read_reg(dev, addr8, &read8);
+	if (err) {
+		dev_err(dev, "[%s] Failed to read FPGA register\n", __func__);
+		return err;
+	}
+
+	if (des_number == 0)
+		val8 = read8 | 0x10;
+	else if (des_number == 1)
+		val8 = read8 | 0x20;
+	else if (des_number == 2)
+		val8 = read8 | 0x40;
+	else if (des_number == 3)
+		val8 = read8 | 0x80;
+	else {
+		dev_err(dev, "[%s] Invalid des_number: %d\n", __func__,
+			des_number);
+		return ERROR_INDEX;
+	}
+
+	if (read8 == val8) {
+		dev_info(dev, "[%s] DES-%d has already been powered on\n",
+			 __func__, des_number);
+		return NO_ERROR;
+	}
+
+	err = tier4_fpga_write_reg(dev, addr8, val8);
+	if (err) {
+		dev_err(dev, "[%s] Failed to power on DES-%d\n", __func__,
+			des_number);
+		return err;
+	} else {
+		dev_info(dev, "[%s] Successfully power on DES-%d\n", __func__,
+			 des_number);
+	}
+
+	return NO_ERROR;
+}
+EXPORT_SYMBOL(tier4_fpga_power_on_deserializer);
+
+// ---------------------------------------------------------
+
+int tier4_fpga_power_off_deserializer(struct device *dev, int des_number)
+{
+	int err = 0;
+	u8 val8, addr8;
+	u8 read8 = 0;
+
+	addr8 = (u8)FPGA_REG_MODE_ADDR;
+	err = tier4_fpga_read_reg(dev, addr8, &read8);
+	if (err) {
+		dev_err(dev, "[%s] Failed to read FPGA register\n", __func__);
+		return err;
+	}
+
+	if (des_number == 0)
+		val8 = read8 & ~(0x10);
+	else if (des_number == 1)
+		val8 = read8 & ~(0x20);
+	else if (des_number == 2)
+		val8 = read8 & ~(0x40);
+	else if (des_number == 3)
+		val8 = read8 & ~(0x80);
+	else {
+		dev_err(dev, "[%s] Invalid des_number: %d\n", __func__,
+			des_number);
+		return ERROR_INDEX;
+	}
+
+	if (read8 == val8) {
+		dev_info(dev, "[%s] DES-%d has already been powered off\n",
+			 __func__, des_number);
+		return NO_ERROR;
+	}
+
+	err = tier4_fpga_write_reg(dev, addr8, val8);
+	if (err) {
+		dev_err(dev, "[%s] Failed to power off DES-%d\n", __func__,
+			des_number);
+		return err;
+	} else {
+		dev_info(dev, "[%s] Successfully power off DES-%d\n", __func__,
+			 des_number);
+	}
+
+	return NO_ERROR;
+}
+EXPORT_SYMBOL(tier4_fpga_power_off_deserializer);
+
+// ---------------------------------------------------------
+
 static int tier4_fpga_probe(struct i2c_client *client,
-			    const struct i2c_device_id *id)
+ 			    const struct i2c_device_id *id)
 {
 	struct tier4_fpga *priv;
 	int err = 0;

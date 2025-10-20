@@ -18,6 +18,7 @@ case "$1" in
          rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-max9296.ko
          rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-gw5300.ko
          rm -f /lib/modules/$KERNEL_REL/updates/dkms/tier4-fpga.ko
+         rm -f /lib/modules/$KERNEL_REL/updates/dkms/max20089.ko
          rm -f /lib/firmware/tier4-isx021.bin
          rm -f /etc/modules-load.d/tier4-isx021-gmsl.conf
          rm -f /etc/modules-load.d/tier4-imx490-gmsl.conf
