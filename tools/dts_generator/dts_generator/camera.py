@@ -113,7 +113,7 @@ class C1(Camera):
 
     def __init__(self, index: int, suffix: StringLike, address: str, vc_id: StringLike,
                  csi_lanes: SupportsInt, port_index: StringLike, serdes_csi_link: str,
-                 dser_label: str, serdes_pix_clk_hz: SupportsInt, primary: bool) -> None:
+                 dser_label: str, serdes_pix_clk_hz: SupportsInt, primary: bool, tegra_sinterface="serial_a") -> None:
         serdes_pix_clk_hz = int(serdes_pix_clk_hz)
         csi_lanes = int(csi_lanes)
         validate_csi_lanes(csi_lanes)
@@ -128,7 +128,7 @@ class C1(Camera):
                 f'vc-id = <{vc_id}>',
                 f'port-index = <{port_index}>',
                 f'bus-width = <{csi_lanes}>',
-                'remote-endpoint = <&csi_in>',  # Should be updated later by `MediaGraph`
+                f'remote-endpoint = <&csi_in>',  # Should be updated later by `MediaGraph`
             ]))
 
         self._image_sensor = (DeviceTreeNode(f'isx021_{suffix}@{address}')
@@ -162,7 +162,7 @@ class C1(Camera):
                         f'vc_id = "{csi_lanes}"',
                         f'serdes_pix_clk_hz = "{serdes_pix_clk_hz}"',
                         'mclk_khz = "24000"',
-                        'tegra_sinterface = "serial_a"',
+                        f'tegra_sinterface = "{tegra_sinterface}"',
                         'discontinuous_clk = "no"',
                         'dpcm_enable = "false"',
                         'cil_settletime = "0"',
@@ -202,7 +202,7 @@ class C1(Camera):
                         f'vc_id = "{csi_lanes}"',
                         f'serdes_pix_clk_hz = "{serdes_pix_clk_hz}"',
                         'mclk_khz = "24000"',
-                        'tegra_sinterface = "serial_a"',
+                        f'tegra_sinterface = "{tegra_sinterface}"',
                         'discontinuous_clk = "no"',
                         'dpcm_enable = "false"',
                         'cil_settletime = "0"',
@@ -242,7 +242,7 @@ class C1(Camera):
                         f'vc_id = "{csi_lanes}"',
                         f'serdes_pix_clk_hz = "{serdes_pix_clk_hz}"',
                         'mclk_khz = "24000"',
-                        'tegra_sinterface = "serial_a"',
+                        f'tegra_sinterface = "{tegra_sinterface}"',
                         'discontinuous_clk = "no"',
                         'dpcm_enable = "false"',
                         'cil_settletime = "0"',
@@ -282,7 +282,7 @@ class C1(Camera):
                         f'vc_id = "{csi_lanes}"',
                         f'serdes_pix_clk_hz = "{serdes_pix_clk_hz}"',
                         'mclk_khz = "24000"',
-                        'tegra_sinterface = "serial_a"',
+                        f'tegra_sinterface = "{tegra_sinterface}"',
                         'discontinuous_clk = "no"',
                         'dpcm_enable = "false"',
                         'cil_settletime = "0"',
@@ -363,7 +363,7 @@ class C2(Camera):
 
     def __init__(self, index: int, suffix: StringLike, address: str, vc_id: StringLike,
                  csi_lanes: SupportsInt, port_index: StringLike, serdes_csi_link: str,
-                 dser_label: str, serdes_pix_clk_hz: SupportsInt, primary: bool) -> None:
+                 dser_label: str, serdes_pix_clk_hz: SupportsInt, primary: bool,  tegra_sinterface="serial_g") -> None:
         csi_lanes = int(csi_lanes)
         validate_csi_lanes(csi_lanes)
 
@@ -378,7 +378,7 @@ class C2(Camera):
                 f'vc-id = <{vc_id}>',
                 f'port-index = <{port_index}>',
                 f'bus-width = <{csi_lanes}>',
-                'remote-endpoint = <&csi_in>',  # Should be updated later by `MediaGraph`
+                f'remote-endpoint = <&csi_in{index}>',  # Should be updated later by `MediaGraph`
             ]))
 
         self._image_sensor = (DeviceTreeNode(f'imx490_{suffix}@{address}')
@@ -410,9 +410,8 @@ class C2(Camera):
                     .properties([
                         f'num_lanes = "{csi_lanes}"',
                         f'vc_id = "{csi_lanes}"',
-                        'tegra_sinterface = "serial_g"',
+                        f'tegra_sinterface = "{tegra_sinterface}"',
                         'vc_id = "0"',
-                        'tegra_sinterface = "serial_g"',
                         'mclk_khz = "24000"',
                         'discontinuous_clk = "no"',
                         'dpcm_enable = "false"',
@@ -497,7 +496,7 @@ class C3(Camera):
 
     def __init__(self, index: int, suffix: StringLike, address: str, vc_id: StringLike,
                  csi_lanes: SupportsInt, port_index: StringLike, serdes_csi_link: str,
-                 dser_label: str, serdes_pix_clk_hz: SupportsInt, primary: bool) -> None:
+                 dser_label: str, serdes_pix_clk_hz: SupportsInt, primary: bool,  tegra_sinterface="serial_a") -> None:
         csi_lanes = int(csi_lanes)
         validate_csi_lanes(csi_lanes)
 
@@ -512,7 +511,7 @@ class C3(Camera):
                 f'vc-id = <{vc_id}>',
                 f'port-index = <{port_index}>',
                 f'bus-width = <{csi_lanes}>',
-                'remote-endpoint = <&csi_in>',  # Should be updated later by `MediaGraph`
+                f'remote-endpoint = <&csi_in{index}>',  # Should be updated later by `MediaGraph`
             ]))
 
         self._image_sensor = (DeviceTreeNode(f'imx728_{suffix}@{address}')
@@ -544,7 +543,7 @@ class C3(Camera):
                     .properties([
                         'mclk_khz = "24000"',
                         f'num_lanes = "{csi_lanes}"',
-                        'tegra_sinterface = "serial_a"',
+                        f'tegra_sinterface = "{tegra_sinterface}"',
                         f'vc_id = "{csi_lanes}"',
                         'discontinuous_clk = "no"',
                         'dpcm_enable = "false"',

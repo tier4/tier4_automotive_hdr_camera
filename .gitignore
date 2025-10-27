@@ -47,6 +47,10 @@ modules.order
 Module.symvers
 Mkfile.old
 build
+pkg/debian
+tools/dts_generator/*.dts*
+tools/dts_generator/*.dtbo*
+tools/dts_generator/tmp
 
 .tag
 .tags

@@ -459,8 +459,14 @@ int tier4_max9295_setup_gpo(struct device *dev)
 	dev_info(dev, "[%s] : Set up max9295 for fsync trigger mode \n",
 		 __func__);
 
+	// err += tier4_max9295_write_reg(dev, 0x2D3, 0xC4);
+	// err += tier4_max9295_write_reg(dev, 0x2D4, 0x00);
+	// err += tier4_max9295_write_reg(dev, 0x2D5, 0x06);
+
+	// err += tier4_max9295_write_reg(dev, MAX9295_GPIO_3_CONFIG_MFP3_ADDR,
+	// 			       0x04);
 	err += tier4_max9295_write_reg(dev, MAX9295_GPIO_3_CONFIG_MFP3_ADDR,
-				       0x04);
+				       0xC4);
 	err += tier4_max9295_write_reg(dev, MAX9295_GPIO_3_GPIO_TX_ID_ADDR,
 				       0x00);
 	err += tier4_max9295_write_reg(dev, MAX9295_GPIO_3_GPIO_RX_ID_ADDR,

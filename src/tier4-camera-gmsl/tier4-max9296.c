@@ -331,7 +331,7 @@ int tier4_max9296_power_on(struct device *dev)
 		}
 		//    if (priv->reset_gpio)
 		if (gpio_is_valid(priv->reset_gpio)) {
-			gpio_direction_output(priv->reset_gpio, 0);
+			gpio_direction_output(priv->reset_gpio, 1);
 		}
 
 		usleep_range(50, 80);
@@ -347,13 +347,13 @@ int tier4_max9296_power_on(struct device *dev)
 		//    if (priv->reset_gpio)
 		if (gpio_is_valid(priv->reset_gpio)) {
 			//            gpio_set_value(priv->reset_gpio, 0);
-			gpio_direction_output(priv->reset_gpio, 0);
+			gpio_direction_output(priv->reset_gpio, 1);
 
 			usleep_range(50, 80);
 			usleep_range(1000000, 1100000);
 			//            gpio_set_value(priv->reset_gpio, 1);
 
-			gpio_direction_output(priv->reset_gpio, 1);
+			gpio_direction_output(priv->reset_gpio, 0);
 
 			usleep_range(50, 80);
 		}
@@ -383,8 +383,8 @@ void tier4_max9296_power_off(struct device *dev)
 		/* enter reset mode: XCLR */
 		usleep_range(1, 2);
 		if (priv->reset_gpio)
-			//            gpio_set_value(priv->reset_gpio, 0);
-			gpio_direction_output(priv->reset_gpio, 0);
+			gpio_set_value(priv->reset_gpio, 1);
+			gpio_direction_output(priv->reset_gpio, 1);
 
 		if (priv->vdd_cam_1v2)
 			regulator_disable(priv->vdd_cam_1v2);
@@ -474,7 +474,8 @@ int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp)
 	gpio_mfp_base = (MAX9296_GPIO0_CONFIG_MFP0_ADDR + 3 * fsync_mfp) &
 			0xFFFF;
 
-	err += tier4_max9296_write_reg(dev, gpio_mfp_base, 0x03);
+	// err += tier4_max9296_write_reg(dev, gpio_mfp_base, 0x03);
+	err += tier4_max9296_write_reg(dev, gpio_mfp_base, 0xC3);
 	err += tier4_max9296_write_reg(dev, gpio_mfp_base + 1, 0x06);
 	err += tier4_max9296_write_reg(dev, gpio_mfp_base + 2, 0x00);
 
@@ -995,16 +996,16 @@ int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev)
 		} else if (g_ctx->hardware_model ==
 			   HW_MODEL_ADLINK_ROSCUBE_ORIN) {
 			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR,
-						MAX9296_PHY1_CLK_1500MHZ);
+						MAX9296_PHY1_CLK_1400MHZ);
 		} else if (g_ctx->hardware_model ==
 			   HW_MODEL_ADLINK_ROSCUBE_XAVIER) {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 65)
 			// RQX-58G L4T 35.4.1
 			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR,
-						MAX9296_PHY1_CLK_1600MHZ);
+						MAX9296_PHY1_CLK_1400MHZ);
 #else // RQX-58G L4T 32.x
 			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR,
-						MAX9296_PHY1_CLK_1800MHZ);
+						MAX9296_PHY1_CLK_1400MHZ);
 #endif
 		} else {
 			tier4_max9296_write_reg(dev, MAX9296_PHY1_CLK_ADDR,
