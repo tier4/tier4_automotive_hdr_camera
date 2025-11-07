@@ -2318,7 +2318,7 @@ str_i2c_imx728_n_p2 = """
           line_length = "4050";
           inherent_gain = "1";
           pix_clk_hz = "23328000";
-          serdes_pix_clk_hz = "250000000";
+          serdes_pix_clk_hz = "350000000";
 
           gain_factor = "10";
           min_gain_val = "0";   /* dB  */
