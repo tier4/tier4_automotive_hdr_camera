@@ -8,6 +8,7 @@ Jetson camera devicetree overlay generator for CTI Anvil.
     * 43-003c, the 8th camera node on the 4th (out of 4) i2c mux bus corresponds to the camera connected to the GMSL port 1
 """
 
+import os
 import sys
 from typing import Dict, Iterable, List, Optional, Sequence, TypeVar
 
@@ -24,7 +25,8 @@ from dts_generator.tegra_nvcsi import NvcsiChannel
 from dts_generator.tegra_vi import CameraPlatform, ViPort
 
 PLATFORM_NAME: str = 'Anvil'
-TEGRA_CAMERA_BASE_OVERLAY_R36: str = 'dtsi/tegra-camera-base-r36.dtsi'
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+TEGRA_CAMERA_BASE_OVERLAY_R36: str = os.path.join(_SCRIPT_DIR, 'dtsi', 'tegra-camera-base-r36.dtsi')
 
 CSI_LANES: int = 4
 NUM_GMSL_DESERIALIZERS: int = 4
