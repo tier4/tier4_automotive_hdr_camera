@@ -1166,6 +1166,43 @@ static const struct v4l2_subdev_internal_ops tier4_imx490_subdev_internal_ops = 
 
 static const char *of_stdout_options;
 
+/*
+ * Resolve an I2C client from a device-tree node. Return -EPROBE_DEFER when the
+ * adapter node exists but the client or its driver is not ready yet (probe order
+ * across multiple cameras / GMSL devices).
+ */
+static int tier4_imx490_get_i2c_client(struct device *dev,
+				       struct device_node *np,
+				       const char *label,
+				       struct i2c_client **client)
+{
+	struct i2c_client *i2c;
+
+	if (!np) {
+		dev_err(dev, "[%s] : Missing %s handle\n", __func__, label);
+		return -EINVAL;
+	}
+
+	i2c = of_find_i2c_device_by_node(np);
+	of_node_put(np);
+
+	if (!i2c) {
+		dev_dbg(dev, "[%s] : %s I2C device not ready, defer probe\n",
+			__func__, label);
+		return -EPROBE_DEFER;
+	}
+
+	if (!i2c->dev.driver) {
+		dev_dbg(dev,
+			"[%s] : %s driver not bound yet, defer probe\n",
+			__func__, label);
+		return -EPROBE_DEFER;
+	}
+
+	*client = i2c;
+	return 0;
+}
+
 static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 {
 	struct tegracam_device *tc_dev = priv->tc_dev;
@@ -1237,6 +1274,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
 	if (priv->g_ctx.hardware_model == HW_MODEL_UNKNOWN) {
 		dev_err(dev, "[%s] : Unknown Hardware Sysytem !\n", __func__);
+		err = -EINVAL;
 		goto error;
 	}
 
@@ -1337,9 +1375,10 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 	// For Ser node
 	ser_node = of_parse_phandle(node, "nvidia,gmsl-ser-device", 0);
 
-	if (ser_node == NULL) {
+	if (!ser_node) {
 		dev_err(dev, "[%s] : Missing %s handle\n", __func__,
 			"nvidia,gmsl-ser-device");
+		err = -EINVAL;
 		goto error;
 	}
 
@@ -1347,22 +1386,13 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
 	if (err < 0) {
 		dev_err(dev, "[%s] : Serializer reg not found\n", __func__);
+		of_node_put(ser_node);
 		goto error;
 	}
 
-	ser_i2c = of_find_i2c_device_by_node(ser_node);
-
-	of_node_put(ser_node);
-
-	if (ser_i2c == NULL) {
-		dev_err(dev, "[%s] : Missing Serializer Dev Handle\n",
-			__func__);
+	err = tier4_imx490_get_i2c_client(dev, ser_node, "serializer", &ser_i2c);
+	if (err)
 		goto error;
-	}
-	if (ser_i2c->dev.driver == NULL) {
-		dev_err(dev, "[%s] : Missing serializer driver\n", __func__);
-		goto error;
-	}
 
 	priv->ser_dev = &ser_i2c->dev;
 
@@ -1370,9 +1400,10 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
 	isp_node = of_parse_phandle(node, "nvidia,isp-device", 0);
 
-	if (isp_node == NULL) {
+	if (!isp_node) {
 		dev_err(dev, "[%s] : Missing %s handle\n", __func__,
 			"nvidia,isp-device");
+		err = -EINVAL;
 		goto error;
 	}
 
@@ -1380,21 +1411,13 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
 	if (err < 0) {
 		dev_err(dev, "[%s] : ISP reg not found\n", __func__);
+		of_node_put(isp_node);
 		goto error;
 	}
 
-	isp_i2c = of_find_i2c_device_by_node(isp_node);
-
-	of_node_put(isp_node);
-
-	if (isp_i2c == NULL) {
-		dev_err(dev, "[%s] : Missing ISP Dev Handle\n", __func__);
+	err = tier4_imx490_get_i2c_client(dev, isp_node, "ISP", &isp_i2c);
+	if (err)
 		goto error;
-	}
-	if (isp_i2c->dev.driver == NULL) {
-		dev_err(dev, "[%s] : Missing ISP driver\n", __func__);
-		goto error;
-	}
 
 	priv->isp_dev = &isp_i2c->dev;
 
@@ -1413,26 +1436,10 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
 	dser_node = of_parse_phandle(node, "nvidia,gmsl-dser-device", 0);
 
-	if (dser_node == NULL) {
-		dev_err(dev, "[%s] : Missing %s handle\n", __func__,
-			"nvidia,gmsl-dser-device");
+	err = tier4_imx490_get_i2c_client(dev, dser_node, "deserializer",
+					 &dser_i2c);
+	if (err)
 		goto error;
-	}
-
-	dser_i2c = of_find_i2c_device_by_node(dser_node);
-
-	of_node_put(dser_node);
-
-	if (dser_i2c == NULL) {
-		dev_err(dev, "[%s] : Missing deserializer dev handle\n",
-			__func__);
-		goto error;
-	}
-
-	if (dser_i2c->dev.driver == NULL) {
-		dev_err(dev, "[%s] : Missing deserializer driver\n", __func__);
-		goto error;
-	}
 
 	priv->dser_dev = &dser_i2c->dev;
 
@@ -1442,9 +1449,10 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
 		fpga_node = of_parse_phandle(node, "nvidia,fpga-device", 0);
 
-		if (fpga_node == NULL) {
+		if (!fpga_node) {
 			dev_err(dev, "[%s] : Missing %s handle\n", __func__,
 				"nvidia,fpga-device");
+			err = -EINVAL;
 			goto error;
 		}
 
@@ -1453,22 +1461,14 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
 		if (err < 0) {
 			dev_err(dev, "[%s] : FPGA reg not found\n", __func__);
+			of_node_put(fpga_node);
 			goto error;
 		}
 
-		fpga_i2c = of_find_i2c_device_by_node(fpga_node);
-
-		of_node_put(fpga_node);
-
-		if (fpga_i2c == NULL) {
-			dev_err(dev, "[%s] : Missing FPGA Dev Handle\n",
-				__func__);
+		err = tier4_imx490_get_i2c_client(dev, fpga_node, "FPGA",
+						  &fpga_i2c);
+		if (err)
 			goto error;
-		}
-		if (fpga_i2c->dev.driver == NULL) {
-			dev_err(dev, "[%s] : Missing FPGA driver\n", __func__);
-			goto error;
-		}
 
 		priv->fpga_dev = &fpga_i2c->dev;
 	}
@@ -1521,6 +1521,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 		priv->g_ctx.csi_mode = GMSL_CSI_2X2_MODE;
 	} else {
 		dev_err(dev, "[%s] :Invalid csi-mode\n", __func__);
+		err = -EINVAL;
 		goto error;
 	}
 
@@ -1576,6 +1577,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
 		if (!str_value1[i]) {
 			dev_err(dev, "[%s] : Invalid Stream Info\n", __func__);
+			err = -EINVAL;
 			goto error;
 		}
 
@@ -1592,6 +1594,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 		} else {
 			dev_err(dev, "[%s] : Invalid stream data type\n",
 				__func__);
+			err = -EINVAL;
 			goto error;
 		}
 	}
@@ -1601,7 +1604,12 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 	return NO_ERROR;
 
 error:
-	dev_err(dev, "[%s] : Board Setup failed\n", __func__);
+	if (err == -EPROBE_DEFER)
+		dev_dbg(dev, "[%s] : Board setup deferred\n", __func__);
+	else
+		dev_err(dev, "[%s] : Board Setup failed (%d)\n", __func__, err);
+	if (err >= 0)
+		err = -EINVAL;
 	return err;
 }
 
@@ -1673,7 +1681,8 @@ static int tier4_imx490_probe(struct i2c_client *client,
 	err = tier4_imx490_board_setup(priv);
 
 	if (err) {
-		dev_err(dev, "[%s] : Board Setup failed\n", __func__);
+		if (err != -EPROBE_DEFER)
+			dev_err(dev, "[%s] : Board Setup failed\n", __func__);
 		goto err_tegracam_unreg;
 	}
 
