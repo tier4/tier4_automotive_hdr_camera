@@ -125,12 +125,10 @@ class GeneratorOptions:
 
     def get_default_overlay_filename(self, platform_name: str) -> str:
         dts_filename = 'tier4'
-        if camera.Type.C1 in self.camera_list:
-            dts_filename += f'-{camera.Type.C1.image_sensor_name}'
-        if camera.Type.C2 in self.camera_list:
-            dts_filename += f'-{camera.Type.C2.image_sensor_name}'
-        if camera.Type.C3 in self.camera_list:
-            dts_filename += f'-{camera.Type.C3.image_sensor_name}'
+
+        unique_camera_types = list(dict.fromkeys(self.camera_list))
+        for cam_type in unique_camera_types:
+            dts_filename += f'-{cam_type.name.lower()}'
 
         version = str(self.l4t_version).replace('.', '').lower()
         dts_filename += f'-gmsl-device-tree-overlay-{platform_name.lower()}-{version}.dts'
