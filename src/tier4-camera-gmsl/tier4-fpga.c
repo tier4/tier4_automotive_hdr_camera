@@ -47,17 +47,17 @@
 
 static int fsync_mode; // 0: disabled, 1: enable auto mode, 2: enable manual mode
 
-module_param(fsync_mode, int, S_IRUGO | S_IWUSR);
+module_param(fsync_mode, int, 0644);
 
 static int fps_cam1_cam2 = 0xCAFE;
 static int fps_cam3_cam4 = 0xCAFE;
 static int fps_cam5_cam6 = 0xCAFE;
 static int fps_cam7_cam8 = 0xCAFE;
 
-module_param(fps_cam1_cam2, int, S_IRUGO | S_IWUSR);
-module_param(fps_cam3_cam4, int, S_IRUGO | S_IWUSR);
-module_param(fps_cam5_cam6, int, S_IRUGO | S_IWUSR);
-module_param(fps_cam7_cam8, int, S_IRUGO | S_IWUSR);
+module_param(fps_cam1_cam2, int, 0644);
+module_param(fps_cam3_cam4, int, 0644);
+module_param(fps_cam5_cam6, int, 0644);
+module_param(fps_cam7_cam8, int, 0644);
 
 struct tier4_fpga {
 	struct i2c_client *i2c_client;
@@ -81,7 +81,6 @@ static struct regmap_config tier4_fpga_regmap_config = {
 /* count channel */
 static __u32 channel_count_fpga; /* should be 1 */
 
-#if 1
 static int tier4_fpga_read_reg(struct device *dev, u16 addr, u8 *val)
 {
 	int err = 0;
@@ -94,7 +93,6 @@ static int tier4_fpga_read_reg(struct device *dev, u16 addr, u8 *val)
 
 	return err;
 }
-#endif
 
 static int tier4_fpga_write_reg(struct device *dev, u16 addr, u8 val)
 {
@@ -142,13 +140,11 @@ int tier4_fpga_enable_fsync_mode(struct device *dev)
 	//  }
 
 	err = tier4_fpga_write_reg(dev, FPGA_REG_MODE_ADDR, FPGA_MODE_FSYNC);
-	if (err) {
+	if (err)
 		dev_err(dev, "[%s] Enabling FSYNC mode failed.\n", __func__);
-	}
 #ifdef DEBUG_INFO
-	else {
+	else
 		dev_info(dev, "[%s] Enabling FSYNC mode.\n", __func__);
-	}
 #endif
 
 	return err;
@@ -168,13 +164,11 @@ int tier4_fpga_disable_fsync_mode(struct device *dev)
 	//  }
 
 	err = tier4_fpga_write_reg(dev, FPGA_REG_MODE_ADDR, FPGA_MODE_FREE_RUN);
-	if (err) {
+	if (err)
 		dev_err(dev, "[%s] Disabling FSYNC mode failed.\n", __func__);
-	}
 #ifdef DEBUG_INFO
-	else {
+	else
 		dev_info(dev, "[%s] Disabling FSYNC mode.\n", __func__);
-	}
 #endif
 	return err;
 }
@@ -249,9 +243,8 @@ int tier4_fpga_check_access(struct device *dev)
 
 	for (i = 0; i < 5; i++) {
 		err = tier4_fpga_read_reg(dev, FPGA_REG_VERSION_ADDR, &dummy8);
-		if (!err) {
+		if (!err)
 			break;
-		}
 		usleep_range(10000, 11000); // sleep 10 msec
 	}
 
@@ -383,11 +376,10 @@ int tier4_fpga_set_fsync_signal_frequency(struct device *dev, int des_number,
 			"[%s] Setting the frequency of fsync trigger failed.\n",
 			__func__);
 		return err;
-	} else {
-		dev_info(dev,
-			 "[%s] Setting the frequency of fsync trigger to %d.\n",
-			 __func__, val8);
 	}
+	dev_info(dev,
+		 "[%s] Setting the frequency of fsync trigger to %d.\n",
+		 __func__, val8);
 
 	return NO_ERROR;
 }
@@ -475,9 +467,8 @@ static int tier4_fpga_probe(struct i2c_client *client,
 
 	err = tier4_fpga_check_access(&client->dev);
 
-	if (err) {
+	if (err)
 		inhibit_fpga_access = 1;
-	}
 
 	// default mode is disabling gnereation of fsync
 
@@ -487,11 +478,10 @@ static int tier4_fpga_probe(struct i2c_client *client,
 		dev_err(&client->dev,
 			"[%s] Unable to disable generation of fsync.\n",
 			__func__);
-		if (inhibit_fpga_access) {
+		if (inhibit_fpga_access)
 			return NO_ERROR;
-		} else {
+		else
 			return -EINVAL;
-		}
 	}
 
 	channel_count_fpga++;
@@ -526,18 +516,18 @@ static const struct i2c_device_id tier4_fpga_id[] = {
 MODULE_DEVICE_TABLE(i2c, tier4_fpga_id);
 
 static struct i2c_driver tier4_fpga_i2c_driver = {
-  .driver = {
-    .name = "tier4_fpga",
-    .owner = THIS_MODULE,
-  },
-  .probe = tier4_fpga_probe,
-  .remove = tier4_fpga_remove,
-  .id_table = tier4_fpga_id,
+	.driver = {
+		.name = "tier4_fpga",
+		.owner = THIS_MODULE,
+	},
+	.probe = tier4_fpga_probe,
+	.remove = tier4_fpga_remove,
+	.id_table = tier4_fpga_id,
 };
 
 static int __init tier4_fpga_init(void)
 {
-	printk("FPGA Driver for Tier4 Cameras.\n");
+	pr_info("FPGA Driver for Tier4 Cameras.\n");
 
 	return i2c_add_driver(&tier4_fpga_i2c_driver);
 }

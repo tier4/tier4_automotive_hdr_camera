@@ -22,8 +22,8 @@
  *  ISX021 Sensor driver.
  */
 
-#ifndef __TIER4_ISX021_EXTREN_H__
-#define __TIER$_ISX021_EXTERN_H__
+#ifndef __TIER4_ISX021_EXTERN_H__
+#define __TIER4_ISX021_EXTERN_H__
 
 /**
  * @brief  mutex lock for sensor.

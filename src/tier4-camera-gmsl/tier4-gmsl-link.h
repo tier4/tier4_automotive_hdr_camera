@@ -99,21 +99,21 @@ struct tier4_gmsl_link_ctx {
 	__u32 dst_vc; /**< Destination virtual channel (user-defined). */
 	__u32 src_csi_port; /**< Sensor to serializer CSI port connection. */
 	__u32 dst_csi_port; /**< Deserializer to Jetson CSI port connection. */
-	__u32 serdes_csi_link; /**< GMSL link between serializer and deserializer
-                         devices. */
-	__u32 num_streams; /**< Number of active streams to be mapped
-                         from sensor. */
+	__u32 serdes_csi_link; /**< GMSL link between serializer and deserializer devices. */
+	__u32 num_streams; /**< Number of active streams to be mapped from sensor. */
 	__u32 num_csi_lanes; /**< Sensor's CSI lane configuration. */
 	__u32 csi_mode; /**< Deserializer CSI mode. */
 	__u32 ser_reg; /**< Serializer slave address. */
 	__u32 sdev_reg; /**< Sensor proxy slave address. */
 	__u32 sdev_def; /**< Sensor default slave address. */
 	__u32 reg_mux;
-	bool serdev_found; /**< Indicates whether the serializer device for
-                  the specified sensor source was found. Set by
-                  the serializer driver during setup; used by
-                  the deserializer driver to choose certain
-                  configuration settings during setup. */
+	/*
+	 * Indicates whether the serializer device for the specified sensor
+	 * source was found. Set by the serializer driver during setup; used
+	 * by the deserializer driver to choose certain configuration settings
+	 * during setup.
+	 */
+	bool serdev_found;
 	struct tier4_gmsl_stream streams[GMSL_DEV_MAX_NUM_DATA_STREAMS];
 	/*< An array of information about the data streams in the link. */
 	__u32 sensor_id; /**< Sensor ID  21:isx021 or 490:imx490 */

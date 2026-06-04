@@ -150,14 +150,14 @@ static struct st_priv wst_priv[MAX_NUM_CAMERA];
 
 static struct mutex tier4_imx490_lock;
 
-static int camera_channel_count = 0;
+static int camera_channel_count;
 
 // --- module parameter ---
 
 static int trigger_mode;
 static int fsync_mfp = -1;
 static int enable_distortion_correction = 1;
-static int internal_delay = 0;
+static int internal_delay;
 
 #define IMX490_MIN_EXPOSURE_TIME 11000 // 11 milisecond
 #define IMX490_MAX_EXPOSURE_TIME 33000 // 33 milisecond
@@ -166,12 +166,12 @@ static int shutter_time_min = IMX490_MIN_EXPOSURE_TIME;
 static int shutter_time_max = IMX490_MAX_EXPOSURE_TIME;
 
 module_param(trigger_mode, int, 0644);
-module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
-module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
-module_param(internal_delay,   int, S_IRUGO | S_IWUSR);
+module_param(shutter_time_min, int, 0644);
+module_param(shutter_time_max, int, 0644);
+module_param(internal_delay,   int, 0644);
 
-module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
-module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
+module_param(fsync_mfp, int, 0644);
+module_param(enable_distortion_correction, int, 0644);
 
 // ------------------------
 static char upper(char c)
@@ -568,7 +568,7 @@ static int tier4_imx490_set_auto_exposure(struct tegracam_device *tc_dev)
 static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
 {
 	int err = 0;
-	
+
 	struct tier4_imx490 *priv =
 		(struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
 
@@ -1269,23 +1269,23 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 #if 0
     priv->g_ctx.fpga_generate_fsync = false;
 
-    if (( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER ) ||
-        ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
+    if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER) ||
+	(priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)) {
 
-        err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
+	err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
 
-        if ( err < 0) {
-            if ( err == -EINVAL ) {
-                dev_info(dev, "[%s] : Parameter of fpga-generate-fsync does not exist.\n", __func__);
-            } else {
-                dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
-                goto error;
-            }
-        } else {
-            if (!strcmp(str_value, "true")) {
-                priv->g_ctx.fpga_generate_fsync = true;
-            }
-        }
+	if (err < 0) {
+	    if (err == -EINVAL) {
+		dev_info(dev, "[%s] : Parameter of fpga-generate-fsync does not exist.\n", __func__);
+	    } else {
+		dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
+		goto error;
+	    }
+	} else {
+	    if (!strcmp(str_value, "true")) {
+		priv->g_ctx.fpga_generate_fsync = true;
+	    }
+	}
     }
 #endif
 
@@ -1708,7 +1708,7 @@ err_tegracam_unreg:
 
 	tier4_isx021_sensor_mutex_unlock();
 
-	//  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p \n", __func__, camera_channel_count,
+	//  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p\n", __func__, camera_channel_count,
 	//           wst_priv[camera_channel_count].p_client);
 
 	return err;
@@ -1945,15 +1945,15 @@ static const struct i2c_device_id tier4_imx490_id[] = { { "tier4_imx490", 0 },
 MODULE_DEVICE_TABLE(i2c, tier4_imx490_id);
 
 static struct i2c_driver tier4_imx490_i2c_driver = {
-  .driver = {
-    .name       = "tier4_imx490",
-    .owner      = THIS_MODULE,
-    .of_match_table = of_match_ptr(tier4_imx490_of_match),
-  },
-  .probe    = tier4_imx490_probe,
-  .remove   = tier4_imx490_remove,
-  .shutdown   = tier4_imx490_shutdown,
-  .id_table   = tier4_imx490_id,
+	.driver = {
+		.name = "tier4_imx490",
+		.owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(tier4_imx490_of_match),
+	},
+	.probe = tier4_imx490_probe,
+	.remove = tier4_imx490_remove,
+	.shutdown = tier4_imx490_shutdown,
+	.id_table = tier4_imx490_id,
 };
 
 static int __init tier4_imx490_init(void)
@@ -1961,7 +1961,7 @@ static int __init tier4_imx490_init(void)
 	mutex_init(&serdes_lock__);
 	mutex_init(&tier4_imx490_lock);
 
-	printk(KERN_INFO "TIERIV Automotive HDR Camera driver.\n");
+	pr_info("TIERIV Automotive HDR Camera driver.\n");
 
 	return i2c_add_driver(&tier4_imx490_i2c_driver);
 }
