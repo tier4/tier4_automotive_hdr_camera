@@ -392,7 +392,7 @@ struct st_priv {
 
 static struct st_priv wst_priv[MAX_NUM_CAMERA];
 
-static int camera_channel_count = 0;
+static int camera_channel_count;
 
 static int trigger_mode = 0xCAFE;
 static int enable_auto_exposure = 0xCAFE;
@@ -401,18 +401,18 @@ static int shutter_time_min = ISX021_MIN_EXPOSURE_TIME;
 static int shutter_time_mid = ISX021_MID_EXPOSURE_TIME;
 static int shutter_time_max = ISX021_MAX_EXPOSURE_TIME;
 static int fsync_mfp = -1;
-static int internal_delay = 0;
+static int internal_delay;
 // static int debug_i2c_write = 0;
 
-module_param(trigger_mode, int, S_IRUGO | S_IWUSR);
-module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
-module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
-module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
-module_param(shutter_time_mid, int, S_IRUGO | S_IWUSR);
-module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
+module_param(trigger_mode, int, 0644);
+module_param(enable_auto_exposure, int, 0644);
+module_param(enable_distortion_correction, int, 0644);
+module_param(shutter_time_min, int, 0644);
+module_param(shutter_time_mid, int, 0644);
+module_param(shutter_time_max, int, 0644);
 
-module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
-module_param(internal_delay, int, S_IRUGO | S_IWUSR);
+module_param(fsync_mfp, int, 0644);
+module_param(internal_delay, int, 0644);
 // module_param(debug_i2c_write, int, S_IRUGO | S_IWUSR);
 
 static struct mutex tier4_sensor_lock__;
@@ -1205,15 +1205,18 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 	if (trigger_mode == TIER4_SYNC_MODE_EXTERNAL_READ_10FPS) {
 		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_105_ADDR, 0x00);
 		usleep_range(10000, 11000);
-		if (err) goto error_exit;
+		if (err)
+			goto error_exit;
 		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_104_ADDR, 0x00);
 		usleep_range(10000, 11000);
-		if (err) goto error_exit;
+		if (err)
+			goto error_exit;
 	} else {
 		int num_line;
 		u8 delay_byte0;
 		u8 delay_byte1;
-		u32 h_line_ns = 23810; 
+		u32 h_line_ns = 23810;
+
 		num_line = DIV_ROUND_CLOSEST(internal_delay * 1000, h_line_ns);
 		if (num_line > 0xFFFF) {
 			num_line = 0xFFFF;
@@ -1223,9 +1226,11 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 		delay_byte0 = num_line & 0xFF;         // LSB
 		delay_byte1 = (num_line >> 8) & 0xFF;  // MSB
 		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_105_ADDR, delay_byte1);
-		if (err) goto error_exit;
+		if (err)
+			goto error_exit;
 		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_104_ADDR, delay_byte0);
-		if (err) goto error_exit;
+		if (err)
+			goto error_exit;
 	}
 	if (err) {
 		goto error_exit;
@@ -1897,7 +1902,7 @@ tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_dev,
 					     TIER4_ISX021_REG_74_ADDR, 0x01);
 
 		usleep_range(1000, 2000);
-	
+
 		err = tier4_isx021_write_reg(tc_dev->s_data,
 					     TIER4_ISX021_REG_75_ADDR, 0x01);
 		if (err) {
@@ -1909,7 +1914,8 @@ tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_dev,
 
 		err = tier4_isx021_write_reg(tc_dev->s_data,
 					     TIER4_ISX021_REG_74_ADDR, 0x00);
-		if (err) goto error_exit;
+		if (err)
+			goto error_exit;
 
 		usleep_range(1000, 2000);
 
@@ -2228,7 +2234,7 @@ static int tier4_isx021_set_mode(struct tegracam_device *tc_dev)
 		break;
 	}
 
-	dev_dbg(dev, "[%s]: priv->enable_embedded_data = %d \n", __func__,
+	dev_dbg(dev, "[%s]: priv->enable_embedded_data = %d\n", __func__,
 		priv->enable_embedded_data);
 
 	return err;
@@ -2314,7 +2320,7 @@ static int tier4_isx021_start_one_streaming(struct tegracam_device *tc_dev)
 		dev_err(dev, "[%s] : Transition to Streaming state failed.\n", __func__);
 		return err;
 	}
-	
+
 	err = tier4_max9296_start_streaming(priv->dser_dev, dev);
 	if (err) {
 		dev_err(dev, "[%s] : Des(Max9296) failed to start streaming.\n",
@@ -2670,24 +2676,6 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 		dev_err(dev, "[%s] : reg_mux not found\n", __func__);
 		goto error;
 	}
-
-#if 0
-  err = of_property_read_string(node, "fsync-mode", &str_value);
-  if (err < 0)
-  {
-    dev_err(dev, "[%s] : No fsync-mode found\n", __func__);
-    goto error;
-  }
-
-  if (!strcmp(str_value, "true"))
-  {
-    priv->fsync_mode = true;
-  }
-  else
-  {
-    priv->fsync_mode = false;
-  }
-#endif
 
 	if (enable_distortion_correction == 0xCAFE) {
 		// if not set kernel param, read device tree param
@@ -3213,7 +3201,7 @@ static int tier4_isx021_probe(struct i2c_client *client,
 
 	tier4_isx021_sensor_mutex_unlock();
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 65)) & 0
+#if (KERNEL_VERSION(5, 10, 65) <= LINUX_VERSION_CODE) & 0
 
 	dev_info(&client->dev, "Detected ISX021 sensor\n");
 	return NO_ERROR;
@@ -3470,15 +3458,15 @@ static const struct i2c_device_id tier4_isx021_id[] = { { "tier4_isx021", 0 },
 MODULE_DEVICE_TABLE(i2c, tier4_isx021_id);
 
 static struct i2c_driver tier4_isx021_i2c_driver = {
-    .driver = {
-        .name           = "tier4_isx021",
-        .owner          = THIS_MODULE,
-        .of_match_table = of_match_ptr(tier4_isx021_of_match),
-    },
-    .probe      = tier4_isx021_probe,
-    .remove     = tier4_isx021_remove,
-    .shutdown   = tier4_isx021_shutdown,
-    .id_table   = tier4_isx021_id,
+	.driver = {
+		.name = "tier4_isx021",
+		.owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(tier4_isx021_of_match),
+	},
+	.probe = tier4_isx021_probe,
+	.remove = tier4_isx021_remove,
+	.shutdown = tier4_isx021_shutdown,
+	.id_table = tier4_isx021_id,
 };
 
 static int __init tier4_isx021_init(void)
@@ -3496,7 +3484,7 @@ static void __exit tier4_isx021_exit(void)
 	mutex_destroy(&tier4_sensor_lock__);
 	mutex_destroy(&tier4_isx021_lock);
 
-	printk(KERN_INFO "[%s]: Exit TIERIV Automotive HDR Camera driver.\n",
+	pr_info("[%s]: Exit TIERIV Automotive HDR Camera driver.\n",
 	       __func__);
 
 	i2c_del_driver(&tier4_isx021_i2c_driver);

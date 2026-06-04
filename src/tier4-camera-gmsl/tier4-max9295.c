@@ -181,23 +181,20 @@ struct map_ctx {
 	u8 st_id;
 };
 
-#if 1
-
 static int tier4_max9295_read_reg(struct device *dev, u16 addr, u8 *val)
 {
-    int err = 0;
-    u32 reg_val = 0;
-    struct tier4_max9295 *priv = dev_get_drvdata(dev);
+	int err = 0;
+	u32 reg_val = 0;
+	struct tier4_max9295 *priv = dev_get_drvdata(dev);
 
-    err = regmap_read(priv->regmap, addr, &reg_val);
+	err = regmap_read(priv->regmap, addr, &reg_val);
 
-    *val = reg_val & 0xFF;
+	*val = reg_val & 0xFF;
 
-    //dev_info(dev,  "[%s ] : Max9295 I2C Read at 0x%04X=[0x%02X].\n", __func__, addr, *val );
+	//dev_info(dev,  "[%s ] : Max9295 I2C Read at 0x%04X=[0x%02X].\n", __func__, addr, *val );
 
-    return err;
+	return err;
 }
-#endif
 
 static int tier4_max9295_write_reg(struct device *dev, u16 addr, u8 val)
 {
@@ -255,7 +252,7 @@ int tier4_max9295_setup_streaming(struct device *dev)
 	struct map_ctx map_pipe_dtype[] = {
 		{ GMSL_CSI_DT_YUV_8, MAX9295_PIPE_Z_DT_ADDR, 0x1E, // For YUV8
 		  MAX9295_ST_ID_2 },
-		{ GMSL_CSI_DT_UED_U1, MAX9295_PIPE_X_DT_ADDR, 
+		{ GMSL_CSI_DT_UED_U1, MAX9295_PIPE_X_DT_ADDR,
 		  0x30, // User defined embedded data type
 		  MAX9295_ST_ID_0 },
 		{ GMSL_CSI_DT_EMBED, MAX9295_PIPE_Y_DT_ADDR, 0x12,
@@ -369,7 +366,7 @@ int tier4_max9295_setup_streaming(struct device *dev)
 	tier4_max9295_write_reg(dev, MAX9295_CSI_PORT_SEL_ADDR, port_sel);
 
 	tier4_max9295_write_reg(dev, MAX9295_PIPE_EN_ADDR, pipe_en);
-	
+
 	priv->g_client.st_done = true;
 
 error:
@@ -412,15 +409,13 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id,
 
 	g_ctx = priv->g_client.g_ctx;
 
-#if 1
-
 	msleep(200);
 
 	if (power_on == true) {
 		// power up camera sensor
-		if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD){
+		if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
 			err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
- 
+
 			if (sensor_id == SENSOR_ID_ISX021) {
 				err += tier4_max9295_write_reg(dev, MAX9295_GPIO_5_ADDR,
 								0x04);
@@ -432,21 +427,20 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id,
 								0x10);
 				msleep(100);
 			}
- 
+
 			err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x10);
-		}
-		else if (priv->cam_type == TIER4_CAMERA_TYPE_MP){
+		} else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
 			err += tier4_max9295_write_reg(dev, MAX9295_GPIO_0_ADDR, 0x00);
 			msleep(100);
- 
+
 			err += tier4_max9295_write_reg(dev, MAX9295_GPIO_0_ADDR, 0x10);
 		}
-	} else { 
+	} else {
 		// power off caemra sensor
-		if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD){
+		if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
 			err += tier4_max9295_write_reg(dev, MAX9295_GPIO_8_ADDR, 0x00);
 			msleep(100);
- 
+
 			if (sensor_id == SENSOR_ID_ISX021) {
 				err += tier4_max9295_write_reg(dev, MAX9295_GPIO_5_ADDR,
 								0x04);
@@ -457,8 +451,7 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id,
 				err += tier4_max9295_write_reg(dev, MAX9295_GPIO_4_ADDR,
 								0x00);
 			}
-		}
-		else if (priv->cam_type == TIER4_CAMERA_TYPE_MP){
+		} else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
 			err += tier4_max9295_write_reg(dev, MAX9295_GPIO_0_ADDR, 0x00);
 		}
 	}
@@ -470,7 +463,6 @@ int tier4_max9295_control_sensor_power_seq(struct device *dev, __u32 sensor_id,
 	}
 
 	msleep(200);
-#endif
 	return err;
 }
 EXPORT_SYMBOL(tier4_max9295_control_sensor_power_seq);
@@ -500,10 +492,11 @@ int tier4_max9295_setup_gpo(struct device *dev)
 {
 	int err = 0;
 
-	dev_info(dev, "[%s] : Set up max9295 for fsync trigger mode \n",
+	dev_info(dev, "[%s] : Set up max9295 for fsync trigger mode\n",
 		 __func__);
 
 	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+
 	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
 		// For TIER IV camera
 		err += tier4_max9295_write_reg(dev, MAX9295_GPIO_3_CONFIG_MFP3_ADDR,
@@ -617,23 +610,22 @@ int tier4_max9295_setup_control(struct device *dev)
 	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
 		// For AB camera
 		tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR, MAX9295_PWDN_GPIO);
-		tier4_max9295_write_reg(dev, MAX9295_SRC_CTRL_ADDR, MAX9295_RESET_SRC);	
+		tier4_max9295_write_reg(dev, MAX9295_SRC_CTRL_ADDR, MAX9295_RESET_SRC);
 
 		// set PCLK output pin
 		tier4_max9295_write_reg(dev, MAX9295_SRC_OUT_RCLK_ADDR,
-					MAX9295_SRC_RCLK);	
+					MAX9295_SRC_RCLK);
 		/* PLL setting & Enable PLL */
 		tier4_max9295_write_reg(dev, MAX9295_REF_VTG0_ADDR, 0x59);
-	}
-	else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
+	} else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
 		// For TIER IV MP camera
-		tier4_max9295_write_reg(dev, MAX9295_SRC_CTRL_ADDR, 			0x60);
-		tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR, 			0x80);
-		tier4_max9295_write_reg(dev, MAX9295_GPIO_7_GPIO_TX_ID_ADDR, 	0x60);
-		tier4_max9295_write_reg(dev, MAX9295_GPIO_7_ADDR, 				0x80);
-		tier4_max9295_write_reg(dev, MAX9295_GPIO_8_GPIO_TX_ID_ADDR, 	0x60);
-		tier4_max9295_write_reg(dev, MAX9295_GPIO_8_CONFIG_MFP8_ADDR, 	0x80);
-		tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR, 			0x90);
+		tier4_max9295_write_reg(dev, MAX9295_SRC_CTRL_ADDR,			0x60);
+		tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR,			0x80);
+		tier4_max9295_write_reg(dev, MAX9295_GPIO_7_GPIO_TX_ID_ADDR,	0x60);
+		tier4_max9295_write_reg(dev, MAX9295_GPIO_7_ADDR,				0x80);
+		tier4_max9295_write_reg(dev, MAX9295_GPIO_8_GPIO_TX_ID_ADDR,	0x60);
+		tier4_max9295_write_reg(dev, MAX9295_GPIO_8_CONFIG_MFP8_ADDR,	0x80);
+		tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR,			0x90);
 		usleep_range(5000, 6000);
 	}
 
@@ -814,8 +806,7 @@ static void tier4_max9295_check_sensor_error(struct work_struct *work)
 
 	mutex_lock(&priv->lock);
 	subdev = priv->subdev;
-	if (!subdev)
-	{
+	if (!subdev) {
 		dev_dbg(dev, "subdev is NULL\n");
 		mutex_unlock(&priv->lock);
 		return;
@@ -823,7 +814,7 @@ static void tier4_max9295_check_sensor_error(struct work_struct *work)
 
 	gpio_addr = MAX9295_GPIO_0_ADDR + priv->xerror_mfp * 3;
 
-    err = tier4_max9295_read_reg(dev, gpio_addr, &val);
+	err = tier4_max9295_read_reg(dev, gpio_addr, &val);
 	if (err) {
 		dev_err(dev, "failed to read the XERROR pin: %d\n", err);
 		mutex_unlock(&priv->lock);
@@ -842,12 +833,12 @@ static void tier4_max9295_check_sensor_error(struct work_struct *work)
 			fault_state ? "detected" : "cleared");
 
 	if (subdev->devnode) {
-		snprintf(camera_id, sizeof camera_id, "CAMERA_ID=%s", subdev->name);
-		snprintf(major, sizeof major, "SUBDEV_MAJOR=%d",
+		snprintf(camera_id, sizeof(camera_id), "CAMERA_ID=%s", subdev->name);
+		snprintf(major, sizeof(major), "SUBDEV_MAJOR=%d",
 				MAJOR(subdev->devnode->dev.devt));
-		snprintf(minor, sizeof minor, "SUBDEV_MINOR=%d",
+		snprintf(minor, sizeof(minor), "SUBDEV_MINOR=%d",
 				MINOR(subdev->devnode->cdev->dev));
-		snprintf(fusa_hw_fault, sizeof fusa_hw_fault, "FUSA_HW_FAULT=%d",
+		snprintf(fusa_hw_fault, sizeof(fusa_hw_fault), "FUSA_HW_FAULT=%d",
 				fault_state);
 		kobject_uevent_env(&subdev->v4l2_dev->dev->kobj, KOBJ_CHANGE, envp);
 	}
@@ -902,6 +893,7 @@ static int tier4_max9295_probe(struct i2c_client *client,
 
 	{
 		u32 xerror_mfp;
+
 		if (of_property_read_u32(node, "xerror-gpios", &xerror_mfp) != 0 &&
 		    of_property_read_u32(node, "xerror-mfp", &xerror_mfp) != 0 &&
 		    of_property_read_u32(node, "mfp", &xerror_mfp) != 0) {
@@ -993,19 +985,19 @@ static const struct i2c_device_id tier4_max9295_id[] = {
 MODULE_DEVICE_TABLE(i2c, tier4_max9295_id);
 
 static struct i2c_driver tier4_max9295_i2c_driver = {
-    .driver = {
-        .name = "tier4_max9295",
-        .owner = THIS_MODULE,
-        .of_match_table = of_match_ptr(tier4_max9295_of_match),
-    },
-    .probe = tier4_max9295_probe,
-    .remove = tier4_max9295_remove,
-    .id_table = tier4_max9295_id,
+	.driver = {
+		.name = "tier4_max9295",
+		.owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(tier4_max9295_of_match),
+	},
+	.probe = tier4_max9295_probe,
+	.remove = tier4_max9295_remove,
+	.id_table = tier4_max9295_id,
 };
 
 static int __init tier4_max9295_init(void)
 {
-	printk(KERN_INFO "MAX9295 Driver for TIER4 C1 camera : %s\n",
+	pr_info("MAX9295 Driver for TIER4 C1 camera : %s\n",
 	       BUILD_STAMP);
 
 	return i2c_add_driver(&tier4_max9295_i2c_driver);

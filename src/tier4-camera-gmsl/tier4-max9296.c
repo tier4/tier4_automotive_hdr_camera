@@ -342,8 +342,8 @@ int tier4_max9296_power_on(struct device *dev)
 		}
 
 		if (priv->reset_gpio) {
-            gpiod_set_value(priv->reset_gpio, 1);
-        }
+	    gpiod_set_value(priv->reset_gpio, 1);
+	}
 
 		usleep_range(5000, 10000);
 
@@ -356,7 +356,7 @@ int tier4_max9296_power_on(struct device *dev)
 		usleep_range(10000, 20000);
 
 		/*exit reset mode: XCLR */
-		if (priv->reset_gpio){
+		if (priv->reset_gpio) {
 			gpiod_set_value(priv->reset_gpio, 0);
 			usleep_range(5000, 10000);
 		}
@@ -414,7 +414,8 @@ static int tier4_max9296_write_link(struct device *dev, u32 link)
 		return -EINVAL;
 	}
 
-	if (err) return err; 
+	if (err)
+		return err;
 
 	err = regmap_read_poll_timeout(priv->regmap, MAX9296_LINK_ADDR, val,
 				       (val & 0x08), 5000, 100000);
@@ -487,24 +488,24 @@ int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp)
 		mfp = priv->fsync_gpi;
 		dev_info(dev, "[%s] :  MFP%d is used for fsync (via device tree)\n", __func__, mfp);
 	} else {
-		mfp = 0; // default FSYNC MFP
+		mfp = 0; /* default FSYNC MFP */
 		dev_info(dev, "[%s] :  MFP%d is used for fsync (default fallback)\n", __func__, mfp);
 	}
 
 	gpio_mfp_base = (MAX9296_GPIO0_CONFIG_MFP0_ADDR + 3 * mfp) &
 			0xFFFF;
 
-	// disable UART
-	if (mfp==5 || mfp==6){
+	/* disable UART */
+	if (mfp == 5 || mfp == 6) {
 		dev_info(dev, "[%s] : Disable UART for MFP%d\n", __func__, mfp);
 		err += tier4_max9296_write_reg(dev, 0x0003, 0x40);
 	}
 
-	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD){
+	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base, 0x03);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 1, 0x06);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 2, 0x00);
-	} else if (priv->cam_type == TIER4_CAMERA_TYPE_MP){
+	} else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base, 0x83);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 1, 0x10);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 2, 0x40);
@@ -952,7 +953,7 @@ int tier4_max9296_stop_streaming(struct device *dev, struct device *s_dev)
 }
 EXPORT_SYMBOL(tier4_max9296_stop_streaming);
 
-int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev, __u32 sensor_id)
+int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev, u32 sensor_id)
 {
 	struct tier4_max9296 *priv = dev_get_drvdata(dev);
 	struct tier4_gmsl_link_ctx *g_ctx;
@@ -1070,6 +1071,7 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv,
 	const char *str_value;
 	int value;
 	const struct of_device_id *match;
+	u32 fsync_val;
 
 	if (!node)
 		return -EINVAL;
@@ -1120,14 +1122,14 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv,
 
 	priv->reset_gpio = devm_gpiod_get_optional(&client->dev, "reset", GPIOD_OUT_LOW);
     if (IS_ERR(priv->reset_gpio)) {
-        err = PTR_ERR(priv->reset_gpio);
-        if (err != -EPROBE_DEFER) {
-            dev_err(&client->dev, "[%s] : reset-gpios error %d\n", __func__, err);
-        }
-        return err;
-    }    
+	err = PTR_ERR(priv->reset_gpio);
+	if (err != -EPROBE_DEFER) {
+	    dev_err(&client->dev, "[%s] : reset-gpios error %d\n", __func__, err);
+	}
+	return err;
+    }
     if (!priv->reset_gpio) {
-        dev_info(&client->dev, "[%s] : reset-gpios not defined, continuing without it.\n", __func__);
+	dev_info(&client->dev, "[%s] : reset-gpios not defined, continuing without it.\n", __func__);
     }
 
 	/* digital 1.2v */
@@ -1145,21 +1147,18 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv,
 		priv->vdd_cam_1v2 = NULL;
 	}
 
-	{
-		u32 val;
-		err = of_property_read_u32(node, "fsync-gpi", &val);
+	err = of_property_read_u32(node, "fsync-gpi", &fsync_val);
+	if (err < 0) {
+		err = of_property_read_u32(node, "fsync-mfp", &fsync_val);
 		if (err < 0) {
-			err = of_property_read_u32(node, "fsync-mfp", &val);
-			if (err < 0) {
-				priv->fsync_gpi = -1;
-			} else {
-				priv->fsync_gpi = (int)val;
-				dev_info(&client->dev, "[%s] : Found fsync-mfp in DT: %d\n", __func__, priv->fsync_gpi);
-			}
+			priv->fsync_gpi = -1;
 		} else {
-			priv->fsync_gpi = (int)val;
-			dev_info(&client->dev, "[%s] : Found fsync-gpi in DT: %d\n", __func__, priv->fsync_gpi);
+			priv->fsync_gpi = (int)fsync_val;
+			dev_info(&client->dev, "[%s] : Found fsync-mfp in DT: %d\n", __func__, priv->fsync_gpi);
 		}
+	} else {
+		priv->fsync_gpi = (int)fsync_val;
+		dev_info(&client->dev, "[%s] : Found fsync-gpi in DT: %d\n", __func__, priv->fsync_gpi);
 	}
 
 	return 0;
@@ -1235,19 +1234,19 @@ static const struct i2c_device_id tier4_max9296_id[] = {
 MODULE_DEVICE_TABLE(i2c, tier4_max9296_id);
 
 static struct i2c_driver tier4_max9296_i2c_driver = {
-    .driver = {
-        .name = "tier4_max9296",
-        .owner = THIS_MODULE,
-        .of_match_table = of_match_ptr(tier4_max9296_of_match),
-    },
-    .probe = tier4_max9296_probe,
-    .remove = tier4_max9296_remove,
-    .id_table = tier4_max9296_id,
+	.driver = {
+		.name = "tier4_max9296",
+		.owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(tier4_max9296_of_match),
+	},
+	.probe = tier4_max9296_probe,
+	.remove = tier4_max9296_remove,
+	.id_table = tier4_max9296_id,
 };
 
 static int __init tier4_max9296_init(void)
 {
-	printk(KERN_INFO "MAX9296 Driver for TIERIV Camera : %s\n",
+	pr_info("MAX9296 Driver for TIERIV Camera : %s\n",
 	       BUILD_STAMP);
 	return i2c_add_driver(&tier4_max9296_i2c_driver);
 }
