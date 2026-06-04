@@ -2,11 +2,15 @@ tier4-camera-gmsl (2.1.0) focal; urgency=medium
 
   * Support hardware diagnostics via uevent
 
+-- tier4 <camera@tier4.jp>  Wed, 03 Jul 2025 12:00:00 +0900
+
 tier4-camera-gmsl (2.0.0) focal; urgency=medium
 
   * Refactor the entire repository
   * Support L4T R36
   * Fix bugs
+
+-- tier4 <camera@tier4.jp>  Tue, 14 Jan 2025 12:00:00 +0900
 
 tier4-camera-gmsl (1.5.0) focal; urgency=medium
 
