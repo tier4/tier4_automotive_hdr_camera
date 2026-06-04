@@ -292,7 +292,7 @@ static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number,
 		break;
 	}
 
-	if (trigger_mode == 1) {
+	if (trigger_mode == TIER4_SYNC_MODE_EXTERNAL_READ_10FPS) {
 		if ((fps > 5) && (fps <= 10)) {
 			freq = fps;
 		} else {
@@ -301,7 +301,7 @@ static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number,
 				 __func__, str_fps_camx_camy, fps,
 				 str_fps_camx_camy, freq);
 		}
-	} else if (trigger_mode == 3) {
+	} else if (trigger_mode == TIER4_SYNC_MODE_EXTERNAL_READ_20FPS) {
 		if ((fps > 10) && (fps <= 20)) {
 			freq = fps;
 		} else {
@@ -310,7 +310,7 @@ static int tier4_fpga_get_fps_camx_camy(struct device *dev, int des_number,
 				 __func__, str_fps_camx_camy, fps,
 				 str_fps_camx_camy, freq);
 		}
-	} else if (trigger_mode == 5) {
+	} else if (trigger_mode == TIER4_SYNC_MODE_EXTERNAL_READ_30FPS) {
 		if ((fps > 20) && (fps <= 30)) {
 			freq = fps;
 		} else {
