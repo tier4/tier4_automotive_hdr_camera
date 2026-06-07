@@ -157,6 +157,8 @@ static int camera_channel_count = 0;
 static int trigger_mode;
 static int fsync_mfp = -1;
 static int enable_distortion_correction = 1;
+static int internal_delay = 0;
+
 #define IMX490_MIN_EXPOSURE_TIME 11000 // 11 milisecond
 #define IMX490_MAX_EXPOSURE_TIME 33000 // 33 milisecond
 
@@ -166,6 +168,8 @@ static int shutter_time_max = IMX490_MAX_EXPOSURE_TIME;
 module_param(trigger_mode, int, 0644);
 module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
 module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
+module_param(internal_delay,   int, S_IRUGO | S_IWUSR);
+
 module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
 module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
 
@@ -777,7 +781,7 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
 	// set internal delay (frame period: 12500 for tier4_, 16666 for tier4mp_)
 	usleep_range(900000, 910000);
-	err = tier4_gw5300_set_internal_delay(priv->isp_dev, 0,
+	err = tier4_gw5300_set_internal_delay(priv->isp_dev, internal_delay,
 					      (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) ? 12500 : 16666);
 	if (err) {
 		dev_err(dev,

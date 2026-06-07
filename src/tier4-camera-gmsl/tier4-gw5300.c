@@ -548,6 +548,49 @@ int tier4_gw5300_c3_set_integration_time_on_aemode(struct device *dev,
 }
 EXPORT_SYMBOL(tier4_gw5300_c3_set_integration_time_on_aemode);
 
+int tier4_gw5300_set_internal_delay(struct device *dev, int internal_delay_us, u32 h_line_ns)
+{
+	int ret = 0;
+	int i;
+	u8 buf[6];
+	int delay_in_line;
+	u8 cmd[28] = {
+		0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+		0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00,
+		0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x02, 0x01, 0x00
+	};
+	u8 regs[3] = {0xfd, 0xfe, 0xff};
+	u8 vals[3];
+
+	if (internal_delay_us < 0 || internal_delay_us > 100000)
+		return -EINVAL;
+
+	if (h_line_ns == 0)
+		return -EINVAL;
+
+	delay_in_line = DIV_ROUND_CLOSEST(internal_delay_us * 1000, h_line_ns);
+
+	vals[0] = (delay_in_line >> 0) & 0xff;
+	vals[1] = (delay_in_line >> 8) & 0xff;
+	vals[2] = (delay_in_line >> 16) & 0xff;
+
+	for (i = 0; i < 3; i++) {
+		cmd[17] = regs[i];
+		cmd[21] = vals[i];
+		cmd[27] = 0;
+		cmd[27] = calcCheckSum(cmd, 28);
+
+		ret = tier4_gw5300_send_and_recv_msg(dev, cmd, sizeof(cmd), buf, sizeof(buf));
+		if (ret < 0)
+			return -EINVAL;
+		usleep_range(100000, 110000);
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(tier4_gw5300_set_internal_delay);
+
 // ------------------------------------------------------------------
 
 int tier4_gw5300_set_distortion_correction(struct device *dev, bool val)
