@@ -35,6 +35,12 @@
 
 #define __TIER4_GMSL_LINK_H__
 
+enum tier4_camera_type {
+	TIER4_CAMERA_TYPE_STANDARD = 0,
+	TIER4_CAMERA_TYPE_MP = 1,
+};
+
+
 #define GMSL_CSI_DT_YUV_8 0x1E
 
 #define GMSL_CSI_1X4_MODE 0x1
@@ -116,3 +122,4 @@ struct tier4_gmsl_link_ctx {
 /** @} */
 
 #endif /* __TIER4_GMSL_LINK_H__ */
+
