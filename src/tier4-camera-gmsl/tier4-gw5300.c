@@ -18,6 +18,9 @@
 
 #include <linux/module.h>
 #include <linux/string.h>
+#include <linux/of.h>
+#include <linux/of_device.h>
+#include <linux/of_gpio.h>
 #include <media/camera_common.h>
 
 #include "tier4-gmsl-link.h"
@@ -29,16 +32,24 @@ struct tier4_gw5300 {
 	struct mutex lock;
 	/* primary ISP properties */
 	__u32 def_addr;
+	const char *compatible;
+	enum tier4_camera_type cam_type;
 };
 
 #define MAX_CHANNEL_NUM 8
 
 #define NO_ERROR 0
 
+// #define SHOW_I2C_WRITE_MSG
+
 /* count channel,the max MAX_CHANNEL_NUM*/
 static __u32 channel_count_gw5300;
 
 static struct tier4_gw5300 *prim_priv__[MAX_CHANNEL_NUM];
+
+/*
+ * C2
+*/
 
 static u8 master_30fps[] = { 0x33, 0x47, 0x0B, 0x00, 0x00, 0x00,
 			     0x12, 0x00, 0x80, 0x03, 0x00, 0x00,
@@ -71,6 +82,46 @@ static u8 master_10fps_slow[] = { 0x33, 0x47, 0x0B, 0x00, 0x00, 0x00,
 static u8 slave_10fps_slow[] = { 0x33, 0x47, 0x0B, 0x00, 0x00, 0x00,
 				 0x12, 0x00, 0x80, 0x03, 0x00, 0x00,
 				 0x00, 0x4B, 0x00, 0x00, 0x00, 0x65 };
+
+/*
+ * C2-MP
+*/
+
+static u8 c2mp_master_10fps[] = { 
+				0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+				0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x17, 0x70, 0x00, 0x02, 0x03, 0xB0
+			};
+
+static u8 c2mp_slave_10fps[] = { 
+				0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+				0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x17, 0x70, 0x00, 0x02, 0x03, 0xB0
+			};
+
+static u8 c2mp_master_20fps[] = { 
+				0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+				0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 
+				0x00, 0x00, 0x00, 0x00, 0xD8, 0x0B, 0xB8, 0x00, 0x02, 0x03, 0xC4 
+			};
+
+static u8 c2mp_slave_20fps[] = { 
+				0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+				0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x0B, 0xB8, 0x00, 0x02, 0x03, 0xC4
+			};
+
+static u8 c2mp_master_30fps[] = { 
+				0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+				0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0xD0, 0x00, 0x02, 0x03, 0x00
+			};
+
+static u8 c2mp_slave_30fps[] = { 
+				0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
+				0x80, 0x01, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0xD0, 0x00, 0x02, 0x03, 0x00
+			};
 
 /*
  * C3 camera mode support
@@ -329,13 +380,28 @@ static int tier4_gw5300_send_and_recv_msg(struct device *dev, u8 *wdata,
 	msg[1].len = rdata_size;
 	msg[1].buf = rdata;
 
+#ifdef SHOW_I2C_WRITE_MSG
+	// sending data
+    dev_info(dev, "[Debug] Sending %d bytes:\n", wdata_size);
+    print_hex_dump(KERN_INFO, "TX_DATA: ", DUMP_PREFIX_OFFSET, 16, 1,
+                   wdata, wdata_size, false);
+#endif
+
+	// transfer data
 	err = i2c_transfer(priv->i2c_client->adapter, msg, 2);
 
 	if (err <= 0) {
 		dev_err(dev,
 			"[%s] : i2c_transer send message failed. %d: slave addr = 0x%x\n",
 			__func__, err, msg[0].addr);
-	}
+	} else {
+#ifdef SHOW_I2C_WRITE_MSG
+		// receiving data
+		dev_info(dev, "[Debug] Received %d bytes:\n", rdata_size);
+        print_hex_dump(KERN_INFO, "RX_DATA: ", DUMP_PREFIX_OFFSET, 16, 1,
+                       rdata, rdata_size, false);
+#endif
+    }
 
 	return err; //  the total number of bytes to have been sent or recived
 }
@@ -454,11 +520,17 @@ int tier4_gw5300_c2_set_integration_time_on_aemode(struct device *dev,
 						   u32 max_integration_time,
 						   u32 min_integration_time)
 {
-	size_t h_line_ns = 12500;
+	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 
-	if (trigger_mode == GW5300_MASTER_MODE_10FPS_SLOW ||
-	    trigger_mode == GW5300_SLAVE_MODE_10FPS_SLOW)
-		h_line_ns = 50000;
+	size_t h_line_ns = 12500;
+	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+		h_line_ns = 12500;
+		if (trigger_mode == GW5300_MASTER_MODE_10FPS_SLOW ||
+			trigger_mode == GW5300_SLAVE_MODE_10FPS_SLOW)
+			h_line_ns = 50000;
+	} else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
+		h_line_ns = 16666;
+	}
 
 	return tier4_gw5300_set_integration_time_on_aemode(
 		dev, h_line_ns, max_integration_time, min_integration_time);
@@ -596,168 +668,313 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
 {
 	int err = 0;
 	u8 buf[6];
+	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 
 	memset(buf, 0x00, 6);
 
-	switch (sensor_mode) {
-	case GW5300_MASTER_MODE_10FPS:
-		err = tier4_gw5300_send_and_recv_msg(dev, master_10fps,
-						     sizeof(master_10fps), buf,
-						     sizeof(buf));
-		if (err < 0) {
-			dev_err(dev,
-				"[%s] : Setting up Master mode 10fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			goto error;
-		} else if (err == 0) { // it means that 0 message has been sent.
-			dev_err(dev,
-				"[%s] : Setting up Master mode 10fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			err = -999;
-			goto error;
-		} else {
-			err = 0;
+	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+		// for C2/C3 camera
+		switch (sensor_mode) {
+		case GW5300_MASTER_MODE_10FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, master_10fps,
+								sizeof(master_10fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Master mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Master mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_SLAVE_MODE_10FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, slave_10fps,
+								sizeof(slave_10fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_MASTER_MODE_20FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, master_20fps,
+								sizeof(master_20fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_SLAVE_MODE_20FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, slave_20fps,
+								sizeof(slave_20fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_MASTER_MODE_30FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, master_30fps,
+								sizeof(master_30fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_SLAVE_MODE_30FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, slave_30fps,
+								sizeof(slave_30fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_MASTER_MODE_10FPS_SLOW:
+			err = tier4_gw5300_send_and_recv_msg(dev, master_10fps_slow,
+								sizeof(master_10fps_slow),
+								buf, sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Slow clock Master mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Slow clock Master mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_SLAVE_MODE_10FPS_SLOW:
+			err = tier4_gw5300_send_and_recv_msg(dev, slave_10fps_slow,
+								sizeof(slave_10fps_slow),
+								buf, sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Slow clock Slave mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Slow clock Slave mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		default:
+			break;
 		}
-		break;
-
-	case GW5300_SLAVE_MODE_10FPS:
-		err = tier4_gw5300_send_and_recv_msg(dev, slave_10fps,
-						     sizeof(slave_10fps), buf,
-						     sizeof(buf));
-		if (err < 0) {
-			dev_err(dev,
-				"[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			goto error;
-		} else if (err == 0) { // it means that 0 message has been sent.
-			dev_err(dev,
-				"[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			err = -999;
-			goto error;
-		} else {
-			err = 0;
-		}
-		break;
-	case GW5300_MASTER_MODE_20FPS:
-		err = tier4_gw5300_send_and_recv_msg(dev, master_20fps,
-						     sizeof(master_20fps), buf,
-						     sizeof(buf));
-		if (err < 0) {
-			dev_err(dev,
-				"[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			goto error;
-		} else if (err == 0) { // it means that 0 message has been sent.
-			dev_err(dev,
-				"[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			err = -999;
-			goto error;
-		} else {
-			err = 0;
-		}
-		break;
-	case GW5300_SLAVE_MODE_20FPS:
-		err = tier4_gw5300_send_and_recv_msg(dev, slave_20fps,
-						     sizeof(slave_20fps), buf,
-						     sizeof(buf));
-		if (err < 0) {
-			dev_err(dev,
-				"[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			goto error;
-		} else if (err == 0) { // it means that 0 message has been sent.
-			dev_err(dev,
-				"[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			err = -999;
-			goto error;
-		} else {
-			err = 0;
-		}
-		break;
-	case GW5300_MASTER_MODE_30FPS:
-		err = tier4_gw5300_send_and_recv_msg(dev, master_30fps,
-						     sizeof(master_30fps), buf,
-						     sizeof(buf));
-		if (err < 0) {
-			dev_err(dev,
-				"[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			goto error;
-		} else if (err == 0) { // it means that 0 message has been sent.
-			dev_err(dev,
-				"[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			err = -999;
-			goto error;
-		} else {
-			err = 0;
-		}
-		break;
-
-	case GW5300_SLAVE_MODE_30FPS:
-		err = tier4_gw5300_send_and_recv_msg(dev, slave_30fps,
-						     sizeof(slave_30fps), buf,
-						     sizeof(buf));
-		if (err < 0) {
-			dev_err(dev,
-				"[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			goto error;
-		} else if (err == 0) { // it means that 0 message has been sent.
-			dev_err(dev,
-				"[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			err = -999;
-			goto error;
-		} else {
-			err = 0;
-		}
-		break;
-	case GW5300_MASTER_MODE_10FPS_SLOW:
-		err = tier4_gw5300_send_and_recv_msg(dev, master_10fps_slow,
-						     sizeof(master_10fps_slow),
-						     buf, sizeof(buf));
-		if (err < 0) {
-			dev_err(dev,
-				"[%s] : Setting up Slow clock Master mode 10fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			goto error;
-		} else if (err == 0) { // it means that 0 message has been sent.
-			dev_err(dev,
-				"[%s] : Setting up Slow clock Master mode 10fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			err = -999;
-			goto error;
-		} else {
-			err = 0;
-		}
-		break;
-	case GW5300_SLAVE_MODE_10FPS_SLOW:
-		err = tier4_gw5300_send_and_recv_msg(dev, slave_10fps_slow,
-						     sizeof(slave_10fps_slow),
-						     buf, sizeof(buf));
-		if (err < 0) {
-			dev_err(dev,
-				"[%s] : Setting up Slow clock Slave mode 10fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			goto error;
-		} else if (err == 0) { // it means that 0 message has been sent.
-			dev_err(dev,
-				"[%s] : Setting up Slow clock Slave mode 10fps failed. %d message has been sent to gw5300.\n",
-				__func__, err);
-			err = -999;
-			goto error;
-		} else {
-			err = 0;
-		}
-		break;
-	default:
-		break;
 	}
-
+	else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
+		// for C2/C3MP camera
+		switch (sensor_mode) {
+		case GW5300_MASTER_MODE_10FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, c2mp_master_10fps,
+								sizeof(c2mp_master_10fps), buf,
+								sizeof(buf));				
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Master mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Master mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_SLAVE_MODE_10FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, c2mp_slave_10fps,
+								sizeof(c2mp_slave_10fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_MASTER_MODE_20FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, c2mp_master_20fps,
+								sizeof(c2mp_master_20fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Master mode 20fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_SLAVE_MODE_20FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, c2mp_slave_20fps,
+								sizeof(c2mp_slave_20fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 20fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_MASTER_MODE_30FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, c2mp_master_30fps,
+								sizeof(c2mp_master_30fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Master mode 30fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_SLAVE_MODE_30FPS:
+			err = tier4_gw5300_send_and_recv_msg(dev, c2mp_slave_30fps,
+								sizeof(c2mp_slave_30fps), buf,
+								sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 30fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		case GW5300_MASTER_MODE_10FPS_SLOW:
+		case GW5300_SLAVE_MODE_10FPS_SLOW:
+			dev_warn(dev,
+				 "[%s] : Slow shutter speed modes are not supported for C2 MP. set 10fps mode\n",
+				__func__);
+			err = tier4_gw5300_send_and_recv_msg(dev, c2mp_slave_10fps,
+						sizeof(c2mp_slave_10fps), buf,
+						sizeof(buf));
+			if (err < 0) {
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				goto error;
+			} else if (err == 0) { // it means that 0 message has been sent.
+				dev_err(dev,
+					"[%s] : Setting up Slave mode 10fps failed. %d message has been sent to gw5300.\n",
+					__func__, err);
+				err = -999;
+				goto error;
+			} else {
+				err = 0;
+			}
+			break;
+		default:
+			break;
+		}
+	}
 error:
 
 	return err;
@@ -907,17 +1124,44 @@ int tier4_gw5300_c2_test_hw_fault(struct device *dev, bool enable)
 }
 EXPORT_SYMBOL(tier4_gw5300_c2_test_hw_fault);
 
+const struct of_device_id tier4_gw5300_of_match[] = {
+	{
+		.compatible = "nvidia,tier4_gw5300",
+	},
+	{
+		.compatible = "nvidia,tier4mp_gw5300",
+	},
+	{},
+};
+MODULE_DEVICE_TABLE(of, tier4_gw5300_of_match);
+
 static int tier4_gw5300_probe(struct i2c_client *client,
 			      const struct i2c_device_id *id)
 {
 	struct tier4_gw5300 *priv;
 	int err = 0;
 	struct device_node *node = client->dev.of_node;
+	const struct of_device_id *match;
 
 	dev_info(&client->dev, "[%s] : probing GW5300 ISP\n", __func__);
 
 	priv = devm_kzalloc(&client->dev, sizeof(*priv), GFP_KERNEL);
 	priv->i2c_client = client;
+
+	match = of_match_device(tier4_gw5300_of_match, &client->dev);
+	if (!match) {
+		dev_err(&client->dev, "[%s] : Failed to match device with dt id\n", __func__);
+		return -ENODEV;
+	}
+	priv->compatible = match->compatible;
+
+	if (strstr(priv->compatible, "tier4mp_")) {
+		priv->cam_type = TIER4_CAMERA_TYPE_MP;
+		dev_info(&client->dev, "[%s] : Matched TIER IV MP compatible: %s\n", __func__, priv->compatible);
+	} else {
+		priv->cam_type = TIER4_CAMERA_TYPE_STANDARD;
+		dev_info(&client->dev, "[%s] : Matched TIER IV compatible: %s\n", __func__, priv->compatible);
+	}
 
 	mutex_init(&priv->lock);
 
@@ -967,20 +1211,13 @@ static const struct i2c_device_id tier4_gw5300_id[] = {
 	{ "tier4_gw5300", 0 },
 	{},
 };
-
-const struct of_device_id tier4_gw5300_of_match[] = {
-	{
-		.compatible = "nvidia,tier4_gw5300",
-	},
-	{},
-};
-MODULE_DEVICE_TABLE(of, tier4_gw5300_of_match);
 MODULE_DEVICE_TABLE(i2c, tier4_gw5300_id);
 
 static struct i2c_driver tier4_gw5300_i2c_driver = {
     .driver = {
         .name = "tier4_gw5300",
         .owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(tier4_gw5300_of_match),
     },
     .probe = tier4_gw5300_probe,
     .remove = tier4_gw5300_remove,
