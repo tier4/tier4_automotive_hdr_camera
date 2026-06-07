@@ -40,6 +40,13 @@ enum tier4_camera_type {
 	TIER4_CAMERA_TYPE_MP = 1,
 };
 
+#define TIER4_SYNC_MODE_INTERNAL_10FPS       0
+#define TIER4_SYNC_MODE_EXTERNAL_READ_10FPS  1
+#define TIER4_SYNC_MODE_INTERNAL_20FPS       2
+#define TIER4_SYNC_MODE_EXTERNAL_READ_20FPS  3
+#define TIER4_SYNC_MODE_INTERNAL_30FPS       4
+#define TIER4_SYNC_MODE_EXTERNAL_READ_30FPS  5
+#define TIER4_SYNC_MODE_EXTERNAL_SHUTTER     6
 
 #define GMSL_CSI_DT_YUV_8 0x1E
 
@@ -122,4 +129,3 @@ struct tier4_gmsl_link_ctx {
 /** @} */
 
 #endif /* __TIER4_GMSL_LINK_H__ */
-

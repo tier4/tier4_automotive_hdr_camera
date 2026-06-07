@@ -323,6 +323,9 @@ const struct of_device_id tier4_isx021_of_match[] = {
 	{
 		.compatible = "nvidia,tier4_isx021",
 	},
+	{
+		.compatible = "nvidia,tier4mp_isx021",
+	},
 	{},
 };
 
@@ -358,6 +361,8 @@ struct tier4_isx021 {
 	bool inhibit_fpga_access;
 	int enable_embedded_data; // 0:disable all embedded data 1: enable front embedded data 2:enable rear embedded data 3: enable front and rear embedded data
 	atomic_t test_hw_fault;
+	const char *compatible;
+	enum tier4_camera_type cam_type;
 };
 
 static const struct regmap_config tier4_sensor_regmap_config = {
@@ -2815,6 +2820,7 @@ static int tier4_isx021_probe(struct i2c_client *client,
 	struct device_node *node = dev->of_node;
 	struct tegracam_device *tc_dev;
 	struct tier4_isx021 *priv;
+	const struct of_device_id *match;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 65)
 	loff_t size;
@@ -2862,6 +2868,26 @@ static int tier4_isx021_probe(struct i2c_client *client,
 	tc_dev->sensor_ops = &tier4_isx021_common_ops;
 	tc_dev->v4l2sd_internal_ops = &tier4_isx021_subdev_internal_ops;
 	tc_dev->tcctrl_ops = &tier4_isx021_ctrl_ops;
+
+	match = of_match_device(tier4_isx021_of_match, dev);
+	if (!match) {
+		dev_err(dev, "[%s] : Failed to find matching dt id\n", __func__);
+		err = -ENODEV;
+		goto errret;
+	}
+	priv->compatible = match->compatible;
+
+	if (strstr(priv->compatible, "tier4mp_")) {
+		priv->cam_type = TIER4_CAMERA_TYPE_MP;
+		dev_info(dev, "[%s] : Matched TIER IV MP compatible: %s\n", __func__, priv->compatible);
+	} else if (strstr(priv->compatible, "tier4_")) {
+		priv->cam_type = TIER4_CAMERA_TYPE_STANDARD;
+		dev_info(dev, "[%s] : Matched TIER IV compatible: %s\n", __func__, priv->compatible);
+	} else {
+		dev_err(dev, "[%s] : No matching compatible found: %s\n", __func__, priv->compatible);
+		err = -ENODEV;
+		goto errret;
+	}
 
 	firmware_buffer =
 		devm_kzalloc(dev, sizeof(u16) * MAX_NUM_OF_REG, GFP_KERNEL);
@@ -2976,15 +3002,17 @@ static int tier4_isx021_probe(struct i2c_client *client,
 	}
 
 	tier4_isx021_sensor_mutex_unlock();
+	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+		err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_90_ADDR,
+					0x06);
 
-	err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_90_ADDR,
-				     0x06);
-
-	err = tier4_isx021_set_response_mode(priv);
-	if (err) {
-		dev_warn(dev, "[%s] : Transition to response mode failed.\n",
-			 __func__);
-		goto err_tegracam_v4l2_unreg;
+		err = tier4_isx021_set_response_mode(priv);
+		if (err) {
+			dev_warn(dev, "[%s] : Transition to response mode failed.\n",
+				 __func__);
+			goto err_tegracam_v4l2_unreg;
+		}
+	}
 	}
 
 	device_create_file(&client->dev, &dev_attr_test_hw_fault);
@@ -3220,18 +3248,20 @@ static void tier4_isx021_shutdown(struct i2c_client *client)
 			} //  if ( i & 0x1 )
 			//         break;
 
-			if (tier4_isx021_is_sensor_ser_shutdown(i)) {
-				// Reset camera sensor
-				tier4_max9295_control_sensor_power_seq(
+			if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+				if (tier4_isx021_is_sensor_ser_shutdown(i)) {
+					// Reset camera sensor
+					tier4_max9295_control_sensor_power_seq(
 					priv->ser_dev, SENSOR_ID_ISX021, false);
-				// S/W Reset max9295
-				tier4_max9295_reset_control(priv->ser_dev);
-			}
+					// S/W Reset max9295
+					tier4_max9295_reset_control(priv->ser_dev);
+				}
 
-			if (tier4_isx021_is_des_shut_down(i)) {
-				// S/W Reset max9296
-				tier4_max9296_reset_control(priv->dser_dev,
-							    &client->dev, true);
+				if (tier4_isx021_is_des_shut_down(i)) {
+					// S/W Reset max9296
+					tier4_max9296_reset_control(priv->dser_dev,
+					    &client->dev, true);
+				}
 			}
 
 			if (priv == NULL || i >= camera_channel_count) {
