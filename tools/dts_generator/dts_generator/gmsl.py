@@ -71,3 +71,58 @@ class Deserializer:
                 'max-src = <2>',
                 'clk-mhz = <2000>',
             ])
+
+
+class Tier4MPSerializer:
+    @staticmethod
+    def primary(index: int) -> DeviceTreeNode:
+        return (DeviceTreeNode('max9295_prim@62', label=f'ser{index}_prim')
+            .properties([
+                'compatible = "nvidia,tier4mp_max9295"',
+                'reg = <0x62>',
+                'is-prim-ser',
+                'status = "okay"',
+            ]))
+
+    @staticmethod
+    def secondary_a(index: int, suffix: StringLike, vc_id: StringLike, dser_label: str) -> DeviceTreeNode:
+        """Secondary serializer A - uses @40 address for Tier4MP"""
+        return (DeviceTreeNode(f'max9295_{suffix}@40', label=f'ser{index}_a')
+            .properties([
+                'status = "okay"',
+                'compatible = "nvidia,tier4mp_max9295"',
+                'reg = <0x40>',
+                f'nvidia,gmsl-dser-device = <&{dser_label}>',
+                f'vc-id = <{vc_id}>',
+            ]))
+
+    @staticmethod
+    def secondary_b(index: int, suffix: StringLike, vc_id: StringLike, dser_label: str) -> DeviceTreeNode:
+        """Secondary serializer B - uses @60 address"""
+        return (DeviceTreeNode(f'max9295_{suffix}@60', label=f'ser{index}_b')
+            .properties([
+                'status = "okay"',
+                'compatible = "nvidia,tier4mp_max9295"',
+                'reg = <0x60>',
+                f'nvidia,gmsl-dser-device = <&{dser_label}>',
+                f'vc-id = <{vc_id}>',
+            ]))
+
+
+class Tier4MPDeserializer:
+    """Tier4MP GMSL Deserializer (tier4mp_max9296)"""
+
+    @staticmethod
+    def node(name: str, label: str, csi_lanes: SupportsInt) -> DeviceTreeNode:
+        csi_lanes = int(csi_lanes)
+        validate_csi_lanes(csi_lanes)
+
+        return (DeviceTreeNode(f'{name}@48', label=label)
+            .properties([
+                'status = "okay"',
+                'compatible = "nvidia,tier4mp_max9296"',
+                'reg = <0x48>',
+                f'csi-mode = "2x{csi_lanes}"',
+                'max-src = <2>',
+                'clk-mhz = <2000>',
+            ]))

@@ -8,7 +8,12 @@ from typing import Dict, Final, Iterable, List, Optional, Tuple
 
 
 def _indent_lines(lines: str, depth: int) -> str:
-    return ''.join(map(lambda s: ('\t' * depth) + s, lines.splitlines(keepends=True)))
+    def indent_line(s: str) -> str:
+        # Don't indent empty lines (lines that are just whitespace/newline)
+        if s.strip() == '':
+            return s
+        return ('\t' * depth) + s
+    return ''.join(map(indent_line, lines.splitlines(keepends=True)))
 
 
 def _split_property(property_str: str) -> Tuple[str, Optional[str]]:

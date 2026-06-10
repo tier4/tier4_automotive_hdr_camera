@@ -116,7 +116,7 @@ int tier4_max9296_sdev_unregister(struct device *dev, struct device *s_dev);
  *
  * @return  0 or success, or -1 otherwise.
  */
-int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev);
+int tier4_max9296_setup_streaming(struct device *dev, struct device *s_dev, u32 sensor_id);
 
 /**
  * @brief Enables streaming.

@@ -30,7 +30,7 @@ CSI_LANES: int = 4
 NUM_GMSL_DESERIALIZERS: int = 4
 TOTAL_CSI_LANES: int = CSI_LANES * NUM_GMSL_DESERIALIZERS
 
-PIXEL_CLOCK: int = 350000000
+PIXEL_CLOCK: int = 625000000
 
 
 def build_cameras(camera_list: Iterable[camera.Type], gmsl_dsers: Iterable[DeviceTreeNode]) -> List[camera.Camera]:
@@ -44,42 +44,78 @@ def build_cameras(camera_list: Iterable[camera.Type], gmsl_dsers: Iterable[Devic
     assert len(dser_label) >= 4
 
     c1_cameras = [
-        camera.C1(index=7, suffix='a', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C1(index=6, suffix='b', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1(index=5, suffix='c', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C1(index=4, suffix='d', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1(index=3, suffix='e', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C1(index=2, suffix='f', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1(index=1, suffix='g', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C1(index=0, suffix='h', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C1(index=7, suffix='a', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_a"),
+        camera.C1(index=6, suffix='b', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_a"),
+        camera.C1(index=5, suffix='c', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_c"),
+        camera.C1(index=4, suffix='d', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_c"),
+        camera.C1(index=3, suffix='e', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_e"),
+        camera.C1(index=2, suffix='f', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_e"),
+        camera.C1(index=1, suffix='g', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_g"),
+        camera.C1(index=0, suffix='h', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_g"),
     ]
 
     c2_cameras = [
-        camera.C2(index=7, suffix='a', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C2(index=6, suffix='b', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2(index=5, suffix='c', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C2(index=4, suffix='d', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2(index=3, suffix='e', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C2(index=2, suffix='f', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2(index=1, suffix='g', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C2(index=0, suffix='h', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C2(index=7, suffix='a', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_a"),
+        camera.C2(index=6, suffix='b', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_a"),
+        camera.C2(index=5, suffix='c', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_c"),
+        camera.C2(index=4, suffix='d', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_c"),
+        camera.C2(index=3, suffix='e', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_e"),
+        camera.C2(index=2, suffix='f', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_e"),
+        camera.C2(index=1, suffix='g', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_g"),
+        camera.C2(index=0, suffix='h', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_g"),
     ]
 
     c3_cameras = [
-        camera.C3(index=7, suffix='a', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C3(index=6, suffix='b', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3(index=5, suffix='c', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C3(index=4, suffix='d', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3(index=3, suffix='e', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C3(index=2, suffix='f', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3(index=1, suffix='g', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C3(index=0, suffix='h', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C3(index=7, suffix='a', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_a"),
+        camera.C3(index=6, suffix='b', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_a"),
+        camera.C3(index=5, suffix='c', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_c"),
+        camera.C3(index=4, suffix='d', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_c"),
+        camera.C3(index=3, suffix='e', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_e"),
+        camera.C3(index=2, suffix='f', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_e"),
+        camera.C3(index=1, suffix='g', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_g"),
+        camera.C3(index=0, suffix='h', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_g"),
+    ]
+
+    c1mp_cameras = [
+        camera.C1MP(index=7, suffix='a', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_a"),
+        camera.C1MP(index=6, suffix='b', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_a"),
+        camera.C1MP(index=5, suffix='c', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_c"),
+        camera.C1MP(index=4, suffix='d', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_c"),
+        camera.C1MP(index=3, suffix='e', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_e"),
+        camera.C1MP(index=2, suffix='f', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_e"),
+        camera.C1MP(index=1, suffix='g', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_g"),
+        camera.C1MP(index=0, suffix='h', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_g"),
+    ]
+
+    c2mp_cameras = [
+        camera.C2MP(index=7, suffix='a', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_a"),
+        camera.C2MP(index=6, suffix='b', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_a"),
+        camera.C2MP(index=5, suffix='c', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_c"),
+        camera.C2MP(index=4, suffix='d', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_c"),
+        camera.C2MP(index=3, suffix='e', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_e"),
+        camera.C2MP(index=2, suffix='f', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_e"),
+        camera.C2MP(index=1, suffix='g', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_g"),
+        camera.C2MP(index=0, suffix='h', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_g"),
+    ]
+
+    c3mp_cameras = [
+        camera.C3MP(index=7, suffix='a', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_a"),
+        camera.C3MP(index=6, suffix='b', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_a"),
+        camera.C3MP(index=5, suffix='c', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_c"),
+        camera.C3MP(index=4, suffix='d', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_c"),
+        camera.C3MP(index=3, suffix='e', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_e"),
+        camera.C3MP(index=2, suffix='f', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_e"),
+        camera.C3MP(index=1, suffix='g', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False, tegra_sinterface="serial_g"),
+        camera.C3MP(index=0, suffix='h', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True,  tegra_sinterface="serial_g"),
     ]
 
     cameras_map: Dict[camera.Type, Sequence[camera.Camera]] = {
         camera.Type.C1: c1_cameras,
         camera.Type.C2: c2_cameras,
         camera.Type.C3: c3_cameras,
+        camera.Type.C1MP: c1mp_cameras,
+        camera.Type.C2MP: c2mp_cameras,
+        camera.Type.C3MP: c3mp_cameras,
     }
 
     return [cameras_map[cam_type][i] for i, cam_type in enumerate(camera_list)]
@@ -92,41 +128,51 @@ def at(lst: Sequence[T], index: int) -> Optional[T]:
     return lst[index] if index < len(lst) else None
 
 
-gmsl_dsers_nodes = [
-    gmsl.Deserializer.node(name='max9296', csi_lanes=CSI_LANES, label='dsera')
-        .properties([
-            f'reset-gpios = <&tca9539_74 0 {const.GPIO_ACTIVE_HIGH}>'
-        ]),
-    gmsl.Deserializer.node(name='max9296', csi_lanes=CSI_LANES, label='dserb')
-        .properties([
-            f'reset-gpios = <&tca9539_74 2 {const.GPIO_ACTIVE_HIGH}>'
-        ]),
-    gmsl.Deserializer.node(name='max9296', csi_lanes=CSI_LANES, label='dserc')
-        .properties([
-            f'reset-gpios = <&tca9539_74 4 {const.GPIO_ACTIVE_HIGH}>'
-        ]),
-    gmsl.Deserializer.node(name='max9296', csi_lanes=CSI_LANES, label='dserd')
-        .properties([
-            f'reset-gpios = <&tca9539_74 6 {const.GPIO_ACTIVE_HIGH}>'
-        ]),
-]
+def create_gmsl_dser_nodes(use_tier4mp_per_dser: Optional[List[bool]] = None) -> List[DeviceTreeNode]:
+    if use_tier4mp_per_dser is None:
+        use_tier4mp_per_dser = [False, False, False, False]
+
+    dser_configs = [
+        ('max9296_a', 'dsera', f'reset-gpios = <&tca9539_74 0 {const.GPIO_ACTIVE_LOW}>'),
+        ('max9296_c', 'dserb', f'reset-gpios = <&tca9539_74 2 {const.GPIO_ACTIVE_LOW}>'),
+        ('max9296_e', 'dserc', f'reset-gpios = <&tca9539_74 4 {const.GPIO_ACTIVE_LOW}>'),
+        ('max9296_g', 'dserd', f'reset-gpios = <&tca9539_74 6 {const.GPIO_ACTIVE_LOW}>'),
+    ]
+
+    nodes = []
+    for i, (name, label, reset_gpio) in enumerate(dser_configs):
+        Dser = gmsl.Tier4MPDeserializer if use_tier4mp_per_dser[i] else gmsl.Deserializer
+        nodes.append(
+            Dser.node(name=name, csi_lanes=CSI_LANES, label=label)
+                .properties([reset_gpio, 'fsync-gpi = <7>'])
+        )
+    return nodes
+
+
+# Default tier4 deserializer nodes for backward compatibility
+gmsl_dsers_nodes = create_gmsl_dser_nodes()
+
 
 gmsl_dser_fragments = [
         gmsl.Deserializer.fragment(target='dsera', csi_lanes=CSI_LANES)
                 .overlay_properties([
-                    f'reset-gpios = <&tca9539_74 0 {const.GPIO_ACTIVE_HIGH}>'
+                    f'reset-gpios = <&tca9539_74 0 {const.GPIO_ACTIVE_HIGH}>',
+                    'fsync-gpi = <7>'
                 ]),
         gmsl.Deserializer.fragment(target='dserb', csi_lanes=CSI_LANES)
                 .overlay_properties([
-                    f'reset-gpios = <&tca9539_74 2 {const.GPIO_ACTIVE_HIGH}>'
+                    f'reset-gpios = <&tca9539_74 2 {const.GPIO_ACTIVE_HIGH}>',
+                    'fsync-gpi = <7>'
                 ]),
         gmsl.Deserializer.fragment(target='dserc', csi_lanes=CSI_LANES)
                 .overlay_properties([
-                    f'reset-gpios = <&tca9539_74 4 {const.GPIO_ACTIVE_HIGH}>'
+                    f'reset-gpios = <&tca9539_74 4 {const.GPIO_ACTIVE_HIGH}>',
+                    'fsync-gpi = <7>'
                 ]),
         gmsl.Deserializer.fragment(target='dserd', csi_lanes=CSI_LANES)
                 .overlay_properties([
-                    f'reset-gpios = <&tca9539_74 6 {const.GPIO_ACTIVE_HIGH}>'
+                    f'reset-gpios = <&tca9539_74 6 {const.GPIO_ACTIVE_HIGH}>',
+                    'fsync-gpi = <7>'
                 ]),
 ]
 
@@ -166,7 +212,25 @@ def generate_jetson_camera_overlay(opts: GeneratorOptions) -> DeviceTreeNode:
 
     i2c_bus_number: int = 0x28
     i2c_mux_path = '/i2c@31e0000/tca9544@72'
-    gmsl_dsers: Sequence[DeviceTreeNode] = gmsl_dser_fragments
+
+    # Determine deserializer type per deserializer based on connected cameras
+    # Each deserializer serves 2 cameras: dser[i] serves cameras[2*i] and cameras[2*i+1]
+    use_tier4mp_per_dser = []
+    for dser_idx in range(NUM_GMSL_DESERIALIZERS):
+        # reverse the deserializer index to match the order of deserializer nodes in the devicetree
+        reversed_dser_idx = (NUM_GMSL_DESERIALIZERS - 1) - dser_idx
+        cam_idx_0 = reversed_dser_idx * 2
+        cam_idx_1 = reversed_dser_idx * 2 + 1
+        
+        # Use tier4mp if any camera on this deserializer is tier4mp
+        is_tier4mp = False
+        if cam_idx_0 < len(opts.camera_list):
+            is_tier4mp = is_tier4mp or opts.camera_list[cam_idx_0].is_tier4mp
+        if cam_idx_1 < len(opts.camera_list):
+            is_tier4mp = is_tier4mp or opts.camera_list[cam_idx_1].is_tier4mp
+        use_tier4mp_per_dser.append(is_tier4mp)
+
+    gmsl_dsers_nodes: Sequence[DeviceTreeNode] = create_gmsl_dser_nodes(use_tier4mp_per_dser=use_tier4mp_per_dser)
 
     if opts.l4t_version.major >= 36:
         i2c_mux_path = '/bus@0' + i2c_mux_path
@@ -338,7 +402,7 @@ def i2c_mux_and_gmsl_dsers(gmsl_dsers: Sequence[DeviceTreeNode]) -> List[Fragmen
                                     'gpio-hog',
                                     'output-low',
                                 ]),
-                            DeviceTreeNode('ca9539_74_outhigh')
+                            DeviceTreeNode('tca9539_74_outhigh')
                                 .properties(['status = "disabled"']),
                             DeviceTreeNode('tca9539_74_input')
                                 .properties(['status = "disabled"']),

@@ -51,7 +51,7 @@
 
 #undef SHOW_I2C_READ_MSG
 
-#define SHOW_I2C_WRITE_MSG
+// #define SHOW_I2C_WRITE_MSG
 //#undef  SHOW_I2C_WRITE_MSG
 
 #undef USE_CHECK_MODE_SEL
@@ -233,9 +233,19 @@ MODULE_SOFTDEP("pre: tier4_fpga");
 #define TIER4_ISX021_REG_97_ADDR 97
 #define TIER4_ISX021_REG_98_ADDR 98
 
+#define TIER4_ISX021_REG_99_ADDR 99
+#define TIER4_ISX021_REG_100_ADDR 100
+#define TIER4_ISX021_REG_101_ADDR 101
+
+#define TIER4_ISX021_REG_102_ADDR 102
+#define TIER4_ISX021_REG_103_ADDR 103
+
+#define TIER4_ISX021_REG_104_ADDR 104
+#define TIER4_ISX021_REG_105_ADDR 105
+
 // --- End of  Register definition ------------------------
 
-#define MAX_NUM_OF_REG (100)
+#define MAX_NUM_OF_REG (106)
 
 #define ISX021_AUTO_EXPOSURE_MODE 0x00
 #define ISX021_AE_TIME_UNIT_MICRO_SECOND 0x03
@@ -323,6 +333,9 @@ const struct of_device_id tier4_isx021_of_match[] = {
 	{
 		.compatible = "nvidia,tier4_isx021",
 	},
+	{
+		.compatible = "nvidia,tier4mp_isx021",
+	},
 	{},
 };
 
@@ -358,6 +371,8 @@ struct tier4_isx021 {
 	bool inhibit_fpga_access;
 	int enable_embedded_data; // 0:disable all embedded data 1: enable front embedded data 2:enable rear embedded data 3: enable front and rear embedded data
 	atomic_t test_hw_fault;
+	const char *compatible;
+	enum tier4_camera_type cam_type;
 };
 
 static const struct regmap_config tier4_sensor_regmap_config = {
@@ -377,7 +392,7 @@ struct st_priv {
 
 static struct st_priv wst_priv[MAX_NUM_CAMERA];
 
-static int camera_channel_count = 0;
+static int camera_channel_count;
 
 static int trigger_mode = 0xCAFE;
 static int enable_auto_exposure = 0xCAFE;
@@ -385,17 +400,19 @@ static int enable_distortion_correction = 0xCAFE;
 static int shutter_time_min = ISX021_MIN_EXPOSURE_TIME;
 static int shutter_time_mid = ISX021_MID_EXPOSURE_TIME;
 static int shutter_time_max = ISX021_MAX_EXPOSURE_TIME;
-static int fsync_mfp = 0;
+static int fsync_mfp = -1;
+static int internal_delay;
 // static int debug_i2c_write = 0;
 
-module_param(trigger_mode, int, S_IRUGO | S_IWUSR);
-module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
-module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
-module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
-module_param(shutter_time_mid, int, S_IRUGO | S_IWUSR);
-module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
+module_param(trigger_mode, int, 0644);
+module_param(enable_auto_exposure, int, 0644);
+module_param(enable_distortion_correction, int, 0644);
+module_param(shutter_time_min, int, 0644);
+module_param(shutter_time_mid, int, 0644);
+module_param(shutter_time_max, int, 0644);
 
-module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
+module_param(fsync_mfp, int, 0644);
+module_param(internal_delay, int, 0644);
 // module_param(debug_i2c_write, int, S_IRUGO | S_IWUSR);
 
 static struct mutex tier4_sensor_lock__;
@@ -450,7 +467,7 @@ static inline int tier4_isx021_read_reg(struct camera_common_data *s_data,
 #else
 	reg_addr = addr;
 #endif
-	usleep_range(TIME_1_MS * 50, PLUS_10(TIME_1_MS * 50));
+	usleep_range(10000, 11000);
 
 	err = regmap_read(s_data->regmap, reg_addr, &reg_val);
 
@@ -484,8 +501,6 @@ static int tier4_isx021_write_reg(struct camera_common_data *s_data, u16 addr,
 #else
 	reg_addr = addr;
 #endif
-
-	usleep_range(TIME_1_MS * 50, PLUS_10(TIME_1_MS * 50));
 
 	err = regmap_write(s_data->regmap, reg_addr, val);
 
@@ -529,7 +544,7 @@ static int tier4_isx021_write_reg_and_verify(struct camera_common_data *s_data,
 			__func__, addr, reg_addr, val8);
 	}
 
-	usleep_range(TIME_10_MS, PLUS_10(TIME_10_MS));
+	usleep_range(10000, 11000);
 
 	err = regmap_read(s_data->regmap, reg_addr, &r_val32);
 
@@ -588,8 +603,6 @@ static int tier4_isx021_read_reg(struct camera_common_data *s_data, u16 addr,
 		err = 0;
 	}
 
-	usleep_range(TIME_1_MS, PLUS_10(TIME_1_MS));
-
 	return err;
 }
 
@@ -631,7 +644,7 @@ static int tier4_isx021_write_reg(struct camera_common_data *s_data, u16 addr,
 		err = 0;
 	}
 
-	usleep_range(TIME_1_MS, PLUS_10(TIME_1_MS));
+	usleep_range(10000, 11000);
 
 	return err;
 }
@@ -645,7 +658,6 @@ static int tier4_isx021_write_reg_raw(struct camera_common_data *s_data, u16 add
 {
 	int err = 0;
 
-	usleep_range(TIME_1_MS * 50, PLUS_10(TIME_1_MS * 50));
 	err = regmap_write(s_data->regmap, addr, val);
 	if (err) {
 		dev_err(s_data->dev,
@@ -684,33 +696,33 @@ test_hw_fault_store(struct device *dev, struct device_attribute *attr,
 	tier4_isx021_sensor_mutex_lock();
 
 	msleep(100);
-	err = tier4_isx021_write_reg_raw(priv->s_data,
+	err = tier4_isx021_write_reg(priv->s_data,
 			TIER4_ISX021_REG_95_ADDR, 0x5a);
 	if (err)
 		goto err;
 
 	msleep(100);
-	err = tier4_isx021_write_reg_raw(priv->s_data,
+	err = tier4_isx021_write_reg(priv->s_data,
 			TIER4_ISX021_REG_96_ADDR, 0x01);
 	if (err)
 		goto err;
 
 	msleep(100);
-	err = tier4_isx021_write_reg_raw(priv->s_data,
+	err = tier4_isx021_write_reg(priv->s_data,
 			TIER4_ISX021_REG_97_ADDR, enable_test ? 0x01 : 0x00);
 	if (err)
 		goto err;
 
 	if (!enable_test) {
 		msleep(100);
-		err = tier4_isx021_write_reg_raw(priv->s_data,
+		err = tier4_isx021_write_reg(priv->s_data,
 				TIER4_ISX021_REG_98_ADDR, 0x01);
 		if (err)
 			goto err;
 	}
 
 	msleep(100);
-	err = tier4_isx021_write_reg_raw(priv->s_data, TIER4_ISX021_REG_94_ADDR, 0x01);
+	err = tier4_isx021_write_reg(priv->s_data, TIER4_ISX021_REG_94_ADDR, 0x01);
 	if (err)
 		goto err;
 
@@ -732,16 +744,10 @@ tier4_isx021_write_mode_set_f_lock_register(struct camera_common_data *s_data,
 {
 	int err = 0;
 
-	usleep_range(TIME_20_MS, PLUS_10(TIME_20_MS));
-
 	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_90_ADDR,
 				     0x06); // ACK Response mode
 
-	usleep_range(TIME_20_MS, PLUS_10(TIME_20_MS));
-
 	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_77_ADDR, val8);
-
-	usleep_range(TIME_20_MS, PLUS_10(TIME_20_MS));
 
 	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_90_ADDR,
 				     0x02); // NAK Response mode
@@ -757,16 +763,16 @@ static int tier4_isx021_write_remap_register(struct camera_common_data *s_data,
 {
 	int err = 0;
 
-	usleep_range(TIME_10_MS, PLUS_10(TIME_10_MS));
+	usleep_range(1000, 2000);
 
 	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_90_ADDR,
 				     0x06); // ACK Response mode
 
-	usleep_range(TIME_10_MS, PLUS_10(TIME_10_MS));
+	usleep_range(1000, 2000);
 
 	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_73_ADDR, val8);
 
-	usleep_range(TIME_10_MS, PLUS_10(TIME_10_MS));
+	usleep_range(1000, 2000);
 
 	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_90_ADDR,
 				     0x02); // NAK Response mode
@@ -777,8 +783,7 @@ static int tier4_isx021_write_remap_register(struct camera_common_data *s_data,
 
 // -------------------------------------------------------------------
 
-static int
-tier4_isx021_transit_to_streaming_state(struct tegracam_device *tc_dev)
+static int tier4_isx021_transit_to_streaming_state(struct tegracam_device *tc_dev)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
@@ -790,8 +795,7 @@ tier4_isx021_transit_to_streaming_state(struct tegracam_device *tc_dev)
 		dev_err(dev, "[%s] : Write to MODE_SET_F register failed.\n",
 			__func__);
 	}
-	usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
-	//msleep(120);
+	msleep(200);
 
 	return err;
 }
@@ -811,8 +815,7 @@ static int tier4_isx021_transit_to_startup_state(struct tegracam_device *tc_dev)
 		dev_err(dev, "[%s] : Write to MODE_SET_F register failed.\n",
 			__func__);
 	}
-	usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
-	//msleep(120);
+	msleep(200);
 
 	return err;
 }
@@ -957,7 +960,6 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 	}
 
 	// transit to Startup state
-
 	err = tier4_isx021_write_mode_set_f_lock_register(s_data, 0x53);
 	if (err) {
 		dev_err(dev,
@@ -966,60 +968,291 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 		return err;
 	}
 
-	usleep_range(TIME_50_MS, PLUS_10(TIME_50_MS));
+	err = tier4_isx021_transit_to_startup_state(priv->tc_dev);
+	if (err) {
+		dev_err(dev, "[%s] : Error transit to startup state.\n",
+			__func__);
+		return err;
+	}
 
-	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_62_ADDR, 0x00);
+	// set FSYNC_FUNCSEL to 0 for FSYNC triggered mode
+	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_92_ADDR, 0x00);
+	if (err) {
+		goto error_exit;
+	}
 
+	usleep_range(10000, 11000);
+
+	// set FSYNC_DRVABTY to 3 for FSYNC triggered mode
+	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_93_ADDR, 0xFF);
+	if (err) {
+		goto error_exit;
+	}
+
+	usleep_range(10000, 11000);
+
+	switch (priv->trigger_mode) {
+	case TIER4_SYNC_MODE_INTERNAL_10FPS:
+		// 10fps master mode
+		// set master mode
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_78_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_63_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		// set 10fps
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_99_ADDR, 0xF0);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_100_ADDR, 0x0A);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_101_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		break;
+
+	case TIER4_SYNC_MODE_EXTERNAL_READ_10FPS:
+		// 10fps trigger(read out sync) mode
+		// set read out sync mode
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_78_ADDR, 0x01);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_63_ADDR, 0x01);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		// set 10fps
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_99_ADDR, 0xF0);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_100_ADDR, 0x0A);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_101_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		break;
+
+	case TIER4_SYNC_MODE_INTERNAL_20FPS:
+		// 20fps master mode
+		// set master mode
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_78_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_63_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		// set 20fps
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_99_ADDR, 0xBC);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_100_ADDR, 0x02);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_101_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		break;
+
+	case TIER4_SYNC_MODE_EXTERNAL_READ_20FPS:
+		// 20fps trigger(read out sync) mode
+		// set read out sync mode
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_78_ADDR, 0x01);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_63_ADDR, 0x01);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		// set 20fps
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_99_ADDR, 0xBC);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_100_ADDR, 0x02);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_101_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		break;
+
+	case TIER4_SYNC_MODE_INTERNAL_30FPS:
+		// 30fps master mode
+		// set master mode
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_78_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_63_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		// set 30fps
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_99_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_100_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_101_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		break;
+
+	case TIER4_SYNC_MODE_EXTERNAL_READ_30FPS:
+		// 30fps trigger(read out sync) mode
+		// set read out sync mode
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_78_ADDR, 0x01);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_63_ADDR, 0x01);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		// set 30fps
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_99_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_100_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_101_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		break;
+
+	case TIER4_SYNC_MODE_EXTERNAL_SHUTTER:
+		// trigger(shutter sync) mode
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_78_ADDR, 0x02);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_63_ADDR, 0x02);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		// set 30fps
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_99_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_100_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_101_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		break;
+
+	default:
+		// invalid mode, set to default 10fps master mode
+		dev_err(dev, "[%s] : Invalid trigger mode. set 10fps master mode\n", __func__);
+		// set master mode
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_78_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_63_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		// set 10fps
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_99_ADDR, 0xF0);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_100_ADDR, 0x0A);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_101_ADDR, 0x00);
+		if (err)
+			goto error_exit;
+		usleep_range(1000, 2000);
+		break;
+	}
+
+	// set internal delay
+	if (trigger_mode == TIER4_SYNC_MODE_EXTERNAL_READ_10FPS) {
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_105_ADDR, 0x00);
+		usleep_range(10000, 11000);
+		if (err)
+			goto error_exit;
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_104_ADDR, 0x00);
+		usleep_range(10000, 11000);
+		if (err)
+			goto error_exit;
+	} else {
+		int num_line;
+		u8 delay_byte0;
+		u8 delay_byte1;
+		u32 h_line_ns = 23810;
+
+		num_line = DIV_ROUND_CLOSEST(internal_delay * 1000, h_line_ns);
+		if (num_line > 0xFFFF) {
+			num_line = 0xFFFF;
+		} else if (num_line < 0) {
+			num_line = 0;
+		}
+		delay_byte0 = num_line & 0xFF;         // LSB
+		delay_byte1 = (num_line >> 8) & 0xFF;  // MSB
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_105_ADDR, delay_byte1);
+		if (err)
+			goto error_exit;
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_104_ADDR, delay_byte0);
+		if (err)
+			goto error_exit;
+	}
+	if (err) {
+		goto error_exit;
+	}
+
+	// transit to Streaming state
+	err = tier4_isx021_write_mode_set_f_lock_register(s_data, 0x53);
+	if (err) {
+		dev_err(dev,
+			"[%s] : Time out Error occurred in tier4_isx021_write_register_mode_set_f_lock.\n",
+			__func__);
+		return err;
+	}
+
+	err = tier4_isx021_transit_to_streaming_state(priv->tc_dev);
 	if (err) {
 		dev_err(dev, "[%s] : tier4_isx021_write_reg failed.\n",
 			__func__);
 		return err;
 	}
+	msleep(100);
 
-	usleep_range(TIME_50_MS, PLUS_10(TIME_50_MS));
-
-	// set FSYNC_FUNCSEL to 0 for FSYNC triggered mode
-
-	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_92_ADDR, 0x00);
-
-	if (err) {
-		goto error_exit;
-	}
-
-	usleep_range(TIME_50_MS, PLUS_10(TIME_50_MS));
-
-	// set FSYNC_DRVABTY to 3 for FSYNC triggered mode
-
-	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_93_ADDR, 0xFF);
-
-	if (err) {
-		goto error_exit;
-	}
-
-	usleep_range(TIME_50_MS, PLUS_10(TIME_50_MS));
-
-	// set SG_MODE_CTL to 0 for transition to FSYNC mode
-
-	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_63_ADDR,
-				     0x02); // set FSYNC mode
-
-	if (err) {
-		goto error_exit;
-	}
-
-	usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
-
-	// set SG_MODE_APL to 0 for transition to FSYNC mode
-
-	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_78_ADDR, 0x02);
-
-	if (err) {
-		goto error_exit;
-	}
-
-	usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
-
-	usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
 
 error_exit:
 
@@ -1044,7 +1277,7 @@ static int tier4_isx021_set_response_mode(struct tier4_isx021 *priv)
 		return err;
 	}
 
-	usleep_range(TIME_10_MS, PLUS_10(TIME_10_MS));
+	usleep_range(10000, 11000);
 
 	err = tier4_isx021_transit_to_startup_state(tc_dev);
 	if (err) {
@@ -1053,7 +1286,7 @@ static int tier4_isx021_set_response_mode(struct tier4_isx021 *priv)
 		goto error_exit;
 	}
 
-	usleep_range(TIME_10_MS, PLUS_10(TIME_10_MS)); // For ES3 and MP
+	usleep_range(10000, 11000);
 
 	err = tier4_isx021_read_reg(s_data, TIER4_ISX021_REG_66_ADDR, &r_val);
 
@@ -1065,7 +1298,7 @@ static int tier4_isx021_set_response_mode(struct tier4_isx021 *priv)
 
 	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_66_ADDR, 0x06);
 
-	usleep_range(TIME_10_MS, PLUS_10(TIME_10_MS)); // For ES3 and MP
+	usleep_range(10000, 11000);
 
 error_exit:
 
@@ -1655,8 +1888,6 @@ tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_dev,
 		return err;
 	}
 
-	usleep_range(TIME_10_MS, PLUS_10(TIME_10_MS));
-
 	err = tier4_isx021_transit_to_startup_state(tc_dev);
 
 	if (err) {
@@ -1665,15 +1896,12 @@ tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_dev,
 		goto error_exit;
 	}
 
-	usleep_range(TIME_35_MS, PLUS_10(TIME_35_MS));
-	//msleep(35);
 
 	if (is_enabled) {
 		err = tier4_isx021_write_reg(tc_dev->s_data,
 					     TIER4_ISX021_REG_74_ADDR, 0x01);
 
-		usleep_range(TIME_35_MS, PLUS_10(TIME_35_MS));
-		//msleep(35);
+		usleep_range(1000, 2000);
 
 		err = tier4_isx021_write_reg(tc_dev->s_data,
 					     TIER4_ISX021_REG_75_ADDR, 0x01);
@@ -1686,9 +1914,10 @@ tier4_isx021_enable_distortion_correction(struct tegracam_device *tc_dev,
 
 		err = tier4_isx021_write_reg(tc_dev->s_data,
 					     TIER4_ISX021_REG_74_ADDR, 0x00);
+		if (err)
+			goto error_exit;
 
-		usleep_range(TIME_35_MS, PLUS_10(TIME_35_MS));
-		//msleep(35);
+		usleep_range(1000, 2000);
 
 		err = tier4_isx021_write_reg(tc_dev->s_data,
 					     TIER4_ISX021_REG_75_ADDR, 0x00);
@@ -1733,8 +1962,6 @@ static int tier4_isx021_setup_embedded_data(struct tegracam_device *tc_dev,
 		//goto error_exit;
 	}
 
-	usleep_range(TIME_100_MS, PLUS_10(TIME_100_MS));
-	//msleep(100);
 
 	err = tier4_isx021_transit_to_startup_state(tc_dev);
 	if (err) {
@@ -1743,8 +1970,6 @@ static int tier4_isx021_setup_embedded_data(struct tegracam_device *tc_dev,
 		goto error_exit;
 	}
 
-	usleep_range(TIME_120_MS, PLUS_10(TIME_120_MS));
-	//msleep(120);
 
 	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_91_ADDR,
 				     0x00); // DCROP_ON_APL Regsiter
@@ -2009,7 +2234,7 @@ static int tier4_isx021_set_mode(struct tegracam_device *tc_dev)
 		break;
 	}
 
-	dev_dbg(dev, "[%s]: priv->enable_embedded_data = %d \n", __func__,
+	dev_dbg(dev, "[%s]: priv->enable_embedded_data = %d\n", __func__,
 		priv->enable_embedded_data);
 
 	return err;
@@ -2031,99 +2256,70 @@ static int tier4_isx021_start_one_streaming(struct tegracam_device *tc_dev)
 		goto exit;
 	}
 
-	err = tier4_max9296_setup_streaming(priv->dser_dev, dev);
+	err = tier4_max9296_setup_streaming(priv->dser_dev, dev, SENSOR_ID_ISX021);
 	if (err) {
 		dev_err(dev, "[%s] : Setup for Streaming failed.\n", __func__);
 		goto exit;
 	}
 
 	err = tier4_max9295_control_sensor_power_seq(priv->ser_dev,
-						     SENSOR_ID_ISX021, true);
+							SENSOR_ID_ISX021, true);
 	if (err) {
-		dev_err(dev, "[%s] : Power on Camera Sensor failed.\n",
-			__func__);
+		dev_err(dev, "[%s] : Power on Camera Sensor failed.\n", __func__);
 		goto exit;
 	}
 
 	if (enable_auto_exposure == 1) {
 		priv->auto_exposure = true;
-		dev_info(dev, "[%s] : Parameter[enable_auto_exposure] = 1.\n",
-			 __func__);
+		dev_info(dev, "[%s] : Parameter[enable_auto_exposure] = 1.\n", __func__);
 	}
 
 	if (priv->auto_exposure == true) {
 		err = tier4_isx021_set_auto_exposure(tc_dev);
 		if (err) {
-			dev_err(dev, "[%s] : Enabling Auto Exposure failed.\n",
-				__func__);
+			dev_err(dev, "[%s] : Enabling Auto Exposure failed.\n", __func__);
 			goto exit;
 		} else {
-			dev_info(dev, "[%s] : Enabled Auto Exposure.\n",
-				 __func__);
+			dev_info(dev, "[%s] : Enabled Auto Exposure.\n", __func__);
 		}
 	} else {
 		dev_info(dev, "[%s] : Disabled Auto Exposure.\n", __func__);
 	}
-	if (err) {
-		dev_err(dev,
-			"[%s] : Setting digital gain  to the default value failed.\n",
-			__func__);
-	}
 
 	dev_info(dev, "[%s] : trigger_mode = %d.\n", __func__, trigger_mode);
-
 	priv->trigger_mode = trigger_mode;
-
-	if (priv->trigger_mode == 1) {
-		//    priv->fsync_mode = true;
-		dev_info(dev, "[%s] : Enabled Slave(fsync triggered) mode.\n",
-			 __func__);
+	err = tier4_isx021_set_fsync_trigger_mode(priv);
+	if (err) {
+		dev_err(dev, "[%s] :  Camera sensor could not be changed trigger mode.\n", __func__);
+		goto exit;
 	}
 
-	//  if (priv->fsync_mode == true)
-	if (priv->trigger_mode == 1) {
-		err = tier4_isx021_set_fsync_trigger_mode(priv);
-		if (err) {
-			dev_err(dev,
-				"[%s] :  Camera sensor is unable to work with Slave(fsync triggered) mode.\n",
-				__func__);
-			//      goto exit;
+
+	err = tier4_isx021_setup_embedded_data(tc_dev, priv->enable_embedded_data);
+	if (err) {
+		dev_err(dev, "[%s] : Setup for Embedded data failed.\n", __func__);
+		goto exit;
+	}
+
+	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+		usleep_range(20000, 21000);
+
+		if (enable_distortion_correction == 1) {
+			priv->distortion_correction = true;
+			dev_info(dev, "[%s] : Prameter[enable_distortion_correction] = 1 .\n", __func__);
 		}
-	}
-
-	usleep_range(TIME_20_MS, PLUS_10(TIME_20_MS));
-
-	if (enable_distortion_correction == 1) {
-		priv->distortion_correction = true;
-		dev_info(
-			dev,
-			"[%s] : Prameter[enable_distortion_correction] = 1 .\n",
-			__func__);
-	}
-	err = tier4_isx021_enable_distortion_correction(
-		tc_dev, priv->distortion_correction);
-	if (err) {
-		dev_err(dev, "[%s] : Enabling Distortion Correction failed.\n",
-			__func__);
-		goto exit;
-	}
-
-	err = tier4_isx021_setup_embedded_data(tc_dev,
-					       priv->enable_embedded_data);
-	if (err) {
-		dev_err(dev, "[%s] : Setup for Embedded data failed.\n",
-			__func__);
-		goto exit;
+		err = tier4_isx021_enable_distortion_correction(tc_dev, priv->distortion_correction);
+		if (err) {
+			dev_err(dev, "[%s] : Enabling Distortion Correction failed.\n", __func__);
+			goto exit;
+		}
 	}
 
 	err = tier4_isx021_transit_to_streaming_state(tc_dev);
 	if (err) {
-		dev_err(dev, "[%s] : Transition to Streaming state failed.\n",
-			__func__);
+		dev_err(dev, "[%s] : Transition to Streaming state failed.\n", __func__);
 		return err;
 	}
-
-	usleep_range(TIME_20_MS, PLUS_10(TIME_20_MS));
 
 	err = tier4_max9296_start_streaming(priv->dser_dev, dev);
 	if (err) {
@@ -2333,9 +2529,7 @@ static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 					}
 					tier4_isx021_set_running_flag(i + 1,
 								      true);
-					usleep_range(TIME_200_MS,
-						     PLUS_10(TIME_200_MS));
-					//msleep(200);
+
 					mutex_unlock(
 						&tier4_isx021_lock); // stop streaming on GMSL B port
 					tier4_isx021_stop_streaming(
@@ -2482,24 +2676,6 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 		dev_err(dev, "[%s] : reg_mux not found\n", __func__);
 		goto error;
 	}
-
-#if 0
-  err = of_property_read_string(node, "fsync-mode", &str_value);
-  if (err < 0)
-  {
-    dev_err(dev, "[%s] : No fsync-mode found\n", __func__);
-    goto error;
-  }
-
-  if (!strcmp(str_value, "true"))
-  {
-    priv->fsync_mode = true;
-  }
-  else
-  {
-    priv->fsync_mode = false;
-  }
-#endif
 
 	if (enable_distortion_correction == 0xCAFE) {
 		// if not set kernel param, read device tree param
@@ -2815,6 +2991,7 @@ static int tier4_isx021_probe(struct i2c_client *client,
 	struct device_node *node = dev->of_node;
 	struct tegracam_device *tc_dev;
 	struct tier4_isx021 *priv;
+	const struct of_device_id *match;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 65)
 	loff_t size;
@@ -2862,6 +3039,26 @@ static int tier4_isx021_probe(struct i2c_client *client,
 	tc_dev->sensor_ops = &tier4_isx021_common_ops;
 	tc_dev->v4l2sd_internal_ops = &tier4_isx021_subdev_internal_ops;
 	tc_dev->tcctrl_ops = &tier4_isx021_ctrl_ops;
+
+	match = of_match_device(tier4_isx021_of_match, dev);
+	if (!match) {
+		dev_err(dev, "[%s] : Failed to find matching dt id\n", __func__);
+		err = -ENODEV;
+		goto errret;
+	}
+	priv->compatible = match->compatible;
+
+	if (strstr(priv->compatible, "tier4mp_")) {
+		priv->cam_type = TIER4_CAMERA_TYPE_MP;
+		dev_info(dev, "[%s] : Matched TIER IV MP compatible: %s\n", __func__, priv->compatible);
+	} else if (strstr(priv->compatible, "tier4_")) {
+		priv->cam_type = TIER4_CAMERA_TYPE_STANDARD;
+		dev_info(dev, "[%s] : Matched TIER IV compatible: %s\n", __func__, priv->compatible);
+	} else {
+		dev_err(dev, "[%s] : No matching compatible found: %s\n", __func__, priv->compatible);
+		err = -ENODEV;
+		goto errret;
+	}
 
 	firmware_buffer =
 		devm_kzalloc(dev, sizeof(u16) * MAX_NUM_OF_REG, GFP_KERNEL);
@@ -2967,6 +3164,8 @@ static int tier4_isx021_probe(struct i2c_client *client,
 		goto err_max9296_unreg;
 	}
 
+	msleep(200);
+
 	err = tegracam_v4l2subdev_register(tc_dev, true);
 	if (err) {
 		dev_err(dev,
@@ -2977,14 +3176,16 @@ static int tier4_isx021_probe(struct i2c_client *client,
 
 	tier4_isx021_sensor_mutex_unlock();
 
-	err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_90_ADDR,
-				     0x06);
+	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+		err = tier4_isx021_write_reg(tc_dev->s_data, TIER4_ISX021_REG_90_ADDR,
+						0x06);
 
-	err = tier4_isx021_set_response_mode(priv);
-	if (err) {
-		dev_warn(dev, "[%s] : Transition to response mode failed.\n",
-			 __func__);
-		goto err_tegracam_v4l2_unreg;
+		err = tier4_isx021_set_response_mode(priv);
+		if (err) {
+			dev_warn(dev, "[%s] : Transition to response mode failed.\n",
+				__func__);
+			goto err_tegracam_v4l2_unreg;
+		}
 	}
 
 	device_create_file(&client->dev, &dev_attr_test_hw_fault);
@@ -3000,7 +3201,7 @@ static int tier4_isx021_probe(struct i2c_client *client,
 
 	tier4_isx021_sensor_mutex_unlock();
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 65)) & 0
+#if (KERNEL_VERSION(5, 10, 65) <= LINUX_VERSION_CODE) & 0
 
 	dev_info(&client->dev, "Detected ISX021 sensor\n");
 	return NO_ERROR;
@@ -3220,18 +3421,20 @@ static void tier4_isx021_shutdown(struct i2c_client *client)
 			} //  if ( i & 0x1 )
 			//         break;
 
-			if (tier4_isx021_is_sensor_ser_shutdown(i)) {
-				// Reset camera sensor
-				tier4_max9295_control_sensor_power_seq(
-					priv->ser_dev, SENSOR_ID_ISX021, false);
-				// S/W Reset max9295
-				tier4_max9295_reset_control(priv->ser_dev);
-			}
+			if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+				if (tier4_isx021_is_sensor_ser_shutdown(i)) {
+					// Reset camera sensor
+					tier4_max9295_control_sensor_power_seq(
+						priv->ser_dev, SENSOR_ID_ISX021, false);
+					// S/W Reset max9295
+					tier4_max9295_reset_control(priv->ser_dev);
+				}
 
-			if (tier4_isx021_is_des_shut_down(i)) {
-				// S/W Reset max9296
-				tier4_max9296_reset_control(priv->dser_dev,
-							    &client->dev, true);
+				if (tier4_isx021_is_des_shut_down(i)) {
+					// S/W Reset max9296
+					tier4_max9296_reset_control(priv->dser_dev,
+								    &client->dev, true);
+				}
 			}
 
 			if (priv == NULL || i >= camera_channel_count) {
@@ -3255,15 +3458,15 @@ static const struct i2c_device_id tier4_isx021_id[] = { { "tier4_isx021", 0 },
 MODULE_DEVICE_TABLE(i2c, tier4_isx021_id);
 
 static struct i2c_driver tier4_isx021_i2c_driver = {
-    .driver = {
-        .name           = "tier4_isx021",
-        .owner          = THIS_MODULE,
-        .of_match_table = of_match_ptr(tier4_isx021_of_match),
-    },
-    .probe      = tier4_isx021_probe,
-    .remove     = tier4_isx021_remove,
-    .shutdown   = tier4_isx021_shutdown,
-    .id_table   = tier4_isx021_id,
+	.driver = {
+		.name = "tier4_isx021",
+		.owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(tier4_isx021_of_match),
+	},
+	.probe = tier4_isx021_probe,
+	.remove = tier4_isx021_remove,
+	.shutdown = tier4_isx021_shutdown,
+	.id_table = tier4_isx021_id,
 };
 
 static int __init tier4_isx021_init(void)
@@ -3281,7 +3484,7 @@ static void __exit tier4_isx021_exit(void)
 	mutex_destroy(&tier4_sensor_lock__);
 	mutex_destroy(&tier4_isx021_lock);
 
-	printk(KERN_INFO "[%s]: Exit TIERIV Automotive HDR Camera driver.\n",
+	pr_info("[%s]: Exit TIERIV Automotive HDR Camera driver.\n",
 	       __func__);
 
 	i2c_del_driver(&tier4_isx021_i2c_driver);

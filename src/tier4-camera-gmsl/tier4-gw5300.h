@@ -112,6 +112,8 @@ int tier4_gw5300_c3_set_integration_time_on_aemode(struct device *dev,
 						   u32 max_integration_time,
 						   u32 min_integration_time);
 
+int tier4_gw5300_set_internal_delay(struct device *dev, int internal_delay_us, u32 h_line_ns);
+
 int tier4_gw5300_set_distortion_correction(struct device *dev, bool val);
 
 int tier4_gw5300_c3_set_distortion_correction(struct device *dev, bool val);

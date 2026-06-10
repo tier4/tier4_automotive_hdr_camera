@@ -94,6 +94,9 @@ const struct of_device_id tier4_imx728_of_match[] = {
 	{
 		.compatible = "nvidia,tier4_imx728",
 	},
+	{
+		.compatible = "nvidia,tier4mp_imx728",
+	},
 	{},
 };
 
@@ -125,6 +128,8 @@ struct tier4_imx728 {
 	bool last_distortion_correction;
 	bool inhibit_fpga_access;
 	struct device *fpga_dev;
+	const char *compatible;
+	enum tier4_camera_type cam_type;
 };
 
 static const struct regmap_config tier4_sensor_regmap_config = {
@@ -146,12 +151,12 @@ static struct st_priv wst_priv[MAX_NUM_CAMERA];
 
 static struct mutex tier4_imx728_lock;
 
-static int camera_channel_count = 0;
+static int camera_channel_count;
 
 // --- module parameter ---
 
 static int trigger_mode;
-static int fsync_mfp = 0;
+static int fsync_mfp = -1;
 static int enable_distortion_correction = 1;
 static int enable_auto_exposure = 0xCAFE;
 
@@ -162,12 +167,12 @@ static int shutter_time_min = IMX728_MIN_EXPOSURE_TIME;
 static int shutter_time_max = IMX728_MAX_EXPOSURE_TIME;
 
 module_param(trigger_mode, int, 0644);
-module_param(shutter_time_min, int, S_IRUGO | S_IWUSR);
-module_param(shutter_time_max, int, S_IRUGO | S_IWUSR);
+module_param(shutter_time_min, int, 0644);
+module_param(shutter_time_max, int, 0644);
 
-module_param(fsync_mfp, int, S_IRUGO | S_IWUSR);
-module_param(enable_distortion_correction, int, S_IRUGO | S_IWUSR);
-module_param(enable_auto_exposure, int, S_IRUGO | S_IWUSR);
+module_param(fsync_mfp, int, 0644);
+module_param(enable_distortion_correction, int, 0644);
+module_param(enable_auto_exposure, int, 0644);
 
 // ------------------------
 static char upper(char c)
@@ -525,11 +530,38 @@ static int tier4_imx728_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
 static int tier4_imx728_set_exposure(struct tegracam_device *tc_dev, s64 val)
 {
 	int err = 0;
+	int gw_mode = -1;
 
 	struct tier4_imx728 *priv =
 		(struct tier4_imx728 *)tegracam_get_privdata(tc_dev);
-	tier4_gw5300_c3_set_integration_time_on_aemode(
-		priv->isp_dev, priv->trigger_mode, val, val);
+
+	switch (priv->trigger_mode) {
+	case TIER4_SYNC_MODE_INTERNAL_10FPS:
+		gw_mode = GW5300_MASTER_MODE_10FPS;
+		break;
+	case TIER4_SYNC_MODE_EXTERNAL_READ_10FPS:
+		gw_mode = GW5300_SLAVE_MODE_10FPS;
+		break;
+	case TIER4_SYNC_MODE_INTERNAL_20FPS:
+		gw_mode = GW5300_MASTER_MODE_20FPS;
+		break;
+	case TIER4_SYNC_MODE_EXTERNAL_READ_20FPS:
+		gw_mode = GW5300_SLAVE_MODE_20FPS;
+		break;
+	case TIER4_SYNC_MODE_INTERNAL_30FPS:
+		gw_mode = GW5300_MASTER_MODE_30FPS;
+		break;
+	case TIER4_SYNC_MODE_EXTERNAL_READ_30FPS:
+		gw_mode = GW5300_SLAVE_MODE_30FPS;
+		break;
+	default:
+		break;
+	}
+
+	if (gw_mode != -1) {
+		tier4_gw5300_c3_set_integration_time_on_aemode(
+			priv->isp_dev, gw_mode, val, val);
+	}
 
 	return err;
 }
@@ -642,7 +674,7 @@ static int tier4_imx728_start_one_streaming(struct tegracam_device *tc_dev)
 		goto exit;
 	}
 
-	err = tier4_max9296_setup_streaming(priv->dser_dev, dev);
+	err = tier4_max9296_setup_streaming(priv->dser_dev, dev, SENSOR_ID_IMX728);
 
 	if (err) {
 		dev_err(dev, "[%s] : Setup Streaming failed\n", __func__);
@@ -653,115 +685,112 @@ static int tier4_imx728_start_one_streaming(struct tegracam_device *tc_dev)
 
 	priv->trigger_mode = trigger_mode;
 
-	switch (priv->trigger_mode) {
-	case GW5300_MASTER_MODE_5FPS:
-	case GW5300_MASTER_MODE_10FPS:
-	case GW5300_MASTER_MODE_10FPS_EBD:
-	case GW5300_MASTER_MODE_20FPS:
-	case GW5300_MASTER_MODE_20FPS_EBD:
-	case GW5300_MASTER_MODE_30FPS:
-	case GW5300_MASTER_MODE_30FPS_EBD:
-		dev_info(dev, "[%s] : Setting camera sensor to %s\n", __func__,
-			 gw5300_mode_name[priv->trigger_mode]);
+	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+		int gw_mode = -1;
 
-		err = tier4_gw5300_c3_setup_sensor_mode(priv->isp_dev,
-							priv->trigger_mode);
+		switch (priv->trigger_mode) {
+		case TIER4_SYNC_MODE_INTERNAL_10FPS:
+			gw_mode = GW5300_MASTER_MODE_10FPS;
+			break;
+		case TIER4_SYNC_MODE_EXTERNAL_READ_10FPS:
+			gw_mode = GW5300_SLAVE_MODE_10FPS;
+			break;
+		case TIER4_SYNC_MODE_INTERNAL_20FPS:
+			gw_mode = GW5300_MASTER_MODE_20FPS;
+			break;
+		case TIER4_SYNC_MODE_EXTERNAL_READ_20FPS:
+			gw_mode = GW5300_SLAVE_MODE_20FPS;
+			break;
+		case TIER4_SYNC_MODE_INTERNAL_30FPS:
+			gw_mode = GW5300_MASTER_MODE_30FPS;
+			break;
+		case TIER4_SYNC_MODE_EXTERNAL_READ_30FPS:
+			gw_mode = GW5300_SLAVE_MODE_30FPS;
+			break;
+		default:
+			dev_err(dev,
+				"[%s] : The camera sensor mode(trigger mode)=%d is invalid.\n",
+				__func__, priv->trigger_mode);
+			return -EINVAL;
+		}
+
+		dev_info(dev, "[%s] : Setting camera sensor to %s\n", __func__,
+			gw5300_mode_name[gw_mode]);
+
+		if (gw_mode == GW5300_MASTER_MODE_10FPS ||
+		    gw_mode == GW5300_MASTER_MODE_20FPS ||
+		    gw_mode == GW5300_MASTER_MODE_30FPS) {
+			err = tier4_gw5300_c3_setup_sensor_mode(priv->isp_dev, gw_mode);
+		} else {
+			err = tier4_imx728_set_fsync_trigger_mode(priv, gw_mode);
+		}
+
 		if (err) {
 			dev_err(dev,
 				"[%s] : setting camera sensor to %s failed\n",
-				__func__, gw5300_mode_name[priv->trigger_mode]);
+				__func__, gw5300_mode_name[gw_mode]);
 			return err;
 		}
 
 		priv->last_distortion_correction = 1;
-		break;
 
-	case GW5300_SLAVE_MODE_5FPS:
-	case GW5300_SLAVE_MODE_10FPS:
-	case GW5300_SLAVE_MODE_10FPS_EBD:
-	case GW5300_SLAVE_MODE_20FPS:
-	case GW5300_SLAVE_MODE_20FPS_EBD:
-	case GW5300_SLAVE_MODE_30FPS:
-	case GW5300_SLAVE_MODE_30FPS_EBD:
-		dev_info(dev, "[%s] : Setting camera sensor to %s\n", __func__,
-			 gw5300_mode_name[priv->trigger_mode]);
-
-		err = tier4_imx728_set_fsync_trigger_mode(priv,
-							  priv->trigger_mode);
-		if (err) {
-			dev_err(dev,
-				"[%s] : setting camera sensor to %s failed\n",
-				__func__, gw5300_mode_name[priv->trigger_mode]);
-			return err;
-		}
-
-		priv->last_distortion_correction = 1;
-		break;
-
-	default: //   case of  trigger_mode  < 0
-		dev_err(dev,
-			"[%s] : The camera sensor mode(trigger mode)=%d is invalid.\n",
-			__func__, priv->trigger_mode);
-
-		return err;
-	}
-
-	usleep_range(500000, 510000);
-	err = tier4_gw5300_c3_set_auto_exposure(priv->isp_dev,
-						enable_auto_exposure);
-	if (err <= 0) {
-		dev_err(dev,
-			"[%s] : Setting Digital Gain to default value failed\n",
-			__func__);
-		goto exit;
-	} else {
-		err = 0;
-	}
-
-#if USE_DISTORTION_CORRECTION
-
-	if (priv->last_distortion_correction != enable_distortion_correction) {
 		usleep_range(500000, 510000);
-		//msleep(900);
-	}
+		err = tier4_gw5300_c3_set_auto_exposure(priv->isp_dev,
+							enable_auto_exposure);
+		if (err <= 0) {
+			dev_err(dev,
+				"[%s] : Setting Digital Gain to default value failed\n",
+				__func__);
+			goto exit;
+		} else {
+			err = 0;
+		}
 
-	if (enable_distortion_correction == 0xCAFE) {
-		// if not set kernel param, read device tree param
-		if (priv->distortion_correction == false) {
+	#if USE_DISTORTION_CORRECTION
+
+		if (priv->last_distortion_correction != enable_distortion_correction) {
+			usleep_range(500000, 510000);
+			//msleep(900);
+		}
+
+		if (enable_distortion_correction == 0xCAFE) {
+			// if not set kernel param, read device tree param
+			if (priv->distortion_correction == false) {
+				err = tier4_imx728_set_distortion_correction(
+					tc_dev, priv->distortion_correction);
+
+				if (err) {
+					dev_err(dev,
+						"[%s] : Disabling Distortion Correction  failed\n",
+						__func__);
+					goto exit;
+				}
+				msleep(20);
+			}
+		} else {
 			err = tier4_imx728_set_distortion_correction(
-				tc_dev, priv->distortion_correction);
-
+				tc_dev, enable_distortion_correction == 1);
 			if (err) {
 				dev_err(dev,
-					"[%s] : Disabling Distortion Correction  failed\n",
+					"[%s] : Setup Distortion Correction  failed\n",
 					__func__);
 				goto exit;
 			}
 			msleep(20);
 		}
-	} else {
-		err = tier4_imx728_set_distortion_correction(
-			tc_dev, enable_distortion_correction == 1);
-		if (err) {
-			dev_err(dev,
-				"[%s] : Setup Distortion Correction  failed\n",
-				__func__);
-			goto exit;
-		}
-		msleep(20);
+
+	#endif
+
+		//  Reset GW5300 via Max9295 in C3 camera
+		//  err = tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX728, POWER_ON );
+		//  if (err)
+		//  {
+		//    dev_err(dev, "[%s] : Reset gw5300 in C3 camaera failed.\n", __func__);
+		//    goto exit;
+		//  }
+		//
+		//  usleep_range(500000, 510000);
 	}
-
-#endif
-
-	//  Reset GW5300 via Max9295 in C3 camera
-	//  err = tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX728, POWER_ON );
-	//  if (err)
-	//  {
-	//    dev_err(dev, "[%s] : Reset gw5300 in C3 camaera failed.\n", __func__);
-	//    goto exit;
-	//  }
-	//
-	//  usleep_range(500000, 510000);
 
 	err = tier4_max9296_start_streaming(priv->dser_dev, dev);
 
@@ -771,11 +800,49 @@ static int tier4_imx728_start_one_streaming(struct tegracam_device *tc_dev)
 		return err;
 	}
 
-	msleep(1000);
-	tier4_gw5300_c3_set_integration_time_on_aemode(priv->isp_dev,
-						       priv->trigger_mode,
-						       shutter_time_max,
-						       shutter_time_min);
+	if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
+		err = tier4_max9295_start_streaming(priv->ser_dev);
+		if (err) {
+			dev_err(dev, "[%s] : tier4_max9295_start_stream() failed\n",
+				__func__);
+			return err;
+		}
+	}
+
+	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+		int gw_mode = -1;
+
+		switch (priv->trigger_mode) {
+		case TIER4_SYNC_MODE_INTERNAL_10FPS:
+			gw_mode = GW5300_MASTER_MODE_10FPS;
+			break;
+		case TIER4_SYNC_MODE_EXTERNAL_READ_10FPS:
+			gw_mode = GW5300_SLAVE_MODE_10FPS;
+			break;
+		case TIER4_SYNC_MODE_INTERNAL_20FPS:
+			gw_mode = GW5300_MASTER_MODE_20FPS;
+			break;
+		case TIER4_SYNC_MODE_EXTERNAL_READ_20FPS:
+			gw_mode = GW5300_SLAVE_MODE_20FPS;
+			break;
+		case TIER4_SYNC_MODE_INTERNAL_30FPS:
+			gw_mode = GW5300_MASTER_MODE_30FPS;
+			break;
+		case TIER4_SYNC_MODE_EXTERNAL_READ_30FPS:
+			gw_mode = GW5300_SLAVE_MODE_30FPS;
+			break;
+		default:
+			break;
+		}
+
+		if (gw_mode != -1) {
+			msleep(1000);
+			tier4_gw5300_c3_set_integration_time_on_aemode(priv->isp_dev,
+									gw_mode,
+									shutter_time_max,
+									shutter_time_min);
+		}
+	}
 
 	//  Reset GW5300 via Max9295 in C3 camera
 	//  err = tier4_max9295_control_sensor_power_seq(priv->ser_dev, SENSOR_ID_IMX728, POWER_ON );
@@ -1059,6 +1126,7 @@ static int tier4_imx728_board_setup(struct tier4_imx728 *priv)
 	struct device_node *root_node;
 	int value = 0xFFFF;
 	const char *str_value;
+	const struct of_device_id *match;
 	const char *str_value1[2];
 	int i;
 	int err;
@@ -1068,6 +1136,21 @@ static int tier4_imx728_board_setup(struct tier4_imx728 *priv)
 	char *sub_str_err;
 
 	root_node = of_find_node_opts_by_path("/", &of_stdout_options);
+
+	match = of_match_device(tier4_imx728_of_match, dev);
+	if (!match) {
+		dev_err(dev, "[%s] : Failed to find matching dt id\n", __func__);
+		return -ENODEV;
+	}
+	priv->compatible = match->compatible;
+
+	if (strstr(priv->compatible, "tier4mp_")) {
+		priv->cam_type = TIER4_CAMERA_TYPE_MP;
+		dev_info(dev, "[%s] : Matched TIER IV C3MP compatible: %s\n", __func__, priv->compatible);
+	} else {
+		priv->cam_type = TIER4_CAMERA_TYPE_STANDARD;
+		dev_info(dev, "[%s] : Matched TIER IV C3 compatible: %s\n", __func__, priv->compatible);
+	}
 
 	err = of_property_read_string(root_node, "model", &str_model);
 
@@ -1193,23 +1276,23 @@ static int tier4_imx728_board_setup(struct tier4_imx728 *priv)
 #if 0
     priv->g_ctx.fpga_generate_fsync = false;
 
-    if (( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER ) ||
-        ( priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN )) {
+    if ((priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER) ||
+	(priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_ORIN)) {
 
-        err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
+	err = of_property_read_string(node, "fpga-generate-fsync", &str_value);
 
-        if ( err < 0) {
-            if ( err == -EINVAL ) {
-                dev_info(dev, "[%s] : Parameter of fpga-generate-fsync does not exist.\n", __func__);
-            } else {
-                dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
-                goto error;
-            }
-        } else {
-            if (!strcmp(str_value, "true")) {
-                priv->g_ctx.fpga_generate_fsync = true;
-            }
-        }
+	if (err < 0) {
+	    if (err == -EINVAL) {
+		dev_info(dev, "[%s] : Parameter of fpga-generate-fsync does not exist.\n", __func__);
+	    } else {
+		dev_err(dev, "[%s]  : Parameter of fpga-generate-fsync  is invalid .\n", __func__);
+		goto error;
+	    }
+	} else {
+	    if (!strcmp(str_value, "true")) {
+		priv->g_ctx.fpga_generate_fsync = true;
+	    }
+	}
     }
 #endif
 
@@ -1629,7 +1712,7 @@ err_tegracam_unreg:
 
 	tier4_isx021_sensor_mutex_unlock();
 
-	//  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p \n", __func__, camera_channel_count,
+	//  dev_info(dev, "[%s] :camera_channel_count = %d  p_client = %p\n", __func__, camera_channel_count,
 	//           wst_priv[camera_channel_count].p_client);
 
 	return err;
@@ -1856,15 +1939,15 @@ static const struct i2c_device_id tier4_imx728_id[] = { { "tier4_imx728", 0 },
 MODULE_DEVICE_TABLE(i2c, tier4_imx728_id);
 
 static struct i2c_driver tier4_imx728_i2c_driver = {
-  .driver = {
-    .name       = "tier4_imx728",
-    .owner      = THIS_MODULE,
-    .of_match_table = of_match_ptr(tier4_imx728_of_match),
-  },
-  .probe    = tier4_imx728_probe,
-  .remove   = tier4_imx728_remove,
-  .shutdown   = tier4_imx728_shutdown,
-  .id_table   = tier4_imx728_id,
+	.driver = {
+		.name = "tier4_imx728",
+		.owner = THIS_MODULE,
+		.of_match_table = of_match_ptr(tier4_imx728_of_match),
+	},
+	.probe = tier4_imx728_probe,
+	.remove = tier4_imx728_remove,
+	.shutdown = tier4_imx728_shutdown,
+	.id_table = tier4_imx728_id,
 };
 
 static int __init tier4_imx728_init(void)
@@ -1872,7 +1955,7 @@ static int __init tier4_imx728_init(void)
 	mutex_init(&serdes_lock__);
 	mutex_init(&tier4_imx728_lock);
 
-	printk(KERN_INFO "TIERIV Automotive HDR Camera driver.\n");
+	pr_info("TIERIV Automotive HDR Camera driver.\n");
 
 	return i2c_add_driver(&tier4_imx728_i2c_driver);
 }
