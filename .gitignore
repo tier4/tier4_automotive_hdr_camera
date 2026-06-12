@@ -64,3 +64,11 @@ debhelper-build-stamp
 *.log
 *.substvars
 **/debian/files
+**.dtbo
+**.dtbo**
+**.dts
+**.dts**
+pkg/debian/tier4-camera-gmsl/*
+private_tools/*
+
+temp/*
