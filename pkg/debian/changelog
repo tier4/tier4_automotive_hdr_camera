@@ -1,3 +1,16 @@
+tier4-camera-gmsl (2.2.0) focal; urgency=medium
+
+  * Support TIER IV C1MP/C2MP
+  * Added new C1 camera synchronization mode
+  * Added new L4T BSP version and ECU
+    * Jeston AGX Orin Devkit - L4T R36.4.4
+    * RQX-59G - L4T R36.4.0
+    * Anvil - L4T R36.4.4 - V006
+    * RML-A4AGX - L4T R36.4.4
+    * EAC5000 - L4T R36.4.4(some restrictions)
+
+ -- tier4 <camera@tier4.jp>  Fri, 12 Jun 2026 19:47:49 +0900
+
 tier4-camera-gmsl (2.1.0) focal; urgency=medium
 
   * Support hardware diagnostics via uevent
