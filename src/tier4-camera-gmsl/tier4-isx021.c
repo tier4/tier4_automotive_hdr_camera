@@ -391,7 +391,7 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
 		.id = TIERIV_C1_CAMERA_CID_TRIGGER_MODE,
-		.name = "TIERIV Trigger Mode",
+		.name = "T4 Trigger Mode",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = TIER4_SYNC_MODE_INTERNAL_10FPS,
 		.max = TIER4_SYNC_MODE_EXTERNAL_SHUTTER,
@@ -402,7 +402,7 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
 		.id = TIERIV_C1_CAMERA_CID_AUTO_EXPOSURE,
-		.name = "TIERIV Auto Exposure",
+		.name = "T4 Auto Exposure",
 		.type = V4L2_CTRL_TYPE_BOOLEAN,
 		.min = 0,
 		.max = 1,
@@ -413,7 +413,7 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
 		.id = TIERIV_C1_CAMERA_CID_LDC,
-		.name = "TIERIV LDC",
+		.name = "T4 LDC",
 		.type = V4L2_CTRL_TYPE_BOOLEAN,
 		.min = 0,
 		.max = 1,
@@ -424,7 +424,7 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
 		.id = TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MIN,
-		.name = "TIERIV Shutter Time Min [us]",
+		.name = "T4 Shutter Time Min [us]",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = 0,
 		.max = 0xffffff,
@@ -435,7 +435,7 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
 		.id = TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MID,
-		.name = "TIERIV Shutter Time Mid [us]",
+		.name = "T4 Shutter Time Mid [us]",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = 0,
 		.max = 0xffffff,
@@ -446,7 +446,7 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
 		.id = TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MAX,
-		.name = "TIERIV Shutter Time Max [us]",
+		.name = "T4 Shutter Time Max [us]",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = 0,
 		.max = 0xffffff,
@@ -457,7 +457,7 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
 		.id = TIERIV_C1_CAMERA_CID_FSYNC_MFP,
-		.name = "TIERIV Fsync MFP",
+		.name = "T4 Fsync MFP",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = -1, // -1: use DT fsync_gpi, else MFP0
 		.max = 10, // valid MFP pins are 0..10
@@ -468,7 +468,7 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
 		.id = TIERIV_C1_CAMERA_CID_INTERNAL_DELAY,
-		.name = "TIERIV Internal Delay [us]",
+		.name = "T4 Internal Delay [us]",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = 0,
 		.max = 0xffffff,

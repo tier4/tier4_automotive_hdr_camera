@@ -116,6 +116,7 @@ MODULE_DEVICE_TABLE(of, tier4_imx490_of_match);
 #define TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MAX (TIERIV_C2_CAMERA_CID_BASE + 5)
 #define TIERIV_C2_CAMERA_CID_INTERNAL_DELAY (TIERIV_C2_CAMERA_CID_BASE + 6)
 #define TIERIV_C2_CAMERA_CID_FSYNC_MFP (TIERIV_C2_CAMERA_CID_BASE + 7)
+#define TIERIV_C2_CAMERA_CID_ISP_PARAM (TIERIV_C2_CAMERA_CID_BASE + 8)
 
 // Indices into tier4_imx490_private_ctrl_list[] / priv->ctrls[] (must match
 // the order of the entries in tier4_imx490_private_ctrl_list below).
@@ -127,91 +128,190 @@ enum {
 	IMX490_CTRL_SHUTTER_TIME_MAX,
 	IMX490_CTRL_INTERNAL_DELAY,
 	IMX490_CTRL_FSYNC_MFP,
+	IMX490_CTRL_ISP_PARAM,
 };
 
 static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl);
+static int tier4_imx490_get_private_ctrls(struct v4l2_ctrl *ctrl);
 static const struct v4l2_ctrl_ops tier4_imx490_private_ctrl_ops = {
 	.s_ctrl = tier4_imx490_set_private_ctrls,
+	.g_volatile_ctrl = tier4_imx490_get_private_ctrls,
 };
 
-static struct v4l2_ctrl_config tier4_imx490_private_ctrl_list[] = {
+struct isp_param_ctrl_priv {
+	u16 param_id;
+	u8 param_type;
+};
+
+struct v4l2_ctrl_config_entry {
+	const struct v4l2_ctrl_config config;
+	struct isp_param_ctrl_priv isp_param_priv;
+};
+
+#define V4L2_CTRL_CFG_ISP_PARAM(_id_idx, _name, _type, _param_id, _p_type, \
+		_min, _max, _step) \
+	{ \
+		.config = { \
+			.ops = &tier4_imx490_private_ctrl_ops, \
+			.id = TIERIV_C2_CAMERA_CID_ISP_PARAM + 1 + (_id_idx), \
+			.name = _name, \
+			.type = _type, \
+			.min = _min, \
+			.max = _max, \
+			.step = _step, \
+			.flags = V4L2_CTRL_FLAG_VOLATILE | \
+				V4L2_CTRL_FLAG_EXECUTE_ON_WRITE, \
+		}, \
+		.isp_param_priv = { \
+			.param_id = _param_id, \
+			.param_type = _p_type, \
+		}, \
+	}
+
+static struct v4l2_ctrl_config_entry tier4_imx490_private_ctrl_list[] = {
 	{
-		.ops = &tier4_imx490_private_ctrl_ops,
-		.id = TIERIV_C2_CAMERA_CID_READOUT_DELAY,
-		.name = "TIERIV Readout Delay [us]",
-		.type = V4L2_CTRL_TYPE_INTEGER,
-		.min = 0,
-		.max = 0xffffff,
-		.step = 1,
-		.def = 0,
-		.flags = 0,
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_READOUT_DELAY,
+			.name = "T4 Readout Delay [us]",
+			.type = V4L2_CTRL_TYPE_INTEGER,
+			.min = 0,
+			.max = 0xffffff,
+			.step = 1,
+			.def = 0,
+			.flags = 0,
+		}
 	},
 	{
-		.ops = &tier4_imx490_private_ctrl_ops,
-		.id = TIERIV_C2_CAMERA_CID_LDC,
-		.name = "TIERIV LDC",
-		.type = V4L2_CTRL_TYPE_BOOLEAN,
-		.min = 0,
-		.max = 1,
-		.step = 1,
-		.def = IMX490_DEFAULT_LDC,
-		.flags = 0,
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_LDC,
+			.name = "T4 LDC",
+			.type = V4L2_CTRL_TYPE_BOOLEAN,
+			.min = 0,
+			.max = 1,
+			.step = 1,
+			.def = IMX490_DEFAULT_LDC,
+			.flags = 0,
+		}
 	},
 	{
-		.ops = &tier4_imx490_private_ctrl_ops,
-		.id = TIERIV_C2_CAMERA_CID_TRIGGER_MODE,
-		.name = "TIERIV Trigger Mode",
-		.type = V4L2_CTRL_TYPE_INTEGER,
-		.min = TIER4_SYNC_MODE_INTERNAL_10FPS,
-		.max = TIER4_SYNC_MODE_EXTERNAL_SHUTTER,
-		.step = 1,
-		.def = IMX490_DEFAULT_TRIGGER_MODE,
-		.flags = 0,
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_TRIGGER_MODE,
+			.name = "T4 Trigger Mode",
+			.type = V4L2_CTRL_TYPE_INTEGER,
+			.min = TIER4_SYNC_MODE_INTERNAL_10FPS,
+			.max = TIER4_SYNC_MODE_EXTERNAL_SHUTTER,
+			.step = 1,
+			.def = IMX490_DEFAULT_TRIGGER_MODE,
+			.flags = 0,
+		}
 	},
 	{
-		.ops = &tier4_imx490_private_ctrl_ops,
-		.id = TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MIN,
-		.name = "TIERIV Shutter Time Min [us]",
-		.type = V4L2_CTRL_TYPE_INTEGER,
-		.min = 0,
-		.max = 0xffffff,
-		.step = 1,
-		.def = IMX490_MIN_EXPOSURE_TIME,
-		.flags = 0,
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MIN,
+			.name = "T4 Shutter Time Min [us]",
+			.type = V4L2_CTRL_TYPE_INTEGER,
+			.min = 0,
+			.max = 0xffffff,
+			.step = 1,
+			.def = IMX490_MIN_EXPOSURE_TIME,
+			.flags = 0,
+		}
 	},
 	{
-		.ops = &tier4_imx490_private_ctrl_ops,
-		.id = TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MAX,
-		.name = "TIERIV Shutter Time Max [us]",
-		.type = V4L2_CTRL_TYPE_INTEGER,
-		.min = 0,
-		.max = 0xffffff,
-		.step = 1,
-		.def = IMX490_MAX_EXPOSURE_TIME,
-		.flags = 0,
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MAX,
+			.name = "T4 Shutter Time Max [us]",
+			.type = V4L2_CTRL_TYPE_INTEGER,
+			.min = 0,
+			.max = 0xffffff,
+			.step = 1,
+			.def = IMX490_MAX_EXPOSURE_TIME,
+			.flags = 0,
+		}
 	},
 	{
-		.ops = &tier4_imx490_private_ctrl_ops,
-		.id = TIERIV_C2_CAMERA_CID_INTERNAL_DELAY,
-		.name = "TIERIV Internal Delay [us]",
-		.type = V4L2_CTRL_TYPE_INTEGER,
-		.min = 0,
-		.max = 0xffffff,
-		.step = 1,
-		.def = IMX490_DEFAULT_INTERNAL_DELAY,
-		.flags = 0,
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_INTERNAL_DELAY,
+			.name = "T4 Internal Delay [us]",
+			.type = V4L2_CTRL_TYPE_INTEGER,
+			.min = 0,
+			.max = 0xffffff,
+			.step = 1,
+			.def = IMX490_DEFAULT_INTERNAL_DELAY,
+			.flags = 0,
+		}
 	},
 	{
-		.ops = &tier4_imx490_private_ctrl_ops,
-		.id = TIERIV_C2_CAMERA_CID_FSYNC_MFP,
-		.name = "TIERIV Fsync MFP",
-		.type = V4L2_CTRL_TYPE_INTEGER,
-		.min = -1, // -1: use DT fsync_gpi, else MFP0
-		.max = 10, // valid MFP pins are 0..10
-		.step = 1,
-		.def = IMX490_DEFAULT_FSYNC_MFP,
-		.flags = 0,
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_FSYNC_MFP,
+			.name = "T4 Fsync MFP",
+			.type = V4L2_CTRL_TYPE_INTEGER,
+			.min = -1, // -1: use DT fsync_gpi, else MFP0
+			.max = 10, // valid MFP pins are 0..10
+			.step = 1,
+			.def = IMX490_DEFAULT_FSYNC_MFP,
+			.flags = 0,
+		}
 	},
+	{
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.type_ops = &tier4_gw5300_isp_param_type_ops,
+			.id = TIERIV_C2_CAMERA_CID_ISP_PARAM,
+			.name = "T4 ISP Parameter",
+			.type = TIER4_GW5300_CTRL_TYPE_ISP_PARAM,
+			.elem_size = sizeof(struct tier4_gw5300_isp_param),
+			.flags = V4L2_CTRL_FLAG_HAS_PAYLOAD |
+				V4L2_CTRL_FLAG_EXECUTE_ON_WRITE,
+		}
+	},
+	V4L2_CTRL_CFG_ISP_PARAM(
+		0,
+		"T4 Enable LocalToneMapping",
+		V4L2_CTRL_TYPE_BOOLEAN,
+		101,
+		TIER4_GW5300_PARAM_UINT8,
+		0,
+		1,
+		1
+	),
+	V4L2_CTRL_CFG_ISP_PARAM(
+		1,
+		"T4 LocalToneMapping Filter Mux",
+		V4L2_CTRL_TYPE_BOOLEAN,
+		117,
+		TIER4_GW5300_PARAM_UINT8,
+		0,
+		1,
+		1
+	),
+	V4L2_CTRL_CFG_ISP_PARAM(
+		2,
+		"T4 Enable LocalToneMapping Adaptive",
+		V4L2_CTRL_TYPE_BOOLEAN,
+		145,
+		TIER4_GW5300_PARAM_UINT8,
+		0,
+		1,
+		1
+	),
+	V4L2_CTRL_CFG_ISP_PARAM(
+		3,
+		"T4 LocalToneMapping Dark Enh",
+		V4L2_CTRL_TYPE_INTEGER,
+		118,
+		TIER4_GW5300_PARAM_UINT16,
+		0,
+		65535,
+		1
+	)
 };
 
 // If you add new ioctl VIDIOC_S_EXT_CTRLS function, please add new CID to the following table.
@@ -750,6 +850,36 @@ static int tier4_imx490_set_readout_delay(struct device *dev, int trigger_mode,
 	return tier4_gw5300_set_readout_delay(dev, delay_lines);
 }
 
+static int tier4_imx490_get_private_ctrls(struct v4l2_ctrl *ctrl)
+{
+	struct tegracam_ctrl_handler *handler = container_of(
+		ctrl->handler, struct tegracam_ctrl_handler, ctrl_handler);
+	struct tegracam_device *tc_dev = handler->tc_dev;
+	struct tier4_imx490 *priv =
+		(struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
+	struct isp_param_ctrl_priv *ctrl_priv = ctrl->priv;
+	u32 val = 0;
+	int err = -ENOENT;
+
+	if (TIERIV_C2_CAMERA_CID_ISP_PARAM + 1 <= ctrl->id &&
+		ctrl->id < TIERIV_C2_CAMERA_CID_ISP_PARAM +
+			ARRAY_SIZE(tier4_imx490_private_ctrl_list)) {
+		dev_info(tc_dev->dev, "%s: ISP param ctrl id 0x%x\n",
+				__func__, ctrl->id);
+
+		err = tier4_gw5300_isp_get_param(priv->isp_dev,
+				TIER4_GW5300_ISP_SPEC_ID,
+				TIER4_GW5300_ISP_CONTEXT,
+				le16_to_cpu(ctrl_priv->param_id),
+				ctrl_priv->param_type,
+				&val);
+		if (!err)
+			ctrl->val = val;
+	}
+
+	return err;
+}
+
 static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 {
 	struct tegracam_ctrl_handler *handler = container_of(
@@ -757,7 +887,8 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 	struct tegracam_device *tc_dev = handler->tc_dev;
 	struct tier4_imx490 *priv =
 		(struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
-	int err = 0;
+	struct isp_param_ctrl_priv *ctrl_priv = ctrl->priv;
+	int err = 0, ret;
 
 	switch (ctrl->id) {
 	case TIERIV_C2_CAMERA_CID_READOUT_DELAY:
@@ -772,6 +903,23 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 		dev_info(tc_dev->dev, "%s: LDC: %d\n", __func__, ctrl->val);
 		tier4_imx490_set_distortion_correction(tc_dev, ctrl->val);
 		break;
+	case TIERIV_C2_CAMERA_CID_ISP_PARAM: {
+		const struct tier4_gw5300_isp_param *p = ctrl->p_new.p;
+
+		if (!priv->isp_dev) {
+			dev_err(tc_dev->dev, "%s: no ISP device\n", __func__);
+			err = -ENODEV;
+			break;
+		}
+
+		err = tier4_gw5300_isp_set_param(priv->isp_dev,
+						 TIER4_GW5300_ISP_SPEC_ID,
+						 TIER4_GW5300_ISP_CONTEXT,
+						 le16_to_cpu(p->param_id),
+						 p->param_type,
+						 le32_to_cpu(p->value));
+		break;
+	}
 	case TIERIV_C2_CAMERA_CID_TRIGGER_MODE:
 	case TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MIN:
 	case TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MAX:
@@ -784,8 +932,23 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 			 ctrl->id, ctrl->val);
 		break;
 	default:
-		dev_err(tc_dev->dev, "%s: unknown V4L2 control id\n", __func__);
-		err = -EINVAL;
+		if (TIERIV_C2_CAMERA_CID_ISP_PARAM + 1 <= ctrl->id &&
+			ctrl->id < TIERIV_C2_CAMERA_CID_ISP_PARAM +
+				ARRAY_SIZE(tier4_imx490_private_ctrl_list)) {
+			dev_info(tc_dev->dev, "%s: ISP param ctrl id 0x%x\n",
+				 __func__, ctrl->id);
+
+			ret = tier4_gw5300_isp_set_param(priv->isp_dev,
+					TIER4_GW5300_ISP_SPEC_ID,
+					TIER4_GW5300_ISP_CONTEXT,
+					le16_to_cpu(ctrl_priv->param_id),
+					ctrl_priv->param_type,
+					ctrl->val);
+			err = (ret == 2 ? 0 : -EIO);
+		} else {
+			dev_err(tc_dev->dev, "%s: unknown V4L2 control id\n", __func__);
+			err = -EINVAL;
+		}
 	}
 
 	return err;
@@ -1238,7 +1401,7 @@ static int tier4_imx490_registered(struct v4l2_subdev *sd)
 	struct camera_common_data *s_data = to_camera_common_data(&client->dev);
 	struct tier4_imx490 *priv = (struct tier4_imx490 *)s_data->priv;
 	struct device *dev = &client->dev;
-	struct v4l2_ctrl_config *ctrl_cfg;
+	struct v4l2_ctrl_config_entry *ctrl_cfg;
 	struct v4l2_ctrl *ctrl;
 	struct tegracam_ctrl_handler *handler = s_data->tegracam_ctrl_hdl;
 	int numctrls;
@@ -1250,12 +1413,13 @@ static int tier4_imx490_registered(struct v4l2_subdev *sd)
 	for (i = 0; i < numctrls; i++) {
 		ctrl_cfg = &tier4_imx490_private_ctrl_list[i];
 
-		ctrl = v4l2_ctrl_new_custom(&handler->ctrl_handler, ctrl_cfg,
-					    NULL);
+		ctrl = v4l2_ctrl_new_custom(&handler->ctrl_handler,
+				&ctrl_cfg->config,
+				&ctrl_cfg->isp_param_priv);
 		if (ctrl == NULL) {
 			err = handler->ctrl_handler.error;
 			dev_err(dev, "%s: failed to create control %s (%d)\n",
-				__func__, ctrl_cfg->name, err);
+				__func__, ctrl_cfg->config.name, err);
 			goto free_ctrl;
 		}
 

@@ -129,6 +129,7 @@ static const u32 ctrl_cid_list[] = {
 #define TIERIV_C3_CAMERA_CID_SHUTTER_TIME_MIN (TIERIV_C3_CAMERA_CID_BASE + 4)
 #define TIERIV_C3_CAMERA_CID_SHUTTER_TIME_MAX (TIERIV_C3_CAMERA_CID_BASE + 5)
 #define TIERIV_C3_CAMERA_CID_FSYNC_MFP (TIERIV_C3_CAMERA_CID_BASE + 6)
+#define TIERIV_C3_CAMERA_CID_ISP_PARAM (TIERIV_C3_CAMERA_CID_BASE + 7)
 
 // Indices into tier4_imx728_private_ctrl_list[] / priv->ctrls[] (must match
 // the order of the entries in tier4_imx728_private_ctrl_list below).
@@ -139,6 +140,7 @@ enum {
 	IMX728_CTRL_SHUTTER_TIME_MIN,
 	IMX728_CTRL_SHUTTER_TIME_MAX,
 	IMX728_CTRL_FSYNC_MFP,
+	IMX728_CTRL_ISP_PARAM,
 };
 
 static int tier4_imx728_set_private_ctrls(struct v4l2_ctrl *ctrl);
@@ -150,7 +152,7 @@ static struct v4l2_ctrl_config tier4_imx728_private_ctrl_list[] = {
 	{
 		.ops = &tier4_imx728_private_ctrl_ops,
 		.id = TIERIV_C3_CAMERA_CID_TRIGGER_MODE,
-		.name = "TIERIV Trigger Mode",
+		.name = "T4 Trigger Mode",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = TIER4_SYNC_MODE_INTERNAL_10FPS,
 		.max = TIER4_SYNC_MODE_EXTERNAL_SHUTTER,
@@ -161,7 +163,7 @@ static struct v4l2_ctrl_config tier4_imx728_private_ctrl_list[] = {
 	{
 		.ops = &tier4_imx728_private_ctrl_ops,
 		.id = TIERIV_C3_CAMERA_CID_AUTO_EXPOSURE,
-		.name = "TIERIV Auto Exposure",
+		.name = "T4 Auto Exposure",
 		.type = V4L2_CTRL_TYPE_BOOLEAN,
 		.min = 0,
 		.max = 1,
@@ -172,7 +174,7 @@ static struct v4l2_ctrl_config tier4_imx728_private_ctrl_list[] = {
 	{
 		.ops = &tier4_imx728_private_ctrl_ops,
 		.id = TIERIV_C3_CAMERA_CID_LDC,
-		.name = "TIERIV LDC",
+		.name = "T4 LDC",
 		.type = V4L2_CTRL_TYPE_BOOLEAN,
 		.min = 0,
 		.max = 1,
@@ -183,7 +185,7 @@ static struct v4l2_ctrl_config tier4_imx728_private_ctrl_list[] = {
 	{
 		.ops = &tier4_imx728_private_ctrl_ops,
 		.id = TIERIV_C3_CAMERA_CID_SHUTTER_TIME_MIN,
-		.name = "TIERIV Shutter Time Min [us]",
+		.name = "T4 Shutter Time Min [us]",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = 0,
 		.max = 0xffffff,
@@ -194,7 +196,7 @@ static struct v4l2_ctrl_config tier4_imx728_private_ctrl_list[] = {
 	{
 		.ops = &tier4_imx728_private_ctrl_ops,
 		.id = TIERIV_C3_CAMERA_CID_SHUTTER_TIME_MAX,
-		.name = "TIERIV Shutter Time Max [us]",
+		.name = "T4 Shutter Time Max [us]",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = 0,
 		.max = 0xffffff,
@@ -205,13 +207,22 @@ static struct v4l2_ctrl_config tier4_imx728_private_ctrl_list[] = {
 	{
 		.ops = &tier4_imx728_private_ctrl_ops,
 		.id = TIERIV_C3_CAMERA_CID_FSYNC_MFP,
-		.name = "TIERIV Fsync MFP",
+		.name = "T4 Fsync MFP",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = -1, // -1: use DT fsync_gpi, else MFP0
 		.max = 10, // valid MFP pins are 0..10
 		.step = 1,
 		.def = IMX728_DEFAULT_FSYNC_MFP,
 		.flags = 0,
+	},
+	{
+		.ops = &tier4_imx728_private_ctrl_ops,
+		.type_ops = &tier4_gw5300_isp_param_type_ops,
+		.id = TIERIV_C3_CAMERA_CID_ISP_PARAM,
+		.name = "T4 ISP Parameter",
+		.type = TIER4_GW5300_CTRL_TYPE_ISP_PARAM,
+		.elem_size = sizeof(struct tier4_gw5300_isp_param),
+		.flags = V4L2_CTRL_FLAG_EXECUTE_ON_WRITE,
 	},
 };
 
@@ -709,6 +720,23 @@ static int tier4_imx728_set_private_ctrls(struct v4l2_ctrl *ctrl)
 		dev_info(tc_dev->dev, "%s: auto exposure = %d\n", __func__,
 			 ctrl->val);
 		break;
+	case TIERIV_C3_CAMERA_CID_ISP_PARAM: {
+		const struct tier4_gw5300_isp_param *p = ctrl->p_new.p;
+
+		if (!priv->isp_dev) {
+			dev_err(tc_dev->dev, "%s: no ISP device\n", __func__);
+			err = -ENODEV;
+			break;
+		}
+
+		err = tier4_gw5300_isp_set_param(priv->isp_dev,
+						 TIER4_GW5300_ISP_SPEC_ID,
+						 TIER4_GW5300_ISP_CONTEXT,
+						 le16_to_cpu(p->param_id),
+						 p->param_type,
+						 le32_to_cpu(p->value));
+		break;
+	}
 	case TIERIV_C3_CAMERA_CID_TRIGGER_MODE:
 	case TIERIV_C3_CAMERA_CID_LDC:
 	case TIERIV_C3_CAMERA_CID_SHUTTER_TIME_MIN:
