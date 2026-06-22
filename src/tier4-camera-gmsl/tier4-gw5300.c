@@ -430,6 +430,65 @@ uint8_t calcCheckSum(const uint8_t *data, size_t size)
 	return result;
 }
 
+int tier4_gw5300_set_readout_delay(struct device *dev, u32 delay_lines)
+{
+	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
+	u8 cmd_set_readout_delay[] = { 0x33, 0x47,
+				       0x15, 0x0,
+				       0x0,  0x0,
+				       0xe0, 0x0,
+				       0x80, 0x1,
+				       0x0,  0x0,
+				       0x0,  0x34,
+				       0x0,  0x0,
+				       0x0,  0x00 /* reg */,
+				       0x1,  0x0,
+				       0x0,  0x00 /* delay */,
+				       0x0,  0x0,
+				       0x0,  0x2,
+				       0x1 };
+	u8 buf[6];
+	int i, ret = 0;
+
+	dev_info(dev, "%s: readout delay lines: %d\n", __func__, delay_lines);
+	if (!delay_lines)
+		return 0;
+
+	if (delay_lines > 0xffffff) {
+		dev_err(dev, "readout delay is too big\n");
+		return -EINVAL;
+	}
+
+	for (i = 0; i < 3; ++i) {
+		u8 reg = 0xfd + i;
+
+		cmd_set_readout_delay[17] = reg;
+		cmd_set_readout_delay[21] = (delay_lines >> ((2 - i) * 8)) &
+					    0xff;
+		dev_info(dev,
+			 "%s: readout delay_lines=%x i=%d reg=%x value=%x\n",
+			 __func__, delay_lines, i, cmd_set_readout_delay[17],
+			 cmd_set_readout_delay[21]);
+
+		cmd_set_readout_delay[sizeof(cmd_set_readout_delay) - 1] =
+			calcCheckSum(cmd_set_readout_delay,
+				     sizeof(cmd_set_readout_delay));
+
+		msleep(20);
+		ret += tier4_gw5300_send_and_recv_msg(
+			dev, cmd_set_readout_delay,
+			sizeof(cmd_set_readout_delay), buf, sizeof(buf));
+
+		print_hex_dump(KERN_INFO, "readout-delay: ", DUMP_PREFIX_OFFSET,
+			       16, 1, buf, sizeof(buf), true);
+		//if (buf[4] != 1)
+		//    return -EIO;
+	}
+
+	return ret;
+}
+EXPORT_SYMBOL(tier4_gw5300_set_readout_delay);
+
 int tier4_gw5300_set_integration_time_on_aemode(struct device *dev,
 						u32 h_line_ns,
 						u32 max_integration_time,

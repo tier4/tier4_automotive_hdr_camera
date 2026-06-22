@@ -351,6 +351,133 @@ static const u32 ctrl_cid_list[] = {
 	//TEGRA_CAMERA_CID_DISTORTION_CORRECTION,
 };
 
+// --- TIERIV private V4L2 controls (formerly module parameters) ---
+
+#define ISX021_DEFAULT_TRIGGER_MODE TIER4_SYNC_MODE_INTERNAL_10FPS
+#define ISX021_DEFAULT_AUTO_EXPOSURE 1
+#define ISX021_DEFAULT_LDC 1
+#define ISX021_DEFAULT_FSYNC_MFP (-1)
+#define ISX021_DEFAULT_INTERNAL_DELAY 0
+
+#define TIERIV_C1_CAMERA_CID_BASE (V4L2_CTRL_CLASS_CAMERA | 0x6000)
+#define TIERIV_C1_CAMERA_CID_TRIGGER_MODE (TIERIV_C1_CAMERA_CID_BASE + 1)
+#define TIERIV_C1_CAMERA_CID_AUTO_EXPOSURE (TIERIV_C1_CAMERA_CID_BASE + 2)
+#define TIERIV_C1_CAMERA_CID_LDC (TIERIV_C1_CAMERA_CID_BASE + 3)
+#define TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MIN (TIERIV_C1_CAMERA_CID_BASE + 4)
+#define TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MID (TIERIV_C1_CAMERA_CID_BASE + 5)
+#define TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MAX (TIERIV_C1_CAMERA_CID_BASE + 6)
+#define TIERIV_C1_CAMERA_CID_FSYNC_MFP (TIERIV_C1_CAMERA_CID_BASE + 7)
+#define TIERIV_C1_CAMERA_CID_INTERNAL_DELAY (TIERIV_C1_CAMERA_CID_BASE + 8)
+
+// Indices into tier4_isx021_private_ctrl_list[] / priv->ctrls[] (must match
+// the order of the entries in tier4_isx021_private_ctrl_list below).
+enum {
+	ISX021_CTRL_TRIGGER_MODE,
+	ISX021_CTRL_AUTO_EXPOSURE,
+	ISX021_CTRL_LDC,
+	ISX021_CTRL_SHUTTER_TIME_MIN,
+	ISX021_CTRL_SHUTTER_TIME_MID,
+	ISX021_CTRL_SHUTTER_TIME_MAX,
+	ISX021_CTRL_FSYNC_MFP,
+	ISX021_CTRL_INTERNAL_DELAY,
+};
+
+static int tier4_isx021_set_private_ctrls(struct v4l2_ctrl *ctrl);
+static const struct v4l2_ctrl_ops tier4_isx021_private_ctrl_ops = {
+	.s_ctrl = tier4_isx021_set_private_ctrls,
+};
+
+static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_TRIGGER_MODE,
+		.name = "TIERIV Trigger Mode",
+		.type = V4L2_CTRL_TYPE_INTEGER,
+		.min = TIER4_SYNC_MODE_INTERNAL_10FPS,
+		.max = TIER4_SYNC_MODE_EXTERNAL_SHUTTER,
+		.step = 1,
+		.def = ISX021_DEFAULT_TRIGGER_MODE,
+		.flags = 0,
+	},
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_AUTO_EXPOSURE,
+		.name = "TIERIV Auto Exposure",
+		.type = V4L2_CTRL_TYPE_BOOLEAN,
+		.min = 0,
+		.max = 1,
+		.step = 1,
+		.def = ISX021_DEFAULT_AUTO_EXPOSURE,
+		.flags = 0,
+	},
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_LDC,
+		.name = "TIERIV LDC",
+		.type = V4L2_CTRL_TYPE_BOOLEAN,
+		.min = 0,
+		.max = 1,
+		.step = 1,
+		.def = ISX021_DEFAULT_LDC,
+		.flags = 0,
+	},
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MIN,
+		.name = "TIERIV Shutter Time Min [us]",
+		.type = V4L2_CTRL_TYPE_INTEGER,
+		.min = 0,
+		.max = 0xffffff,
+		.step = 1,
+		.def = ISX021_MIN_EXPOSURE_TIME,
+		.flags = 0,
+	},
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MID,
+		.name = "TIERIV Shutter Time Mid [us]",
+		.type = V4L2_CTRL_TYPE_INTEGER,
+		.min = 0,
+		.max = 0xffffff,
+		.step = 1,
+		.def = ISX021_MID_EXPOSURE_TIME,
+		.flags = 0,
+	},
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MAX,
+		.name = "TIERIV Shutter Time Max [us]",
+		.type = V4L2_CTRL_TYPE_INTEGER,
+		.min = 0,
+		.max = 0xffffff,
+		.step = 1,
+		.def = ISX021_MAX_EXPOSURE_TIME,
+		.flags = 0,
+	},
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_FSYNC_MFP,
+		.name = "TIERIV Fsync MFP",
+		.type = V4L2_CTRL_TYPE_INTEGER,
+		.min = -1, // -1: use DT fsync_gpi, else MFP0
+		.max = 10, // valid MFP pins are 0..10
+		.step = 1,
+		.def = ISX021_DEFAULT_FSYNC_MFP,
+		.flags = 0,
+	},
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_INTERNAL_DELAY,
+		.name = "TIERIV Internal Delay [us]",
+		.type = V4L2_CTRL_TYPE_INTEGER,
+		.min = 0,
+		.max = 0xffffff,
+		.step = 1,
+		.def = ISX021_DEFAULT_INTERNAL_DELAY,
+		.flags = 0,
+	},
+};
+
 struct tier4_isx021 {
 	struct i2c_client *i2c_client;
 	const struct i2c_device_id *id;
@@ -373,6 +500,9 @@ struct tier4_isx021 {
 	atomic_t test_hw_fault;
 	const char *compatible;
 	enum tier4_camera_type cam_type;
+
+	struct v4l2_ctrl_handler ctrl_handler;
+	struct v4l2_ctrl *ctrls[ARRAY_SIZE(tier4_isx021_private_ctrl_list)];
 };
 
 static const struct regmap_config tier4_sensor_regmap_config = {
@@ -394,26 +524,10 @@ static struct st_priv wst_priv[MAX_NUM_CAMERA];
 
 static int camera_channel_count;
 
-static int trigger_mode = 0xCAFE;
-static int enable_auto_exposure = 0xCAFE;
-static int enable_distortion_correction = 0xCAFE;
-static int shutter_time_min = ISX021_MIN_EXPOSURE_TIME;
-static int shutter_time_mid = ISX021_MID_EXPOSURE_TIME;
-static int shutter_time_max = ISX021_MAX_EXPOSURE_TIME;
-static int fsync_mfp = -1;
-static int internal_delay;
-// static int debug_i2c_write = 0;
-
-module_param(trigger_mode, int, 0644);
-module_param(enable_auto_exposure, int, 0644);
-module_param(enable_distortion_correction, int, 0644);
-module_param(shutter_time_min, int, 0644);
-module_param(shutter_time_mid, int, 0644);
-module_param(shutter_time_max, int, 0644);
-
-module_param(fsync_mfp, int, 0644);
-module_param(internal_delay, int, 0644);
-// module_param(debug_i2c_write, int, S_IRUGO | S_IWUSR);
+// The former module parameters (trigger_mode, enable_auto_exposure,
+// enable_distortion_correction, shutter_time_min/mid/max, fsync_mfp,
+// internal_delay) are now per-camera TIERIV V4L2 controls. See
+// tier4_isx021_private_ctrl_list[] and priv->ctrls[].
 
 static struct mutex tier4_sensor_lock__;
 
@@ -943,7 +1057,8 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 		} // else (tier4_fpga_get_fsync_mode() != FPGA_FSYNC_MODE_DISABLE)
 	} // if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER)
 
-	err = tier4_max9296_setup_gpi(priv->dser_dev, fsync_mfp);
+	err = tier4_max9296_setup_gpi(priv->dser_dev,
+				      priv->ctrls[ISX021_CTRL_FSYNC_MFP]->val);
 
 	if (err) {
 		dev_err(dev, "[%s] : tier4_max9296_setup_gpi failed.\n",
@@ -1202,7 +1317,7 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 	}
 
 	// set internal delay
-	if (trigger_mode == TIER4_SYNC_MODE_EXTERNAL_READ_10FPS) {
+	if (priv->trigger_mode == TIER4_SYNC_MODE_EXTERNAL_READ_10FPS) {
 		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_105_ADDR, 0x00);
 		usleep_range(10000, 11000);
 		if (err)
@@ -1217,7 +1332,9 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 		u8 delay_byte1;
 		u32 h_line_ns = 23810;
 
-		num_line = DIV_ROUND_CLOSEST(internal_delay * 1000, h_line_ns);
+		num_line = DIV_ROUND_CLOSEST(
+			priv->ctrls[ISX021_CTRL_INTERNAL_DELAY]->val * 1000,
+			h_line_ns);
 		if (num_line > 0xFFFF) {
 			num_line = 0xFFFF;
 		} else if (num_line < 0) {
@@ -1694,6 +1811,11 @@ static int tier4_isx021_set_auto_exposure(struct tegracam_device *tc_dev)
 {
 	int err = 0;
 	struct camera_common_data *s_data = tc_dev->s_data;
+	struct tier4_isx021 *priv =
+		(struct tier4_isx021 *)tegracam_get_privdata(tc_dev);
+	int shutter_time_min = priv->ctrls[ISX021_CTRL_SHUTTER_TIME_MIN]->val;
+	int shutter_time_mid = priv->ctrls[ISX021_CTRL_SHUTTER_TIME_MID]->val;
+	int shutter_time_max = priv->ctrls[ISX021_CTRL_SHUTTER_TIME_MAX]->val;
 
 	// Change to Auto exposure mode
 
@@ -2158,6 +2280,46 @@ error_exit:
 //  If you add new ioctl VIDIOC_S_EXT_CTRLS function,
 //  please add the new memeber and the function at the following table.
 
+static int tier4_isx021_set_private_ctrls(struct v4l2_ctrl *ctrl)
+{
+	struct tegracam_ctrl_handler *handler = container_of(
+		ctrl->handler, struct tegracam_ctrl_handler, ctrl_handler);
+	struct tegracam_device *tc_dev = handler->tc_dev;
+	struct tier4_isx021 *priv =
+		(struct tier4_isx021 *)tegracam_get_privdata(tc_dev);
+	int err = 0;
+
+	switch (ctrl->id) {
+	case TIERIV_C1_CAMERA_CID_AUTO_EXPOSURE:
+		priv->auto_exposure = ctrl->val;
+		dev_info(tc_dev->dev, "%s: auto exposure = %d\n", __func__,
+			 ctrl->val);
+		break;
+	case TIERIV_C1_CAMERA_CID_LDC:
+		priv->distortion_correction = ctrl->val;
+		dev_info(tc_dev->dev, "%s: distortion correction = %d\n",
+			 __func__, ctrl->val);
+		break;
+	case TIERIV_C1_CAMERA_CID_TRIGGER_MODE:
+	case TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MIN:
+	case TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MID:
+	case TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MAX:
+	case TIERIV_C1_CAMERA_CID_FSYNC_MFP:
+	case TIERIV_C1_CAMERA_CID_INTERNAL_DELAY:
+		// These configure the GMSL/sensor pipeline and take effect at
+		// the next streaming start; the V4L2 control framework stores
+		// the value.
+		dev_info(tc_dev->dev, "%s: ctrl id 0x%x = %d\n", __func__,
+			 ctrl->id, ctrl->val);
+		break;
+	default:
+		dev_err(tc_dev->dev, "%s: unknown V4L2 control id\n", __func__);
+		err = -EINVAL;
+	}
+
+	return err;
+}
+
 static struct tegracam_ctrl_ops tier4_isx021_ctrl_ops = {
 	.numctrls = ARRAY_SIZE(ctrl_cid_list),
 	.ctrl_cid_list = ctrl_cid_list,
@@ -2269,11 +2431,6 @@ static int tier4_isx021_start_one_streaming(struct tegracam_device *tc_dev)
 		goto exit;
 	}
 
-	if (enable_auto_exposure == 1) {
-		priv->auto_exposure = true;
-		dev_info(dev, "[%s] : Parameter[enable_auto_exposure] = 1.\n", __func__);
-	}
-
 	if (priv->auto_exposure == true) {
 		err = tier4_isx021_set_auto_exposure(tc_dev);
 		if (err) {
@@ -2286,8 +2443,9 @@ static int tier4_isx021_start_one_streaming(struct tegracam_device *tc_dev)
 		dev_info(dev, "[%s] : Disabled Auto Exposure.\n", __func__);
 	}
 
-	dev_info(dev, "[%s] : trigger_mode = %d.\n", __func__, trigger_mode);
-	priv->trigger_mode = trigger_mode;
+	priv->trigger_mode = priv->ctrls[ISX021_CTRL_TRIGGER_MODE]->val;
+	dev_info(dev, "[%s] : trigger_mode = %d.\n", __func__,
+		 priv->trigger_mode);
 	err = tier4_isx021_set_fsync_trigger_mode(priv);
 	if (err) {
 		dev_err(dev, "[%s] :  Camera sensor could not be changed trigger mode.\n", __func__);
@@ -2304,10 +2462,6 @@ static int tier4_isx021_start_one_streaming(struct tegracam_device *tc_dev)
 	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
 		usleep_range(20000, 21000);
 
-		if (enable_distortion_correction == 1) {
-			priv->distortion_correction = true;
-			dev_info(dev, "[%s] : Prameter[enable_distortion_correction] = 1 .\n", __func__);
-		}
 		err = tier4_isx021_enable_distortion_correction(tc_dev, priv->distortion_correction);
 		if (err) {
 			dev_err(dev, "[%s] : Enabling Distortion Correction failed.\n", __func__);
@@ -2587,7 +2741,60 @@ static int tier4_isx021_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 	return NO_ERROR;
 }
 
+static int tier4_isx021_registered(struct v4l2_subdev *sd)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	struct camera_common_data *s_data = to_camera_common_data(&client->dev);
+	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
+	struct device *dev = &client->dev;
+	struct v4l2_ctrl_config *ctrl_cfg;
+	struct v4l2_ctrl *ctrl;
+	struct tegracam_ctrl_handler *handler = s_data->tegracam_ctrl_hdl;
+	int numctrls;
+	int err, i;
+
+	numctrls = ARRAY_SIZE(tier4_isx021_private_ctrl_list);
+	v4l2_ctrl_handler_init(&priv->ctrl_handler, numctrls);
+
+	for (i = 0; i < numctrls; i++) {
+		ctrl_cfg = &tier4_isx021_private_ctrl_list[i];
+
+		ctrl = v4l2_ctrl_new_custom(&handler->ctrl_handler, ctrl_cfg,
+					    NULL);
+		if (ctrl == NULL) {
+			err = handler->ctrl_handler.error;
+			dev_err(dev, "%s: failed to create control %s (%d)\n",
+				__func__, ctrl_cfg->name, err);
+			goto free_ctrl;
+		}
+
+		priv->ctrls[i] = ctrl;
+	}
+
+	err = v4l2_ctrl_add_handler(sd->ctrl_handler, &priv->ctrl_handler, NULL,
+				    false);
+	if (err)
+		goto free_ctrl;
+
+	return 0;
+
+free_ctrl:
+	v4l2_ctrl_handler_free(&priv->ctrl_handler);
+	return err;
+}
+
+static void tier4_isx021_unregistered(struct v4l2_subdev *sd)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	struct camera_common_data *s_data = to_camera_common_data(&client->dev);
+	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
+
+	v4l2_ctrl_handler_free(&priv->ctrl_handler);
+}
+
 static const struct v4l2_subdev_internal_ops tier4_isx021_subdev_internal_ops = {
+	.registered = tier4_isx021_registered,
+	.unregistered = tier4_isx021_unregistered,
 	.open = tier4_isx021_open,
 };
 
@@ -2677,44 +2884,28 @@ static int tier4_isx021_board_setup(struct tier4_isx021 *priv)
 		goto error;
 	}
 
-	if (enable_distortion_correction == 0xCAFE) {
-		// if not set kernel param, read device tree param
-		err = of_property_read_string(node, "distortion-correction",
-					      &str_value);
-		if (err < 0) {
-			dev_err(dev,
-				"[%s] : No distortion-correction found. set enable_distortion-correction = true\n",
-				__func__);
-		} else {
-			if (!strcmp(str_value, "true")) {
-				enable_distortion_correction = 1;
-			} else {
-				enable_distortion_correction = 0;
-			}
-		}
+	// Seed the initial lens-distortion-correction / auto-exposure state from
+	// the device tree. These are the boot-time defaults for the matching
+	// TIERIV V4L2 controls, which can override them at runtime.
+	err = of_property_read_string(node, "distortion-correction", &str_value);
+	if (err < 0) {
+		dev_err(dev,
+			"[%s] : No distortion-correction found. set distortion_correction = true\n",
+			__func__);
+		priv->distortion_correction = true;
+	} else {
+		priv->distortion_correction = !strcmp(str_value, "true");
 	}
 
-	priv->distortion_correction = enable_distortion_correction != 0 ? true :
-									  false;
-
-	if (enable_auto_exposure == 0xCAFE) {
-		// if not set kernel param, read device tree param
-		err = of_property_read_string(node, "auto-exposure",
-					      &str_value);
-		if (err < 0) {
-			dev_err(dev,
-				"[%s] : No auto-exposure mode found. set enable_auto_exposure = true\n",
-				__func__);
-		} else {
-			if (!strcmp(str_value, "true")) {
-				enable_auto_exposure = 1;
-			} else {
-				enable_auto_exposure = 0;
-			}
-		}
+	err = of_property_read_string(node, "auto-exposure", &str_value);
+	if (err < 0) {
+		dev_err(dev,
+			"[%s] : No auto-exposure mode found. set auto_exposure = true\n",
+			__func__);
+		priv->auto_exposure = true;
+	} else {
+		priv->auto_exposure = !strcmp(str_value, "true");
 	}
-
-	priv->auto_exposure = enable_auto_exposure != 0 ? true : false;
 
 	mode_node = of_get_child_by_name(node, "mode0");
 
@@ -3116,7 +3307,8 @@ static int tier4_isx021_probe(struct i2c_client *client,
 		goto err_tegracam_unreg;
 	}
 
-	priv->trigger_mode = trigger_mode; // trigger_mode per camaera
+	priv->trigger_mode = ISX021_DEFAULT_TRIGGER_MODE; // overridden by the
+	// TIERIV trigger-mode V4L2 control at streaming start
 
 	/* Pair sensor to serializer dev */
 	err = tier4_max9295_sdev_pair(priv->ser_dev, &priv->g_ctx);

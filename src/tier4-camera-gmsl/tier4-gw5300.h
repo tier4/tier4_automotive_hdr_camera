@@ -124,4 +124,6 @@ int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size);
 
 int tier4_gw5300_c2_test_hw_fault(struct device *dev, bool enable);
 
+int tier4_gw5300_set_readout_delay(struct device *dev, u32 delay_lines);
+
 #endif /* __TIER4_GW5300_H__ */
