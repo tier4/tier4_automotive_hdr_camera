@@ -387,16 +387,26 @@ static const struct v4l2_ctrl_ops tier4_isx021_private_ctrl_ops = {
 	.s_ctrl = tier4_isx021_set_private_ctrls,
 };
 
+static const char *const tier4_trigger_mode_menu[] = {
+	[TIER4_SYNC_MODE_INTERNAL_10FPS] = "Internal 10fps",
+	[TIER4_SYNC_MODE_EXTERNAL_READ_10FPS] = "External read 10fps",
+	[TIER4_SYNC_MODE_INTERNAL_20FPS] = "Internal 20fps",
+	[TIER4_SYNC_MODE_EXTERNAL_READ_20FPS] = "External read 20fps",
+	[TIER4_SYNC_MODE_INTERNAL_30FPS] = "Internal 30fps",
+	[TIER4_SYNC_MODE_EXTERNAL_READ_30FPS] = "External read 30fps",
+	[TIER4_SYNC_MODE_EXTERNAL_SHUTTER] = "External shutter",
+};
+
 static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
 		.id = TIERIV_C1_CAMERA_CID_TRIGGER_MODE,
 		.name = "T4 Trigger Mode",
-		.type = V4L2_CTRL_TYPE_INTEGER,
+		.type = V4L2_CTRL_TYPE_MENU,
 		.min = TIER4_SYNC_MODE_INTERNAL_10FPS,
 		.max = TIER4_SYNC_MODE_EXTERNAL_SHUTTER,
-		.step = 1,
 		.def = ISX021_DEFAULT_TRIGGER_MODE,
+		.qmenu = tier4_trigger_mode_menu,
 		.flags = 0,
 	},
 	{
