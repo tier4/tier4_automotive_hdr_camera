@@ -325,7 +325,6 @@ def generate_jetson_camera_overlay(opts: GeneratorOptions) -> DeviceTreeNode:
     
     # Platform modules
     tegra_camera_platform_modules = []
->>>>>>> c2d5091 (dts_generator: add support for new L4T BSP versions and ECU platforms)
     for i in range(8):
         cam = at(cameras, i)
         frags = create_platform_module_fragment(
