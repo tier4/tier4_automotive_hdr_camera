@@ -357,7 +357,7 @@ static const u32 ctrl_cid_list[] = {
 #define ISX021_DEFAULT_AUTO_EXPOSURE 1
 #define ISX021_DEFAULT_LDC 1
 #define ISX021_DEFAULT_FSYNC_MFP (-1)
-#define ISX021_DEFAULT_INTERNAL_DELAY 0
+#define ISX021_DEFAULT_READOUT_DELAY 0
 
 #define TIERIV_C1_CAMERA_CID_BASE (V4L2_CTRL_CLASS_CAMERA | 0x6000)
 #define TIERIV_C1_CAMERA_CID_TRIGGER_MODE (TIERIV_C1_CAMERA_CID_BASE + 1)
@@ -367,7 +367,7 @@ static const u32 ctrl_cid_list[] = {
 #define TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MID (TIERIV_C1_CAMERA_CID_BASE + 5)
 #define TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MAX (TIERIV_C1_CAMERA_CID_BASE + 6)
 #define TIERIV_C1_CAMERA_CID_FSYNC_MFP (TIERIV_C1_CAMERA_CID_BASE + 7)
-#define TIERIV_C1_CAMERA_CID_INTERNAL_DELAY (TIERIV_C1_CAMERA_CID_BASE + 8)
+#define TIERIV_C1_CAMERA_CID_READOUT_DELAY (TIERIV_C1_CAMERA_CID_BASE + 8)
 
 // Indices into tier4_isx021_private_ctrl_list[] / priv->ctrls[] (must match
 // the order of the entries in tier4_isx021_private_ctrl_list below).
@@ -379,7 +379,7 @@ enum {
 	ISX021_CTRL_SHUTTER_TIME_MID,
 	ISX021_CTRL_SHUTTER_TIME_MAX,
 	ISX021_CTRL_FSYNC_MFP,
-	ISX021_CTRL_INTERNAL_DELAY,
+	ISX021_CTRL_READOUT_DELAY,
 };
 
 static int tier4_isx021_set_private_ctrls(struct v4l2_ctrl *ctrl);
@@ -477,13 +477,13 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	},
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
-		.id = TIERIV_C1_CAMERA_CID_INTERNAL_DELAY,
-		.name = "T4 Internal Delay [us]",
+		.id = TIERIV_C1_CAMERA_CID_READOUT_DELAY,
+		.name = "T4 Readout Delay [us]",
 		.type = V4L2_CTRL_TYPE_INTEGER,
 		.min = 0,
 		.max = 0xffffff,
 		.step = 1,
-		.def = ISX021_DEFAULT_INTERNAL_DELAY,
+		.def = ISX021_DEFAULT_READOUT_DELAY,
 		.flags = 0,
 	},
 };
@@ -536,7 +536,7 @@ static int camera_channel_count;
 
 // The former module parameters (trigger_mode, enable_auto_exposure,
 // enable_distortion_correction, shutter_time_min/mid/max, fsync_mfp,
-// internal_delay) are now per-camera TIERIV V4L2 controls. See
+// readout_delay) are now per-camera TIERIV V4L2 controls. See
 // tier4_isx021_private_ctrl_list[] and priv->ctrls[].
 
 static struct mutex tier4_sensor_lock__;
@@ -971,6 +971,49 @@ static int tier4_isx021_check_mode_sel(struct camera_common_data *s_data,
 
 // ------------------------------------------------------------------
 
+// Writes the readout delay registers. Called from
+// tier4_isx021_set_fsync_trigger_mode() at the next streaming start, since
+// selecting a trigger mode resets these registers.
+static int tier4_isx021_set_readout_delay(struct tier4_isx021 *priv,
+					  u32 readout_delay_us)
+{
+	struct camera_common_data *s_data = priv->s_data;
+	int err;
+
+	if (priv->trigger_mode == TIER4_SYNC_MODE_EXTERNAL_READ_10FPS) {
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_105_ADDR, 0x00);
+		usleep_range(10000, 11000);
+		if (err)
+			return err;
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_104_ADDR, 0x00);
+		usleep_range(10000, 11000);
+		if (err)
+			return err;
+	} else {
+		int num_line;
+		u8 delay_byte0;
+		u8 delay_byte1;
+		u32 h_line_ns = 23810;
+
+		num_line = DIV_ROUND_CLOSEST(readout_delay_us * 1000, h_line_ns);
+		if (num_line > 0xFFFF) {
+			num_line = 0xFFFF;
+		} else if (num_line < 0) {
+			num_line = 0;
+		}
+		delay_byte0 = num_line & 0xFF;         // LSB
+		delay_byte1 = (num_line >> 8) & 0xFF;  // MSB
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_105_ADDR, delay_byte1);
+		if (err)
+			return err;
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_104_ADDR, delay_byte0);
+		if (err)
+			return err;
+	}
+
+	return 0;
+}
+
 static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 {
 	int err = 0;
@@ -1326,39 +1369,9 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 		break;
 	}
 
-	// set internal delay
-	if (priv->trigger_mode == TIER4_SYNC_MODE_EXTERNAL_READ_10FPS) {
-		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_105_ADDR, 0x00);
-		usleep_range(10000, 11000);
-		if (err)
-			goto error_exit;
-		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_104_ADDR, 0x00);
-		usleep_range(10000, 11000);
-		if (err)
-			goto error_exit;
-	} else {
-		int num_line;
-		u8 delay_byte0;
-		u8 delay_byte1;
-		u32 h_line_ns = 23810;
-
-		num_line = DIV_ROUND_CLOSEST(
-			priv->ctrls[ISX021_CTRL_INTERNAL_DELAY]->val * 1000,
-			h_line_ns);
-		if (num_line > 0xFFFF) {
-			num_line = 0xFFFF;
-		} else if (num_line < 0) {
-			num_line = 0;
-		}
-		delay_byte0 = num_line & 0xFF;         // LSB
-		delay_byte1 = (num_line >> 8) & 0xFF;  // MSB
-		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_105_ADDR, delay_byte1);
-		if (err)
-			goto error_exit;
-		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_104_ADDR, delay_byte0);
-		if (err)
-			goto error_exit;
-	}
+	// set readout delay
+	err = tier4_isx021_set_readout_delay(
+		priv, priv->ctrls[ISX021_CTRL_READOUT_DELAY]->val);
 	if (err) {
 		goto error_exit;
 	}
@@ -2315,7 +2328,7 @@ static int tier4_isx021_set_private_ctrls(struct v4l2_ctrl *ctrl)
 	case TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MID:
 	case TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MAX:
 	case TIERIV_C1_CAMERA_CID_FSYNC_MFP:
-	case TIERIV_C1_CAMERA_CID_INTERNAL_DELAY:
+	case TIERIV_C1_CAMERA_CID_READOUT_DELAY:
 		// These configure the GMSL/sensor pipeline and take effect at
 		// the next streaming start; the V4L2 control framework stores
 		// the value.
