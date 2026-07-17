@@ -1,3 +1,9 @@
+tier4-camera-gmsl (3.0.0) focal; urgency=medium
+
+  * Support v4l2 control
+
+ -- tier4 <camera@tier4.jp>  Fri, 12 Jun 2026 19:47:49 +0900
+
 tier4-camera-gmsl (2.2.0) focal; urgency=medium
 
   * Support TIER IV C1MP/C2MP
