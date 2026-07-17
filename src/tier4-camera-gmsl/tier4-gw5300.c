@@ -430,6 +430,235 @@ uint8_t calcCheckSum(const uint8_t *data, size_t size)
 	return result;
 }
 
+static int tier4_gw5300_param_byte_width(u8 param_type)
+{
+	switch (param_type) {
+	case TIER4_GW5300_PARAM_UINT8:
+	case TIER4_GW5300_PARAM_INT8:
+		return 1;
+	case TIER4_GW5300_PARAM_UINT16:
+	case TIER4_GW5300_PARAM_INT16:
+		return 2;
+	case TIER4_GW5300_PARAM_UINT32:
+	case TIER4_GW5300_PARAM_INT32:
+	case TIER4_GW5300_PARAM_FLOAT:
+		return 4;
+	default:
+		return -EINVAL;
+	}
+}
+
+/*
+ * Write a single scalar ISP parameter. Mirrors write_parameter() in the
+ * isp_parameter_bridge: a 0x72 "set parameter" command carrying the value as
+ * @width little-endian bytes, terminated by a modulo-256 checksum.
+ */
+int tier4_gw5300_isp_set_param(struct device *dev, u8 spec_id, u8 context,
+			       u16 param_id, u8 param_type, u32 value)
+{
+	/* header(9) + payload(8) + value(<=4) + checksum(1) */
+	u8 packet[22];
+	u8 buf[6];
+	int width = tier4_gw5300_param_byte_width(param_type);
+	int data_size;
+	int len = 0;
+	int i;
+
+	if (width < 0) {
+		dev_err(dev, "%s: unsupported param_type %u\n", __func__,
+			param_type);
+		return -EINVAL;
+	}
+
+	data_size = 11 + width;
+
+	packet[len++] = 0x33;
+	packet[len++] = 0x47;
+	packet[len++] = data_size & 0xFF;
+	packet[len++] = (data_size >> 8) & 0xFF;
+	packet[len++] = 0x00;
+	packet[len++] = 0x00;
+	packet[len++] = 0x72;
+	packet[len++] = 0x00;
+	packet[len++] = 0x80;
+
+	packet[len++] = spec_id;
+	packet[len++] = context;
+	packet[len++] = param_id & 0xFF;
+	packet[len++] = (param_id >> 8) & 0xFF;
+	packet[len++] = 0x01;
+	packet[len++] = 0x00;
+	packet[len++] = width & 0xFF;
+	packet[len++] = (width >> 8) & 0xFF;
+	for (i = 0; i < width; i++)
+		packet[len++] = (value >> (8 * i)) & 0xFF;
+
+	packet[len] = calcCheckSum(packet, len);
+	len++;
+
+	dev_info(dev,
+		 "%s: spec_id=%u context=%u param_id=0x%04x type=%u width=%d value=0x%08x\n",
+		 __func__, spec_id, context, param_id, param_type, width, value);
+
+	msleep(20);
+	return tier4_gw5300_send_and_recv_msg(dev, packet, len, buf,
+					      sizeof(buf));
+}
+EXPORT_SYMBOL(tier4_gw5300_isp_set_param);
+
+/*
+ * Read a single scalar ISP parameter. Mirrors read_parameter() in the
+ * isp_parameter_bridge: a 0x70 read request returns a message id in its ACK,
+ * then a 0x51 query is polled until the result is ready, and @width
+ * little-endian bytes of the value are returned in *value.
+ */
+int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
+			       u16 param_id, u8 param_type, u32 *value)
+{
+	u8 req[19]; /* header(9) + payload(9) + checksum(1) */
+	u8 ack[6];
+	u8 query[11]; /* query(10) + checksum(1) */
+	u8 resp[24];
+	int width = tier4_gw5300_param_byte_width(param_type);
+	int len = 0;
+	int i, ret, retry;
+	u8 msg_id;
+	u32 v = 0;
+
+	if (width < 0) {
+		dev_err(dev, "%s: unsupported param_type %u\n", __func__,
+			param_type);
+		return -EINVAL;
+	}
+	if (!value)
+		return -EINVAL;
+
+	/* Phase 1: 0x70 read request -> 6-byte ACK carrying the message id. */
+	req[len++] = 0x33;
+	req[len++] = 0x47;
+	req[len++] = 0x0C;
+	req[len++] = 0x00;
+	req[len++] = 0x00;
+	req[len++] = 0x00;
+	req[len++] = 0x70;
+	req[len++] = 0x00;
+	req[len++] = 0x80;
+	req[len++] = spec_id;
+	req[len++] = 0x00;
+	req[len++] = 0x00;
+	req[len++] = 0x00;
+	req[len++] = param_id & 0xFF;
+	req[len++] = (param_id >> 8) & 0xFF;
+	req[len++] = 0x00;
+	req[len++] = 0x00;
+	req[len++] = context;
+	req[len] = calcCheckSum(req, len);
+	len++;
+
+	msleep(20);
+	ret = tier4_gw5300_send_and_recv_msg(dev, req, len, ack, sizeof(ack));
+	if (ret < 0)
+		return ret;
+	if (ack[1] != 0x41 || ack[4] != 0x01) {
+		dev_err(dev, "%s: read ACK failed for param 0x%04x\n", __func__,
+			param_id);
+		return -EIO;
+	}
+	msg_id = ack[3];
+
+	/* Phase 2: 0x51 query, polled until the result status is ready. */
+	len = 0;
+	query[len++] = 0x33;
+	query[len++] = 0x51;
+	query[len++] = 0x07;
+	query[len++] = msg_id;
+	query[len++] = 0x00;
+	query[len++] = 0x00;
+	query[len++] = 0x08;
+	query[len++] = 0x00;
+	query[len++] = 0x00;
+	query[len++] = 0x00;
+	query[len] = calcCheckSum(query, len);
+	len++;
+
+	for (retry = 0; retry < 5; retry++) {
+		ret = tier4_gw5300_send_and_recv_msg(dev, query, len, resp,
+						     sizeof(resp));
+		if (ret < 0)
+			return ret;
+
+		/* resp[8]: 0x02 = ready, 0x01 = pending, otherwise error. */
+		if (resp[8] == 0x02) {
+			for (i = 0; i < width; i++)
+				v |= (u32)resp[15 + i] << (8 * i);
+			*value = v;
+			dev_info(dev,
+				 "%s: param_id=0x%04x type=%u value=0x%08x\n",
+				 __func__, param_id, param_type, v);
+			return 0;
+		}
+		if (resp[8] != 0x01) {
+			dev_err(dev, "%s: read status 0x%02x for param 0x%04x\n",
+				__func__, resp[8], param_id);
+			return -EIO;
+		}
+		msleep(50);
+	}
+
+	dev_err(dev, "%s: read timed out for param 0x%04x\n", __func__,
+		param_id);
+	return -ETIMEDOUT;
+}
+EXPORT_SYMBOL(tier4_gw5300_isp_get_param);
+
+/*
+ * Type operations for the private "ISP Parameter" compound control, whose
+ * value is a struct tier4_gw5300_isp_param. The V4L2 core copies the value
+ * to/from userspace generically (elem_size bytes); these ops only need to
+ * implement equal/init/log/validate.
+ */
+static bool tier4_gw5300_isp_param_equal(const struct v4l2_ctrl *ctrl, u32 idx,
+					 union v4l2_ctrl_ptr ptr1,
+					 union v4l2_ctrl_ptr ptr2)
+{
+	size_t off = idx * ctrl->elem_size;
+
+	return !memcmp(ptr1.p_const + off, ptr2.p_const + off, ctrl->elem_size);
+}
+
+static void tier4_gw5300_isp_param_init(const struct v4l2_ctrl *ctrl, u32 idx,
+					union v4l2_ctrl_ptr ptr)
+{
+	memset(ptr.p + idx * ctrl->elem_size, 0, ctrl->elem_size);
+}
+
+static void tier4_gw5300_isp_param_log(const struct v4l2_ctrl *ctrl)
+{
+	const struct tier4_gw5300_isp_param *p = ctrl->p_cur.p;
+
+	pr_cont("param_id=0x%04x type=%u value=0x%08x", le16_to_cpu(p->param_id),
+		p->param_type, le32_to_cpu(p->value));
+}
+
+static int tier4_gw5300_isp_param_validate(const struct v4l2_ctrl *ctrl,
+					   u32 idx, union v4l2_ctrl_ptr ptr)
+{
+	const struct tier4_gw5300_isp_param *p = ptr.p + idx * ctrl->elem_size;
+
+	if (p->param_type >= TIER4_GW5300_PARAM_TYPE_MAX)
+		return -EINVAL;
+
+	return 0;
+}
+
+const struct v4l2_ctrl_type_ops tier4_gw5300_isp_param_type_ops = {
+	.equal = tier4_gw5300_isp_param_equal,
+	.init = tier4_gw5300_isp_param_init,
+	.log = tier4_gw5300_isp_param_log,
+	.validate = tier4_gw5300_isp_param_validate,
+};
+EXPORT_SYMBOL(tier4_gw5300_isp_param_type_ops);
+
 int tier4_gw5300_set_integration_time_on_aemode(struct device *dev,
 						u32 h_line_ns,
 						u32 max_integration_time,
@@ -527,7 +756,7 @@ int tier4_gw5300_c3_set_integration_time_on_aemode(struct device *dev,
 }
 EXPORT_SYMBOL(tier4_gw5300_c3_set_integration_time_on_aemode);
 
-int tier4_gw5300_set_internal_delay(struct device *dev, int internal_delay_us, u32 h_line_ns)
+int tier4_gw5300_set_readout_delay(struct device *dev, int readout_delay_us, u32 h_line_ns)
 {
 	int ret = 0;
 	int i;
@@ -542,13 +771,13 @@ int tier4_gw5300_set_internal_delay(struct device *dev, int internal_delay_us, u
 	u8 regs[3] = {0xfd, 0xfe, 0xff};
 	u8 vals[3];
 
-	if (internal_delay_us < 0 || internal_delay_us > 100000)
+	if (readout_delay_us < 0 || readout_delay_us > 100000)
 		return -EINVAL;
 
 	if (h_line_ns == 0)
 		return -EINVAL;
 
-	delay_in_line = DIV_ROUND_CLOSEST(internal_delay_us * 1000, h_line_ns);
+	delay_in_line = DIV_ROUND_CLOSEST(readout_delay_us * 1000, h_line_ns);
 
 	vals[0] = (delay_in_line >> 0) & 0xff;
 	vals[1] = (delay_in_line >> 8) & 0xff;
@@ -568,7 +797,7 @@ int tier4_gw5300_set_internal_delay(struct device *dev, int internal_delay_us, u
 
 	return 0;
 }
-EXPORT_SYMBOL(tier4_gw5300_set_internal_delay);
+EXPORT_SYMBOL(tier4_gw5300_set_readout_delay);
 
 // ------------------------------------------------------------------
 
