@@ -430,65 +430,6 @@ uint8_t calcCheckSum(const uint8_t *data, size_t size)
 	return result;
 }
 
-int tier4_gw5300_set_readout_delay(struct device *dev, u32 delay_lines)
-{
-	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
-	u8 cmd_set_readout_delay[] = { 0x33, 0x47,
-				       0x15, 0x0,
-				       0x0,  0x0,
-				       0xe0, 0x0,
-				       0x80, 0x1,
-				       0x0,  0x0,
-				       0x0,  0x34,
-				       0x0,  0x0,
-				       0x0,  0x00 /* reg */,
-				       0x1,  0x0,
-				       0x0,  0x00 /* delay */,
-				       0x0,  0x0,
-				       0x0,  0x2,
-				       0x1 };
-	u8 buf[6];
-	int i, ret = 0;
-
-	dev_info(dev, "%s: readout delay lines: %d\n", __func__, delay_lines);
-	if (!delay_lines)
-		return 0;
-
-	if (delay_lines > 0xffffff) {
-		dev_err(dev, "readout delay is too big\n");
-		return -EINVAL;
-	}
-
-	for (i = 0; i < 3; ++i) {
-		u8 reg = 0xfd + i;
-
-		cmd_set_readout_delay[17] = reg;
-		cmd_set_readout_delay[21] = (delay_lines >> ((2 - i) * 8)) &
-					    0xff;
-		dev_info(dev,
-			 "%s: readout delay_lines=%x i=%d reg=%x value=%x\n",
-			 __func__, delay_lines, i, cmd_set_readout_delay[17],
-			 cmd_set_readout_delay[21]);
-
-		cmd_set_readout_delay[sizeof(cmd_set_readout_delay) - 1] =
-			calcCheckSum(cmd_set_readout_delay,
-				     sizeof(cmd_set_readout_delay));
-
-		msleep(20);
-		ret += tier4_gw5300_send_and_recv_msg(
-			dev, cmd_set_readout_delay,
-			sizeof(cmd_set_readout_delay), buf, sizeof(buf));
-
-		print_hex_dump(KERN_INFO, "readout-delay: ", DUMP_PREFIX_OFFSET,
-			       16, 1, buf, sizeof(buf), true);
-		//if (buf[4] != 1)
-		//    return -EIO;
-	}
-
-	return ret;
-}
-EXPORT_SYMBOL(tier4_gw5300_set_readout_delay);
-
 static int tier4_gw5300_param_byte_width(u8 param_type)
 {
 	switch (param_type) {
@@ -815,7 +756,7 @@ int tier4_gw5300_c3_set_integration_time_on_aemode(struct device *dev,
 }
 EXPORT_SYMBOL(tier4_gw5300_c3_set_integration_time_on_aemode);
 
-int tier4_gw5300_set_internal_delay(struct device *dev, int internal_delay_us, u32 h_line_ns)
+int tier4_gw5300_set_readout_delay(struct device *dev, int readout_delay_us, u32 h_line_ns)
 {
 	int ret = 0;
 	int i;
@@ -830,13 +771,13 @@ int tier4_gw5300_set_internal_delay(struct device *dev, int internal_delay_us, u
 	u8 regs[3] = {0xfd, 0xfe, 0xff};
 	u8 vals[3];
 
-	if (internal_delay_us < 0 || internal_delay_us > 100000)
+	if (readout_delay_us < 0 || readout_delay_us > 100000)
 		return -EINVAL;
 
 	if (h_line_ns == 0)
 		return -EINVAL;
 
-	delay_in_line = DIV_ROUND_CLOSEST(internal_delay_us * 1000, h_line_ns);
+	delay_in_line = DIV_ROUND_CLOSEST(readout_delay_us * 1000, h_line_ns);
 
 	vals[0] = (delay_in_line >> 0) & 0xff;
 	vals[1] = (delay_in_line >> 8) & 0xff;
@@ -856,7 +797,7 @@ int tier4_gw5300_set_internal_delay(struct device *dev, int internal_delay_us, u
 
 	return 0;
 }
-EXPORT_SYMBOL(tier4_gw5300_set_internal_delay);
+EXPORT_SYMBOL(tier4_gw5300_set_readout_delay);
 
 // ------------------------------------------------------------------
 

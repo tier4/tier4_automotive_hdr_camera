@@ -106,27 +106,25 @@ MODULE_DEVICE_TABLE(of, tier4_imx490_of_match);
 #define IMX490_DEFAULT_TRIGGER_MODE 0
 #define IMX490_DEFAULT_FSYNC_MFP (-1)
 #define IMX490_DEFAULT_LDC 1
-#define IMX490_DEFAULT_INTERNAL_DELAY 0
+#define IMX490_DEFAULT_READOUT_DELAY 0
 
 #define TIERIV_C2_CAMERA_CID_BASE (V4L2_CTRL_CLASS_CAMERA | 0x6000)
-#define TIERIV_C2_CAMERA_CID_READOUT_DELAY (TIERIV_C2_CAMERA_CID_BASE + 1)
 #define TIERIV_C2_CAMERA_CID_LDC (TIERIV_C2_CAMERA_CID_BASE + 2)
 #define TIERIV_C2_CAMERA_CID_TRIGGER_MODE (TIERIV_C2_CAMERA_CID_BASE + 3)
 #define TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MIN (TIERIV_C2_CAMERA_CID_BASE + 4)
 #define TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MAX (TIERIV_C2_CAMERA_CID_BASE + 5)
-#define TIERIV_C2_CAMERA_CID_INTERNAL_DELAY (TIERIV_C2_CAMERA_CID_BASE + 6)
+#define TIERIV_C2_CAMERA_CID_READOUT_DELAY (TIERIV_C2_CAMERA_CID_BASE + 6)
 #define TIERIV_C2_CAMERA_CID_FSYNC_MFP (TIERIV_C2_CAMERA_CID_BASE + 7)
 #define TIERIV_C2_CAMERA_CID_ISP_PARAM (TIERIV_C2_CAMERA_CID_BASE + 8)
 
 // Indices into tier4_imx490_private_ctrl_list[] / priv->ctrls[] (must match
 // the order of the entries in tier4_imx490_private_ctrl_list below).
 enum {
-	IMX490_CTRL_READOUT_DELAY,
 	IMX490_CTRL_LDC,
 	IMX490_CTRL_TRIGGER_MODE,
 	IMX490_CTRL_SHUTTER_TIME_MIN,
 	IMX490_CTRL_SHUTTER_TIME_MAX,
-	IMX490_CTRL_INTERNAL_DELAY,
+	IMX490_CTRL_READOUT_DELAY,
 	IMX490_CTRL_FSYNC_MFP,
 	IMX490_CTRL_ISP_PARAM,
 };
@@ -169,19 +167,6 @@ struct v4l2_ctrl_config_entry {
 	}
 
 static struct v4l2_ctrl_config_entry tier4_imx490_private_ctrl_list[] = {
-	{
-		.config = {
-			.ops = &tier4_imx490_private_ctrl_ops,
-			.id = TIERIV_C2_CAMERA_CID_READOUT_DELAY,
-			.name = "T4 Readout Delay [us]",
-			.type = V4L2_CTRL_TYPE_INTEGER,
-			.min = 0,
-			.max = 0xffffff,
-			.step = 1,
-			.def = 0,
-			.flags = 0,
-		}
-	},
 	{
 		.config = {
 			.ops = &tier4_imx490_private_ctrl_ops,
@@ -237,13 +222,13 @@ static struct v4l2_ctrl_config_entry tier4_imx490_private_ctrl_list[] = {
 	{
 		.config = {
 			.ops = &tier4_imx490_private_ctrl_ops,
-			.id = TIERIV_C2_CAMERA_CID_INTERNAL_DELAY,
-			.name = "T4 Internal Delay [us]",
+			.id = TIERIV_C2_CAMERA_CID_READOUT_DELAY,
+			.name = "T4 Readout Delay [us]",
 			.type = V4L2_CTRL_TYPE_INTEGER,
 			.min = 0,
 			.max = 0xffffff,
 			.step = 1,
-			.def = IMX490_DEFAULT_INTERNAL_DELAY,
+			.def = IMX490_DEFAULT_READOUT_DELAY,
 			.flags = 0,
 		}
 	},
@@ -372,9 +357,9 @@ static struct mutex tier4_imx490_lock;
 static int camera_channel_count;
 
 // The former module parameters (trigger_mode, fsync_mfp,
-// enable_distortion_correction, internal_delay, shutter_time_min,
-// shutter_time_max) are now per-camera TIERIV V4L2 controls. See
-// tier4_imx490_private_ctrl_list[] and priv->ctrls[].
+// enable_distortion_correction, readout_delay (formerly internal_delay),
+// shutter_time_min, shutter_time_max) are now per-camera TIERIV V4L2
+// controls. See tier4_imx490_private_ctrl_list[] and priv->ctrls[].
 
 static char upper(char c)
 {
@@ -833,21 +818,25 @@ static struct tegracam_ctrl_ops tier4_imx490_ctrl_ops = {
 
 // --------------------------------------------------------------------------------------
 
-static int tier4_imx490_set_readout_delay(struct device *dev, int trigger_mode,
+static int tier4_imx490_set_readout_delay(struct tegracam_device *tc_dev, struct device *dev, int trigger_mode,
 					  u32 readout_delay_us)
 {
-	u32 delay_lines;
-	size_t h_line_ns = 12500;
+	struct tier4_imx490 *priv =
+		(struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
+	u32 h_line_ns;
 
-	dev_info(dev, "%s: readout_delay_us=%d\n", __func__, readout_delay_us);
+	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD)
+		h_line_ns = 12500;
+	else
+		h_line_ns = 16666;
 
 	if (trigger_mode == GW5300_MASTER_MODE_10FPS_SLOW ||
 	    trigger_mode == GW5300_SLAVE_MODE_10FPS_SLOW)
 		h_line_ns = 50000;
 
-	delay_lines = DIV_ROUND_CLOSEST(readout_delay_us * 1000, h_line_ns);
+	dev_info(dev, "%s: readout_delay_us=%d\n", __func__, readout_delay_us);
 
-	return tier4_gw5300_set_readout_delay(dev, delay_lines);
+	return tier4_gw5300_set_readout_delay(dev, readout_delay_us, h_line_ns);
 }
 
 static int tier4_imx490_get_private_ctrls(struct v4l2_ctrl *ctrl)
@@ -891,14 +880,6 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 	int err = 0, ret;
 
 	switch (ctrl->id) {
-	case TIERIV_C2_CAMERA_CID_READOUT_DELAY:
-		dev_info(tc_dev->dev, "%s: readout delay: %d\n", __func__,
-			 ctrl->val);
-
-		if (ctrl->val)
-			tier4_imx490_set_readout_delay(
-				priv->isp_dev, priv->trigger_mode, ctrl->val);
-		break;
 	case TIERIV_C2_CAMERA_CID_LDC:
 		dev_info(tc_dev->dev, "%s: LDC: %d\n", __func__, ctrl->val);
 		tier4_imx490_set_distortion_correction(tc_dev, ctrl->val);
@@ -923,7 +904,7 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 	case TIERIV_C2_CAMERA_CID_TRIGGER_MODE:
 	case TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MIN:
 	case TIERIV_C2_CAMERA_CID_SHUTTER_TIME_MAX:
-	case TIERIV_C2_CAMERA_CID_INTERNAL_DELAY:
+	case TIERIV_C2_CAMERA_CID_READOUT_DELAY:
 	case TIERIV_C2_CAMERA_CID_FSYNC_MFP:
 		// These configure the GMSL/ISP pipeline and are applied at the
 		// next streaming start; just store the value (done by the V4L2
@@ -1104,14 +1085,13 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 			return err;
 	}
 
-	// set internal delay (frame period: 12500 for tier4_, 16666 for tier4mp_)
+	// set readout delay (frame period: 12500 for tier4_, 16666 for tier4mp_)
 	usleep_range(900000, 910000);
-	err = tier4_gw5300_set_internal_delay(priv->isp_dev,
-					      priv->ctrls[IMX490_CTRL_INTERNAL_DELAY]->val,
-					      (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) ? 12500 : 16666);
+	err = tier4_imx490_set_readout_delay(tc_dev, priv->isp_dev, priv->trigger_mode,
+					     priv->ctrls[IMX490_CTRL_READOUT_DELAY]->val);
 	if (err) {
 		dev_err(dev,
-			"[%s] : setting camera sensor C2/C2MP internal delay failed\n",
+			"[%s] : setting camera sensor C2/C2MP readout delay failed\n",
 			__func__);
 		return err;
 	}
@@ -1154,9 +1134,6 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 	}
 
 	msleep(200);
-
-	tier4_imx490_set_readout_delay(priv->isp_dev, priv->trigger_mode,
-				       priv->ctrls[IMX490_CTRL_READOUT_DELAY]->val);
 
 	//#if 0
 	msleep(1000);
