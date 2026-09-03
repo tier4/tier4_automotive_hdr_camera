@@ -1143,7 +1143,8 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 	} // if (priv->g_ctx.hardware_model == HW_MODEL_ADLINK_ROSCUBE_XAVIER)
 
 	err = tier4_max9296_setup_gpi(priv->dser_dev,
-				      priv->ctrls[ISX021_CTRL_FSYNC_MFP]->val);
+				      priv->ctrls[ISX021_CTRL_FSYNC_MFP]->val,
+				      priv->cam_type);
 
 	if (err) {
 		dev_err(dev, "[%s] : tier4_max9296_setup_gpi failed.\n",

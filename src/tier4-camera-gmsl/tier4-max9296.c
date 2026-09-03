@@ -184,7 +184,6 @@ struct tier4_max9296 {
 	int pw_ref;
 	const char *compatible;
 	struct regulator *vdd_cam_1v2;
-	enum tier4_camera_type cam_type;
 	int fsync_gpi;
 };
 
@@ -474,7 +473,8 @@ static int tier4_max9296_link_locked(struct device *dev)
 	return 0;
 }
 
-int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp)
+int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp,
+			    enum tier4_camera_type cam_type)
 {
 	int err = 0;
 	u16 gpio_mfp_base;
@@ -501,11 +501,11 @@ int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp)
 		err += tier4_max9296_write_reg(dev, 0x0003, 0x40);
 	}
 
-	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+	if (cam_type == TIER4_CAMERA_TYPE_STANDARD) {
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base, 0x03);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 1, 0x06);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 2, 0x00);
-	} else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
+	} else if (cam_type == TIER4_CAMERA_TYPE_MP) {
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base, 0x83);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 1, 0x10);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 2, 0x40);
@@ -1084,13 +1084,8 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv,
 	}
 	priv->compatible = match->compatible;
 
-	if (strstr(priv->compatible, "tier4mp_")) {
-		priv->cam_type = TIER4_CAMERA_TYPE_MP;
-		dev_info(&client->dev, "[%s] : Matched TIER IV MP compatible: %s\n", __func__, priv->compatible);
-	} else {
-		priv->cam_type = TIER4_CAMERA_TYPE_STANDARD;
-		dev_info(&client->dev, "[%s] : Matched TIER IV compatible: %s\n", __func__, priv->compatible);
-	}
+	dev_info(&client->dev, "[%s] : Matched TIER IV compatible: %s\n",
+		__func__, priv->compatible);
 
 	err = of_property_read_string(node, "csi-mode", &str_value);
 	if (err < 0) {

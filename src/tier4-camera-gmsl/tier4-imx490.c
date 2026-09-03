@@ -671,7 +671,8 @@ static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv,
 	}
 
 	err = tier4_max9296_setup_gpi(priv->dser_dev,
-				      priv->ctrls[IMX490_CTRL_FSYNC_MFP]->val);
+				      priv->ctrls[IMX490_CTRL_FSYNC_MFP]->val,
+				      priv->cam_type);
 
 	if (err) {
 		dev_err(dev, "[%s] :tier4_max9296_setup_gpi() failed\n",

@@ -35,11 +35,17 @@
  *
  * @param [in]  dev             The deserializer device handle.
  * @param [in]  fsync_mfp       MFP pin number for fsync siganl input.
+ * @param [in]  cam_type        The calling camera's own type (standard vs
+ *                               MP). The deserializer may be shared by two
+ *                               cameras of different types, so this is
+ *                               taken per call rather than tracked on the
+ *                               deserializer itself.
  *
  * @ingroup serdes_group
  * @{
  */
-int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp);
+int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp,
+			    enum tier4_camera_type cam_type);
 
 /**
  * Puts a deserializer device in single exclusive link mode, so link-specific

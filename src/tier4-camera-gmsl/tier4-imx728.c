@@ -419,7 +419,8 @@ static int tier4_imx728_set_fsync_trigger_mode(struct tier4_imx728 *priv,
 	}
 
 	err = tier4_max9296_setup_gpi(priv->dser_dev,
-				      priv->ctrls[IMX728_CTRL_FSYNC_MFP]->val);
+				      priv->ctrls[IMX728_CTRL_FSYNC_MFP]->val,
+				      priv->cam_type);
 
 	if (err) {
 		dev_err(dev, "[%s] :tier4_max9296_setup_gpi() failed\n",

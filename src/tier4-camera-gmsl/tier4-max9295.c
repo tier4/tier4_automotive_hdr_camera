@@ -519,24 +519,23 @@ int tier4_max9295_setup_gpo(struct device *dev)
 }
 EXPORT_SYMBOL(tier4_max9295_setup_gpo);
 
-int tier4_max9295_setup_control(struct device *dev)
+void tier4_max9295_set_cam_type(struct device *dev,
+				enum tier4_camera_type cam_type)
+{
+	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+
+	mutex_lock(&priv->lock);
+	priv->cam_type = cam_type;
+	priv->xerror_mfp = (cam_type == TIER4_CAMERA_TYPE_MP) ? 5 : 7;
+	mutex_unlock(&priv->lock);
+}
+EXPORT_SYMBOL(tier4_max9295_set_cam_type);
+
+int tier4_max9295_setup_control_link(struct device *dev)
 {
 	struct tier4_max9295 *priv = dev_get_drvdata(dev);
 	int err = 0;
 	struct tier4_gmsl_link_ctx *g_ctx;
-	u32 offset1 = 0;
-	u32 offset2 = 0;
-	u32 i;
-
-	u8 i2c_ovrd[] = {
-		0x6B, 0x10, 0x73, 0x11, 0x7B, 0x30, 0x83, 0x30, 0x93,
-		0x30, 0x9B, 0x30, 0xA3, 0x30, 0xAB, 0x30, 0x8B, 0x30,
-	};
-
-	u8 addr_offset[] = {
-		0x80, 0x00, 0x00, 0x84, 0x00, 0x01,
-		0xC0, 0x02, 0x02, 0xC4, 0x02, 0x03,
-	};
 
 	mutex_lock(&priv->lock);
 
@@ -565,13 +564,85 @@ int tier4_max9295_setup_control(struct device *dev)
 	/* delay to settle link */
 	msleep(100);
 
-	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
-		/* Set RCLKOUT soruce to the reference PLL clock*/
-		err = tier4_max9295_write_reg(dev, MAX9295_CLK_OUTPUT_ADDR, 0x03);
+error:
 
-		/* PLL setting & Reset PLL */
-		err = tier4_max9295_write_reg(dev, MAX9295_REF_VTG0_ADDR, 0x5A);
+	mutex_unlock(&priv->lock);
+
+	return err;
+}
+EXPORT_SYMBOL(tier4_max9295_setup_control_link);
+
+int tier4_max9295_setup_control_hw_dependent(struct device *dev,
+					     enum tier4_max9295_hw_stage stage)
+{
+	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+	int err = 0;
+
+	mutex_lock(&priv->lock);
+
+	if (stage == TIER4_MAX9295_HW_STAGE_PLL) {
+		if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+			/* Set RCLKOUT soruce to the reference PLL clock*/
+			err = tier4_max9295_write_reg(dev, MAX9295_CLK_OUTPUT_ADDR, 0x03);
+
+			/* PLL setting & Reset PLL */
+			err = tier4_max9295_write_reg(dev, MAX9295_REF_VTG0_ADDR, 0x5A);
+		}
+	} else { /* TIER4_MAX9295_HW_STAGE_SENSOR */
+		if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+			// For AB camera
+			tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR, MAX9295_PWDN_GPIO);
+			tier4_max9295_write_reg(dev, MAX9295_SRC_CTRL_ADDR, MAX9295_RESET_SRC);
+
+			// set PCLK output pin
+			tier4_max9295_write_reg(dev, MAX9295_SRC_OUT_RCLK_ADDR,
+						MAX9295_SRC_RCLK);
+			/* PLL setting & Enable PLL */
+			tier4_max9295_write_reg(dev, MAX9295_REF_VTG0_ADDR, 0x59);
+			/* let the PLL lock before the link is used, as done
+			 * for the MP branch below */
+			usleep_range(5000, 6000);
+		} else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
+			// For TIER IV MP camera
+			tier4_max9295_write_reg(dev, MAX9295_SRC_CTRL_ADDR,			0x60);
+			tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR,			0x80);
+			tier4_max9295_write_reg(dev, MAX9295_GPIO_7_GPIO_TX_ID_ADDR,	0x60);
+			tier4_max9295_write_reg(dev, MAX9295_GPIO_7_ADDR,				0x80);
+			tier4_max9295_write_reg(dev, MAX9295_GPIO_8_GPIO_TX_ID_ADDR,	0x60);
+			tier4_max9295_write_reg(dev, MAX9295_GPIO_8_CONFIG_MFP8_ADDR,	0x80);
+			tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR,			0x90);
+			usleep_range(5000, 6000);
+		}
 	}
+
+	mutex_unlock(&priv->lock);
+
+	return err;
+}
+EXPORT_SYMBOL(tier4_max9295_setup_control_hw_dependent);
+
+int tier4_max9295_setup_control_routing(struct device *dev)
+{
+	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+	int err = 0;
+	struct tier4_gmsl_link_ctx *g_ctx;
+	u32 offset1 = 0;
+	u32 offset2 = 0;
+	u32 i;
+
+	u8 i2c_ovrd[] = {
+		0x6B, 0x10, 0x73, 0x11, 0x7B, 0x30, 0x83, 0x30, 0x93,
+		0x30, 0x9B, 0x30, 0xA3, 0x30, 0xAB, 0x30, 0x8B, 0x30,
+	};
+
+	u8 addr_offset[] = {
+		0x80, 0x00, 0x00, 0x84, 0x00, 0x01,
+		0xC0, 0x02, 0x02, 0xC4, 0x02, 0x03,
+	};
+
+	mutex_lock(&priv->lock);
+
+	g_ctx = priv->g_client.g_ctx;
 
 	for (i = 0; i < ARRAY_SIZE(addr_offset); i += 3) {
 		if ((g_ctx->ser_reg << 1) == addr_offset[i]) {
@@ -607,35 +678,40 @@ int tier4_max9295_setup_control(struct device *dev)
 	tier4_max9295_write_reg(dev, MAX9295_I2C4_ADDR, (g_ctx->sdev_reg << 1));
 	tier4_max9295_write_reg(dev, MAX9295_I2C5_ADDR, (g_ctx->sdev_def << 1));
 
-	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
-		// For AB camera
-		tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR, MAX9295_PWDN_GPIO);
-		tier4_max9295_write_reg(dev, MAX9295_SRC_CTRL_ADDR, MAX9295_RESET_SRC);
-
-		// set PCLK output pin
-		tier4_max9295_write_reg(dev, MAX9295_SRC_OUT_RCLK_ADDR,
-					MAX9295_SRC_RCLK);
-		/* PLL setting & Enable PLL */
-		tier4_max9295_write_reg(dev, MAX9295_REF_VTG0_ADDR, 0x59);
-	} else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
-		// For TIER IV MP camera
-		tier4_max9295_write_reg(dev, MAX9295_SRC_CTRL_ADDR,			0x60);
-		tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR,			0x80);
-		tier4_max9295_write_reg(dev, MAX9295_GPIO_7_GPIO_TX_ID_ADDR,	0x60);
-		tier4_max9295_write_reg(dev, MAX9295_GPIO_7_ADDR,				0x80);
-		tier4_max9295_write_reg(dev, MAX9295_GPIO_8_GPIO_TX_ID_ADDR,	0x60);
-		tier4_max9295_write_reg(dev, MAX9295_GPIO_8_CONFIG_MFP8_ADDR,	0x80);
-		tier4_max9295_write_reg(dev, MAX9295_SRC_PWDN_ADDR,			0x90);
-		usleep_range(5000, 6000);
-	}
-
-	g_ctx->serdev_found = true;
-
 error:
 
 	mutex_unlock(&priv->lock);
 
 	return err;
+}
+EXPORT_SYMBOL(tier4_max9295_setup_control_routing);
+
+int tier4_max9295_setup_control(struct device *dev)
+{
+	struct tier4_max9295 *priv = dev_get_drvdata(dev);
+	int err;
+
+	err = tier4_max9295_setup_control_link(dev);
+	if (err)
+		return err;
+
+	err = tier4_max9295_setup_control_hw_dependent(
+		dev, TIER4_MAX9295_HW_STAGE_PLL);
+	if (err)
+		return err;
+
+	err = tier4_max9295_setup_control_routing(dev);
+	if (err)
+		return err;
+
+	err = tier4_max9295_setup_control_hw_dependent(
+		dev, TIER4_MAX9295_HW_STAGE_SENSOR);
+	if (err)
+		return err;
+
+	priv->g_client.g_ctx->serdev_found = true;
+
+	return 0;
 }
 EXPORT_SYMBOL(tier4_max9295_setup_control);
 
@@ -891,22 +967,8 @@ static int tier4_max9295_probe(struct i2c_client *client,
 		dev_info(&client->dev, "[%s] : Matched TIER IV compatible: %s\n", __func__, priv->compatible);
 	}
 
-	{
-		u32 xerror_mfp;
-
-		if (of_property_read_u32(node, "xerror-gpios", &xerror_mfp) != 0 &&
-		    of_property_read_u32(node, "xerror-mfp", &xerror_mfp) != 0 &&
-		    of_property_read_u32(node, "mfp", &xerror_mfp) != 0) {
-			// Fallback to compatible string if no property is found
-			if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
-				xerror_mfp = 5;
-			} else {
-				xerror_mfp = 7;
-			}
-		}
-		priv->xerror_mfp = xerror_mfp;
-		dev_info(&client->dev, "[%s] : Using xerror_mfp: %u\n", __func__, priv->xerror_mfp);
-	}
+	priv->xerror_mfp = (priv->cam_type == TIER4_CAMERA_TYPE_MP) ? 5 : 7;
+	dev_info(&client->dev, "[%s] : Using xerror_mfp: %u\n", __func__, priv->xerror_mfp);
 
 	priv->regmap = devm_regmap_init_i2c(priv->i2c_client,
 					    &tier4_max9295_regmap_config);
