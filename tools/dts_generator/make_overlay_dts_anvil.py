@@ -128,10 +128,15 @@ def at(lst: Sequence[T], index: int) -> Optional[T]:
     return lst[index] if index < len(lst) else None
 
 
-def create_gmsl_dser_nodes(use_tier4mp_per_dser: Optional[List[bool]] = None) -> List[DeviceTreeNode]:
-    if use_tier4mp_per_dser is None:
-        use_tier4mp_per_dser = [False, False, False, False]
-
+def create_gmsl_dser_nodes() -> List[DeviceTreeNode]:
+    # The deserializer's own compatible string is unified to tier4_max9296
+    # regardless of the attached cameras' type: the runtime driver
+    # auto-detects MP vs standard cameras and reconfigures itself
+    # accordingly. Note this assumes cameras sharing a deserializer are
+    # all auto-detect-capable (currently imx490 and isx021) -- imx728
+    # (C3/C3MP) doesn't have equivalent runtime detection, so mixing it
+    # with this generator on the same deserializer would leave its GPI
+    # configuration wrong.
     dser_configs = [
         ('max9296_a', 'dsera', f'reset-gpios = <&tca9539_74 0 {const.GPIO_ACTIVE_LOW}>'),
         ('max9296_c', 'dserb', f'reset-gpios = <&tca9539_74 2 {const.GPIO_ACTIVE_LOW}>'),
@@ -140,16 +145,14 @@ def create_gmsl_dser_nodes(use_tier4mp_per_dser: Optional[List[bool]] = None) ->
     ]
 
     nodes = []
-    for i, (name, label, reset_gpio) in enumerate(dser_configs):
-        Dser = gmsl.Tier4MPDeserializer if use_tier4mp_per_dser[i] else gmsl.Deserializer
+    for name, label, reset_gpio in dser_configs:
         nodes.append(
-            Dser.node(name=name, csi_lanes=CSI_LANES, label=label)
+            gmsl.Deserializer.node(name=name, csi_lanes=CSI_LANES, label=label)
                 .properties([reset_gpio, 'fsync-gpi = <7>'])
         )
     return nodes
 
 
-# Default tier4 deserializer nodes for backward compatibility
 gmsl_dsers_nodes = create_gmsl_dser_nodes()
 
 
@@ -213,24 +216,7 @@ def generate_jetson_camera_overlay(opts: GeneratorOptions) -> DeviceTreeNode:
     i2c_bus_number: int = 0x28
     i2c_mux_path = '/i2c@31e0000/tca9544@72'
 
-    # Determine deserializer type per deserializer based on connected cameras
-    # Each deserializer serves 2 cameras: dser[i] serves cameras[2*i] and cameras[2*i+1]
-    use_tier4mp_per_dser = []
-    for dser_idx in range(NUM_GMSL_DESERIALIZERS):
-        # reverse the deserializer index to match the order of deserializer nodes in the devicetree
-        reversed_dser_idx = (NUM_GMSL_DESERIALIZERS - 1) - dser_idx
-        cam_idx_0 = reversed_dser_idx * 2
-        cam_idx_1 = reversed_dser_idx * 2 + 1
-        
-        # Use tier4mp if any camera on this deserializer is tier4mp
-        is_tier4mp = False
-        if cam_idx_0 < len(opts.camera_list):
-            is_tier4mp = is_tier4mp or opts.camera_list[cam_idx_0].is_tier4mp
-        if cam_idx_1 < len(opts.camera_list):
-            is_tier4mp = is_tier4mp or opts.camera_list[cam_idx_1].is_tier4mp
-        use_tier4mp_per_dser.append(is_tier4mp)
-
-    gmsl_dsers_nodes: Sequence[DeviceTreeNode] = create_gmsl_dser_nodes(use_tier4mp_per_dser=use_tier4mp_per_dser)
+    gmsl_dsers_nodes: Sequence[DeviceTreeNode] = create_gmsl_dser_nodes()
 
     if opts.l4t_version.major >= 36:
         i2c_mux_path = '/bus@0' + i2c_mux_path
