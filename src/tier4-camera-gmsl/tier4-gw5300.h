@@ -24,6 +24,8 @@
 #include <linux/device.h>
 #include <media/v4l2-ctrls.h>
 
+#include "tier4-gmsl-link.h"
+
 #define GW5300_MASTER_MODE_10FPS 0
 #define GW5300_SLAVE_MODE_10FPS 1
 #define GW5300_MASTER_MODE_20FPS 2
@@ -175,5 +177,19 @@ int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 			       u16 param_id, u8 param_type, u32 *value);
 
 int tier4_gw5300_set_reverse(struct device *dev, int v_reverse, int h_reverse);
+
+/* Checks the ISP's identity against the MP-variant signature. Returns 0
+ * if identified as MP, -ENODEV if not, or another errno on I2C failure.
+ * fov (optional) receives the model's field-of-view designator.
+ */
+int tier4_gw5300_check_mp_camera(struct device *dev, char *fov, size_t fov_size);
+
+/* Same as tier4_gw5300_check_mp_camera(), for the standard variant. */
+int tier4_gw5300_check_standard_camera(struct device *dev, char *fov,
+				       size_t fov_size);
+
+/* Records which camera type is actually connected, once probed. */
+void tier4_gw5300_set_cam_type(struct device *dev,
+			       enum tier4_camera_type cam_type);
 
 #endif /* __TIER4_GW5300_H__ */
