@@ -121,6 +121,8 @@ struct tier4_gmsl_link_ctx {
 	__u32 sdev_isp_reg; /**< Sensor or ISP proxy slave address. */
 	__u32 sdev_isp_def; /**< Sensor or ISP default slave address. */
 	__u32 sdev_fpga_reg; /**< FPGA default slave address. */
+	__u32 eeprom_reg; /**< EEPROM proxy (translated) slave address, unique per port. */
+	__u32 eeprom_def; /**< EEPROM default (untranslated) slave address. */
 	struct device *s_dev; /**< Sensor device handle. */
 	__u32 hardware_model; /**< ROScube, Xavier or Orin . */
 	//  bool fpga_generate_fsync; /**< Indicates whther FPGA generate fsync or not . */

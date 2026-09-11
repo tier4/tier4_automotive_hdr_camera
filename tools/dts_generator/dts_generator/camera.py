@@ -426,6 +426,15 @@ class C1(Camera):
                         'default_exp_time = "33333"',
                         'embedded_metadata_height = "0"',
                     ]),
+                # On-board EEPROM. Populated unconditionally, since MP vs
+                # standard is decided at runtime and a standard camera simply
+                # won't ACK the read. reg is the per-port proxy address,
+                # chosen by link position (primary/secondary).
+                DeviceTreeNode('eeprom')
+                    .properties([
+                        f'reg = <0x{"55" if primary else "56"}>',
+                        'def-addr = <0x54>',
+                    ]),
                 DeviceTreeNode('ports')
                     .properties([
                         '#address-cells = <1>',
@@ -558,6 +567,12 @@ class C2(Camera):
                         'default_exp_time = "33333"',
                         'embedded_metadata_height = "0"',
                         # 'deskew_initial_enable = "true"',
+                    ]),
+                # On-board EEPROM, see the identical node on C1 above.
+                DeviceTreeNode('eeprom')
+                    .properties([
+                        f'reg = <0x{"55" if primary else "56"}>',
+                        'def-addr = <0x54>',
                     ]),
                 DeviceTreeNode('ports')
                     .properties([
@@ -943,6 +958,12 @@ class C1MP(Camera):
                         'default_exp_time = "33333"',
                         'embedded_metadata_height = "0"',
                     ]),
+                # On-board EEPROM, see the identical node on C1 above.
+                DeviceTreeNode('eeprom')
+                    .properties([
+                        f'reg = <0x{"55" if primary else "56"}>',
+                        'def-addr = <0x54>',
+                    ]),
                 DeviceTreeNode('ports')
                     .properties([
                         '#address-cells = <1>',
@@ -1074,6 +1095,12 @@ class C2MP(Camera):
                         'step_exp_time = "1"',
                         'default_exp_time = "33333"',
                         'embedded_metadata_height = "0"',
+                    ]),
+                # On-board EEPROM, see the identical node on C1 above.
+                DeviceTreeNode('eeprom')
+                    .properties([
+                        f'reg = <0x{"55" if primary else "56"}>',
+                        'def-addr = <0x54>',
                     ]),
                 DeviceTreeNode('ports')
                     .properties([
@@ -1207,6 +1234,12 @@ class C3MP(Camera):
                         'step_exp_time = "1"',
                         'default_exp_time = "33333"',
                         'embedded_metadata_height = "0"',
+                    ]),
+                # On-board EEPROM, see the identical node on C1 above.
+                DeviceTreeNode('eeprom')
+                    .properties([
+                        f'reg = <0x{"55" if primary else "56"}>',
+                        'def-addr = <0x54>',
                     ]),
                 DeviceTreeNode('ports')
                     .properties([

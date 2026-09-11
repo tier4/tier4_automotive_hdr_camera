@@ -36,6 +36,15 @@
 #define MAX9295_CLK_OUTPUT_ADDR 0x0003
 #define MAX9295_CTRL0_ADDR 0x0010
 
+/* MAX9295 has exactly two independent I2C address-translation slots, at
+ * register pairs (0x42, 0x43) and (0x44, 0x45) -- see the chip vendor's
+ * upstream Linux driver (drivers/media/i2c/max96717.c,
+ * MAX96717_I2C_2(n)/MAX96717_I2C_3(n) = 0x42+n*2 / 0x43+n*2, n=0..1). Slot
+ * 1 (0x44/0x45) is used for the sensor below; slot 0 (0x42/0x43) is used
+ * for the EEPROM.
+ */
+#define MAX9295_I2C2_ADDR 0x0042
+#define MAX9295_I2C3_ADDR 0x0043
 #define MAX9295_I2C4_ADDR 0x0044
 #define MAX9295_I2C5_ADDR 0x0045
 
@@ -677,6 +686,14 @@ int tier4_max9295_setup_control_routing(struct device *dev)
 	// set slave addr for image sensor
 	tier4_max9295_write_reg(dev, MAX9295_I2C4_ADDR, (g_ctx->sdev_reg << 1));
 	tier4_max9295_write_reg(dev, MAX9295_I2C5_ADDR, (g_ctx->sdev_def << 1));
+
+	// set slave addr for on-board EEPROM, if this camera has one
+	if (g_ctx->eeprom_reg && g_ctx->eeprom_def) {
+		tier4_max9295_write_reg(dev, MAX9295_I2C2_ADDR,
+					(g_ctx->eeprom_reg << 1));
+		tier4_max9295_write_reg(dev, MAX9295_I2C3_ADDR,
+					(g_ctx->eeprom_def << 1));
+	}
 
 error:
 
