@@ -25,6 +25,7 @@
 #include <media/camera_common.h>
 
 #include "tier4-max9296.h"
+#include "tier4-eeprom.h"
 #include "tier4-gmsl-link.h"
 #include "tier4-hw-model.h"
 
@@ -435,6 +436,44 @@ static int tier4_max9296_write_link(struct device *dev, u32 link)
 
 	return 0;
 }
+
+/*
+ * Returns true if another camera on this deserializer has already read an
+ * on-board EEPROM device-info block identical to @devinfo. Once both links
+ * are up, that camera's EEPROM also answers at the untranslated address,
+ * so a match means @s_dev read the other camera's EEPROM, not its own.
+ */
+bool tier4_max9296_eeprom_seen_on_other_link(struct device *dev,
+					     struct device *s_dev,
+					     const u8 *devinfo, size_t len)
+{
+	struct tier4_max9296 *priv = dev_get_drvdata(dev);
+	const struct tier4_eeprom_info *info;
+	bool seen = false;
+	int i;
+
+	if (len > TIER4_EEPROM_DEVICE_INFO_SIZE)
+		return false;
+
+	mutex_lock(&priv->lock);
+
+	for (i = 0; i < priv->num_src; i++) {
+		if (!priv->sources[i].g_ctx ||
+		    priv->sources[i].g_ctx->s_dev == s_dev)
+			continue;
+
+		info = priv->sources[i].g_ctx->eeprom_info;
+		if (info && info->valid && !memcmp(info->raw, devinfo, len)) {
+			seen = true;
+			break;
+		}
+	}
+
+	mutex_unlock(&priv->lock);
+
+	return seen;
+}
+EXPORT_SYMBOL(tier4_max9296_eeprom_seen_on_other_link);
 
 int tier4_max9296_setup_link(struct device *dev, struct device *s_dev)
 {

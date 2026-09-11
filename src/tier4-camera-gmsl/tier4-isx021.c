@@ -249,10 +249,12 @@ MODULE_SOFTDEP("pre: tier4_fpga");
 #define TIER4_ISX021_REG_107_ADDR 107
 #define TIER4_ISX021_REG_108_ADDR 108
 #define TIER4_ISX021_REG_109_ADDR 109
+#define TIER4_ISX021_REG_110_ADDR 110
+#define TIER4_ISX021_REG_111_ADDR 111
 
 // --- End of  Register definition ------------------------
 
-#define MAX_NUM_OF_REG (110)
+#define MAX_NUM_OF_REG (112)
 
 #define ISX021_AUTO_EXPOSURE_MODE 0x00
 #define ISX021_AE_TIME_UNIT_MICRO_SECOND 0x03
@@ -375,6 +377,7 @@ static const u32 ctrl_cid_list[] = {
 #define TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MAX (TIERIV_C1_CAMERA_CID_BASE + 6)
 #define TIERIV_C1_CAMERA_CID_FSYNC_MFP (TIERIV_C1_CAMERA_CID_BASE + 7)
 #define TIERIV_C1_CAMERA_CID_READOUT_DELAY (TIERIV_C1_CAMERA_CID_BASE + 8)
+#define TIERIV_C1_CAMERA_CID_CAMERA_TYPE (TIERIV_C1_CAMERA_CID_BASE + 9)
 #define TIERIV_C1_CAMERA_CID_H_REVERSE (TIERIV_C1_CAMERA_CID_BASE + 10)
 #define TIERIV_C1_CAMERA_CID_V_REVERSE (TIERIV_C1_CAMERA_CID_BASE + 11)
 // On-board EEPROM device-info fields (MP cameras only), read once at
@@ -384,6 +387,8 @@ static const u32 ctrl_cid_list[] = {
 #define TIERIV_C1_CAMERA_CID_EEPROM_MODEL_NAME (TIERIV_C1_CAMERA_CID_BASE + 30)
 #define TIERIV_C1_CAMERA_CID_EEPROM_PART_NUMBER (TIERIV_C1_CAMERA_CID_BASE + 31)
 #define TIERIV_C1_CAMERA_CID_EEPROM_REGION_CODE (TIERIV_C1_CAMERA_CID_BASE + 32)
+
+#define TIER4_ISX021_CAMERA_TYPE_STR_MAX_LEN 15
 
 // Indices into tier4_isx021_private_ctrl_list[] / priv->ctrls[] (must match
 // the order of the entries in tier4_isx021_private_ctrl_list below).
@@ -396,6 +401,7 @@ enum {
 	ISX021_CTRL_SHUTTER_TIME_MAX,
 	ISX021_CTRL_FSYNC_MFP,
 	ISX021_CTRL_READOUT_DELAY,
+	ISX021_CTRL_CAMERA_TYPE,
 };
 
 static int tier4_isx021_set_private_ctrls(struct v4l2_ctrl *ctrl);
@@ -506,6 +512,16 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 	},
 	{
 		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_CAMERA_TYPE,
+		.name = "T4 Camera Type",
+		.type = V4L2_CTRL_TYPE_STRING,
+		.min = 0,
+		.max = TIER4_ISX021_CAMERA_TYPE_STR_MAX_LEN,
+		.step = 1,
+		.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+	},
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
 		.id = TIERIV_C1_CAMERA_CID_H_REVERSE,
 		.name = "T4 Horizontal Reverse",
 		.type = V4L2_CTRL_TYPE_BOOLEAN,
@@ -592,6 +608,7 @@ struct tier4_isx021 {
 	bool distortion_correction;
 	bool auto_exposure;
 	u16 *firmware_buffer;
+	size_t firmware_num_regs; // entries actually loaded from FIRMWARE_BIN_FILE
 	int es_number;
 	struct device *fpga_dev;
 	int trigger_mode;
@@ -602,6 +619,7 @@ struct tier4_isx021 {
 	atomic_t test_hw_fault;
 	const char *compatible;
 	enum tier4_camera_type cam_type;
+	char fov[8];
 	struct tier4_eeprom_info eeprom_info;
 
 	struct v4l2_ctrl_handler ctrl_handler;
@@ -884,6 +902,150 @@ static int tier4_isx021_write_reg_raw(struct camera_common_data *s_data, u16 add
 	return err;
 }
 
+/*
+ * Reads the register at firmware_buffer[index] + offset, for byte strings
+ * whose start address comes from FIRMWARE_BIN_FILE. Unlike
+ * tier4_isx021_read_reg(), this doesn't sleep before the read.
+ */
+static int tier4_isx021_read_reg_offset(struct camera_common_data *s_data,
+					u16 index, u16 offset, u8 *val)
+{
+	struct tier4_isx021 *priv = (struct tier4_isx021 *)s_data->priv;
+	u16 reg_addr;
+	u32 reg_val;
+	int err;
+
+	if (index >= priv->firmware_num_regs) {
+		dev_err(s_data->dev,
+			"[%s] : register index %u not in %s (%zu entries); firmware table too old?\n",
+			__func__, index, FIRMWARE_BIN_FILE,
+			priv->firmware_num_regs);
+		return -ENODEV;
+	}
+
+	reg_addr = priv->firmware_buffer[index] + offset;
+
+	err = regmap_read(s_data->regmap, reg_addr, &reg_val);
+	if (err) {
+		dev_err(s_data->dev,
+			"[%s] : I2C Read register failed at %u+%u\n",
+			__func__, index, offset);
+		return err;
+	}
+	*val = reg_val & 0xFF;
+	return 0;
+}
+
+/* Extracts the FOV digits between '-' and '_' in an MP identity string,
+ * e.g. "xxx-120_yyy" -> "120".
+ */
+static void tier4_isx021_extract_fov_delimited(const char *str, char *fov,
+						size_t fov_size)
+{
+	const char *dash = strchr(str, '-');
+	const char *p;
+	size_t n = 0;
+
+	fov[0] = '\0';
+	if (!dash)
+		return;
+
+	for (p = dash + 1; *p && *p != '_' && n + 1 < fov_size; p++) {
+		if (*p >= '0' && *p <= '9')
+			fov[n++] = *p;
+	}
+	fov[n] = '\0';
+}
+
+/* Extracts the FOV digits at offset 2..4 in a standard identity string,
+ * e.g. "C1085..." -> "085".
+ */
+static void tier4_isx021_extract_fov_fixed(const char *str, int str_len,
+					   char *fov, size_t fov_size)
+{
+	int n = 0;
+	int i;
+
+	for (i = 2; i < str_len && n < 3 && (size_t)(n + 1) < fov_size; i++)
+		fov[n++] = str[i];
+	fov[n] = '\0';
+}
+
+#define TIER4_ISX021_MP_ID_MAX_LEN 30
+
+/*
+ * Checks the sensor's identity string against the MP-variant signature.
+ * Returns 0 if identified as MP, -ENODEV if not, or another errno on
+ * I2C failure. Fills in fov (if non-NULL) on success.
+ */
+static int tier4_isx021_check_mp_camera(struct camera_common_data *s_data,
+					char *fov, size_t fov_size)
+{
+	char str[TIER4_ISX021_MP_ID_MAX_LEN + 1] = { 0 };
+	int str_len = 0;
+	int i;
+
+	for (i = 0; i < TIER4_ISX021_MP_ID_MAX_LEN; i++) {
+		u8 val;
+		int err = tier4_isx021_read_reg_offset(
+			s_data, TIER4_ISX021_REG_110_ADDR, i, &val);
+		if (err)
+			return err;
+
+		if (val != 0x00 && str_len < TIER4_ISX021_MP_ID_MAX_LEN)
+			str[str_len++] = (char)val;
+
+		if (str_len >= 3 && !strncmp(str, "222", 3) &&
+		    memchr(str, '_', str_len))
+			break;
+	}
+
+	if (str_len >= 3 && !strncmp(str, "222", 3)) {
+		dev_info(s_data->dev, "%s: identified MP camera\n", __func__);
+		if (fov)
+			tier4_isx021_extract_fov_delimited(str, fov, fov_size);
+		return 0;
+	}
+
+	return -ENODEV;
+}
+
+#define TIER4_ISX021_STANDARD_ID_MAX_LEN 16
+
+/* Same as tier4_isx021_check_mp_camera(), for the standard variant. */
+static int tier4_isx021_check_standard_camera(struct camera_common_data *s_data,
+					      char *fov, size_t fov_size)
+{
+	char str[TIER4_ISX021_STANDARD_ID_MAX_LEN + 1] = { 0 };
+	int str_len = 0;
+	int i;
+
+	for (i = 0; i < TIER4_ISX021_STANDARD_ID_MAX_LEN; i++) {
+		u8 val;
+		int err = tier4_isx021_read_reg_offset(
+			s_data, TIER4_ISX021_REG_111_ADDR, i, &val);
+		if (err)
+			return err;
+
+		if (val != 0x00 && str_len < TIER4_ISX021_STANDARD_ID_MAX_LEN)
+			str[str_len++] = (char)val;
+
+		if (str_len >= 5 && !strncmp(str, "C1", 2))
+			break;
+	}
+
+	if (str_len >= 2 && !strncmp(str, "C1", 2)) {
+		dev_info(s_data->dev, "%s: identified standard camera\n",
+			 __func__);
+		if (fov)
+			tier4_isx021_extract_fov_fixed(str, str_len, fov,
+							fov_size);
+		return 0;
+	}
+
+	return -ENODEV;
+}
+
 static ssize_t
 test_hw_fault_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
@@ -954,6 +1116,36 @@ err:
 }
 static DEVICE_ATTR_RW(test_hw_fault);
 
+static const char *tier4_isx021_cam_type_name(enum tier4_camera_type cam_type)
+{
+	switch (cam_type) {
+	case TIER4_CAMERA_TYPE_MP:
+		return "C1MP";
+	case TIER4_CAMERA_TYPE_STANDARD:
+		return "C1";
+	default:
+		return "UNKNOWN";
+	}
+}
+
+/*
+ * Formats the "T4 Camera Type" string as "<type> <FOV>" (e.g. "C1MP 120",
+ * "C1 85"), with the FOV in plain decimal. The FOV is left out when the
+ * type is UNKNOWN or the FOV couldn't be read (empty, non-numeric, or the
+ * "000" placeholder).
+ */
+static void tier4_isx021_format_cam_type(const struct tier4_isx021 *priv,
+					 char *buf, size_t size)
+{
+	const char *name = tier4_isx021_cam_type_name(priv->cam_type);
+	unsigned int fov;
+
+	if (priv->cam_type != TIER4_CAMERA_TYPE_UNKNOWN &&
+	    !kstrtouint(priv->fov, 10, &fov) && fov != 0)
+		snprintf(buf, size, "%s %u", name, fov);
+	else
+		snprintf(buf, size, "%s", name);
+}
 
 static int
 tier4_isx021_write_mode_set_f_lock_register(struct camera_common_data *s_data,
@@ -1472,9 +1664,8 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 
 	usleep_range(10000, 11000);
 
-	// Horizontal/Vertical Reverse (TIER4_ISX021_REG_106_ADDR..109_ADDR: standard/MP-
-	// mirror pairs) are Application Lock registers -- write them before
-	// the streaming lock below, or they're rejected.
+	// Horizontal/Vertical Reverse are Application Lock registers -- write
+	// them before the streaming lock below, or they're rejected.
 	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_106_ADDR,
 				     priv->h_reverse ? 0x01 : 0x00);
 	if (!err && priv->cam_type == TIER4_CAMERA_TYPE_MP) {
@@ -1572,6 +1763,168 @@ error_exit:
 	return err;
 }
 
+#define TIER4_ISX021_SENSOR_CHECK_RETRIES 10
+#define TIER4_ISX021_SENSOR_CHECK_INTERVAL_MS 50
+
+static int tier4_isx021_retry_sensor_check(
+	struct camera_common_data *s_data,
+	int (*check_fn)(struct camera_common_data *, char *, size_t),
+	char *fov, size_t fov_size)
+{
+	int err = -ENODEV;
+	int retry;
+
+	for (retry = 0; retry < TIER4_ISX021_SENSOR_CHECK_RETRIES; retry++) {
+		msleep(TIER4_ISX021_SENSOR_CHECK_INTERVAL_MS);
+
+		err = check_fn(s_data, fov, fov_size);
+		if (!err)
+			return 0;
+	}
+
+	return err;
+}
+
+/*
+ * One serializer-config + sensor-identity attempt for a given camera
+ * type. Returns 0 iff the sensor identifies as that type.
+ * *configured tells whether the serializer setup itself succeeded, so a
+ * missing or broken serializer can be told apart from a type mismatch.
+ */
+static int tier4_isx021_try_serializer_as(struct tier4_isx021 *priv,
+					  enum tier4_camera_type type,
+					  bool *configured)
+{
+	int err;
+
+	tier4_max9295_set_cam_type(priv->ser_dev, type);
+	err = tier4_max9295_setup_control(priv->ser_dev);
+	*configured = !err;
+	if (err)
+		return err;
+
+	return tier4_isx021_retry_sensor_check(
+		priv->s_data,
+		type == TIER4_CAMERA_TYPE_MP ? tier4_isx021_check_mp_camera
+					    : tier4_isx021_check_standard_camera,
+		priv->fov, sizeof(priv->fov));
+}
+
+/*
+ * Detects MP vs standard by reading the on-board EEPROM first (see
+ * tier4_eeprom_type_hint()) and trying that type; the sensor
+ * identity check confirms it, and the other type is retried once on
+ * mismatch. priv->cam_type ends up UNKNOWN if neither matches. The
+ * deserializer isn't told the camera type, since it may be shared by
+ * two cameras of different types; callers pass cam_type explicitly to
+ * deserializer functions that need it instead.
+ *
+ * If the serializer setup itself fails on the first attempt (e.g. no
+ * camera on the port), that error is returned without the
+ * reset-and-retry: tier4_max9295_reset_control() would drop a
+ * pass-through reference that the failed setup never took.
+ */
+static int tier4_isx021_detect_and_setup_serializer(struct tier4_isx021 *priv,
+						     struct device *dev)
+{
+	u8 devinfo[TIER4_EEPROM_DEVICE_INFO_SIZE];
+	enum tier4_camera_type hint, first, second;
+	bool configured;
+	int err;
+
+	/*
+	 * The camera-module EEPROM is reachable as soon as the deserializer
+	 * link is up -- before any serializer register write -- and only MP
+	 * cameras carry it. Use it to try the right camera type
+	 * first, so the common case (an MP camera, or a standard camera with
+	 * no EEPROM) needs no reset-and-retry. Sensor-identity confirmation
+	 * below still has the final say; the other type is retried on
+	 * mismatch.
+	 */
+	priv->g_ctx.eeprom_info = &priv->eeprom_info;
+
+	hint = tier4_eeprom_type_hint(priv->i2c_client->adapter,
+				      TIER4_EEPROM_HW_ADDR, devinfo,
+				      &priv->i2c_client->dev);
+
+	/*
+	 * Once the deserializer has both links up, the other link's camera
+	 * also answers at the untranslated EEPROM address. If the block read
+	 * is that camera's, this camera has no EEPROM of its own.
+	 */
+	if (hint != TIER4_CAMERA_TYPE_UNKNOWN &&
+	    tier4_max9296_eeprom_seen_on_other_link(priv->dser_dev,
+						   &priv->i2c_client->dev,
+						   devinfo, sizeof(devinfo))) {
+		dev_info(dev,
+			 "[%s] : EEPROM read belongs to the camera on the other link; ignoring it\n",
+			 __func__);
+		hint = TIER4_CAMERA_TYPE_UNKNOWN;
+	}
+
+	first = (hint == TIER4_CAMERA_TYPE_MP) ? TIER4_CAMERA_TYPE_MP
+					       : TIER4_CAMERA_TYPE_STANDARD;
+	second = (first == TIER4_CAMERA_TYPE_MP) ? TIER4_CAMERA_TYPE_STANDARD
+						: TIER4_CAMERA_TYPE_MP;
+
+	err = tier4_isx021_try_serializer_as(priv, first, &configured);
+	if (!err) {
+		priv->cam_type = first;
+		dev_info(dev, "[%s] : Detected TIER IV %s camera\n", __func__,
+			 first == TIER4_CAMERA_TYPE_MP ? "MP" : "standard (C1)");
+		if (first == TIER4_CAMERA_TYPE_MP)
+			tier4_eeprom_read_device_info(priv->i2c_client->adapter,
+						     priv->g_ctx.eeprom_reg,
+						     &priv->eeprom_info,
+						     &priv->i2c_client->dev);
+		return 0;
+	}
+
+	if (!configured) {
+		priv->cam_type = TIER4_CAMERA_TYPE_UNKNOWN;
+		return err;
+	}
+
+	dev_info(dev, "[%s] : not a %s camera, retrying as %s\n", __func__,
+		 first == TIER4_CAMERA_TYPE_MP ? "MP" : "standard",
+		 second == TIER4_CAMERA_TYPE_MP ? "MP" : "standard");
+
+	tier4_max9295_reset_control(priv->ser_dev);
+
+	err = tier4_max9296_setup_link(priv->dser_dev, dev);
+	if (err) {
+		dev_err(dev, "[%s] : GMSL deserializer link config failed\n",
+			__func__);
+		priv->cam_type = TIER4_CAMERA_TYPE_UNKNOWN;
+		return err;
+	}
+
+	/* setup_link() skips its link-lock wait once splitter mode is
+	 * already enabled, so wait here for the link after the reset above.
+	 */
+	msleep(100);
+
+	err = tier4_isx021_try_serializer_as(priv, second, &configured);
+	if (err) {
+		dev_err(dev,
+			"[%s] : Failed to identify camera as MP or standard; marking UNKNOWN\n",
+			__func__);
+		priv->cam_type = TIER4_CAMERA_TYPE_UNKNOWN;
+		return err;
+	}
+
+	priv->cam_type = second;
+	dev_info(dev, "[%s] : Detected TIER IV %s camera\n", __func__,
+		 second == TIER4_CAMERA_TYPE_MP ? "MP" : "standard (C1)");
+	if (second == TIER4_CAMERA_TYPE_MP)
+		tier4_eeprom_read_device_info(priv->i2c_client->adapter,
+					     priv->g_ctx.eeprom_reg,
+					     &priv->eeprom_info,
+					     &priv->i2c_client->dev);
+
+	return 0;
+}
+
 static int tier4_isx021_gmsl_serdes_setup(struct tier4_isx021 *priv)
 {
 	int err = 0;
@@ -1601,7 +1954,7 @@ static int tier4_isx021_gmsl_serdes_setup(struct tier4_isx021 *priv)
 		goto error;
 	}
 
-	err = tier4_max9295_setup_control(priv->ser_dev);
+	err = tier4_isx021_detect_and_setup_serializer(priv, dev);
 
 	/* proceed even if ser setup failed, to setup deser correctly */
 	if (err) {
@@ -1609,15 +1962,6 @@ static int tier4_isx021_gmsl_serdes_setup(struct tier4_isx021 *priv)
 			__func__);
 		goto error;
 	}
-
-	/* The on-board EEPROM sits behind the serializer, so it is readable
-	 * only once the link is configured. Only MP cameras carry one.
-	 */
-	if (priv->cam_type == TIER4_CAMERA_TYPE_MP)
-		tier4_eeprom_read_device_info(priv->i2c_client->adapter,
-					      priv->g_ctx.eeprom_reg,
-					      &priv->eeprom_info,
-					      &priv->i2c_client->dev);
 
 	des_err = tier4_max9296_setup_control(priv->dser_dev,
 					      &priv->i2c_client->dev);
@@ -2445,6 +2789,10 @@ static int tier4_isx021_get_private_ctrls(struct v4l2_ctrl *ctrl)
 	int err = 0;
 
 	switch (ctrl->id) {
+	case TIERIV_C1_CAMERA_CID_CAMERA_TYPE:
+		tier4_isx021_format_cam_type(priv, ctrl->p_new.p_char,
+					     ctrl->maximum + 1);
+		break;
 	case TIERIV_C1_CAMERA_CID_EEPROM_SERIAL_NUMBER:
 		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
 			priv->eeprom_info.serial_number);
@@ -2496,6 +2844,7 @@ static int tier4_isx021_set_private_ctrls(struct v4l2_ctrl *ctrl)
 		dev_info(tc_dev->dev, "%s: distortion correction = %d\n",
 			 __func__, ctrl->val);
 		break;
+	case TIERIV_C1_CAMERA_CID_CAMERA_TYPE:
 	case TIERIV_C1_CAMERA_CID_EEPROM_SERIAL_NUMBER:
 	case TIERIV_C1_CAMERA_CID_EEPROM_SHORT_MODEL:
 	case TIERIV_C1_CAMERA_CID_EEPROM_MODEL_NAME:
@@ -2963,6 +3312,13 @@ static int tier4_isx021_registered(struct v4l2_subdev *sd)
 
 	for (i = 0; i < numctrls; i++) {
 		ctrl_cfg = &tier4_isx021_private_ctrl_list[i];
+
+		/* LDC is inoperative on MP; don't register it there. */
+		if (i == ISX021_CTRL_LDC &&
+		    priv->cam_type != TIER4_CAMERA_TYPE_STANDARD) {
+			priv->ctrls[i] = NULL;
+			continue;
+		}
 
 		ctrl = v4l2_ctrl_new_custom(&handler->ctrl_handler, ctrl_cfg,
 					    NULL);
@@ -3491,6 +3847,8 @@ static int tier4_isx021_probe(struct i2c_client *client,
 		goto errret;
 #endif
 	}
+	if (err > 0)
+		priv->firmware_num_regs = err / sizeof(u16);
 #else
 	err = kernel_read_file_from_path(
 		path, &firmware_buffer, &size, INT_MAX,
@@ -3500,6 +3858,8 @@ static int tier4_isx021_probe(struct i2c_client *client,
 #ifdef USE_FIRMWARE
 		goto errret;
 #endif
+	} else {
+		priv->firmware_num_regs = size / sizeof(u16);
 	}
 #endif
 
