@@ -147,7 +147,7 @@ struct v4l2_ctrl_config_entry {
 };
 
 #define V4L2_CTRL_CFG_ISP_PARAM(_id_idx, _name, _type, _param_id, _p_type, \
-		_min, _max, _step) \
+		_min, _max, _step, _def) \
 	{ \
 		.config = { \
 			.ops = &tier4_imx490_private_ctrl_ops, \
@@ -157,6 +157,7 @@ struct v4l2_ctrl_config_entry {
 			.min = _min, \
 			.max = _max, \
 			.step = _step, \
+			.def = _def, \
 			.flags = V4L2_CTRL_FLAG_VOLATILE | \
 				V4L2_CTRL_FLAG_EXECUTE_ON_WRITE, \
 		}, \
@@ -265,7 +266,8 @@ static struct v4l2_ctrl_config_entry tier4_imx490_private_ctrl_list[] = {
 		TIER4_GW5300_PARAM_UINT8,
 		0,
 		1,
-		1
+		1,
+		0
 	),
 	V4L2_CTRL_CFG_ISP_PARAM(
 		1,
@@ -275,7 +277,8 @@ static struct v4l2_ctrl_config_entry tier4_imx490_private_ctrl_list[] = {
 		TIER4_GW5300_PARAM_UINT8,
 		0,
 		1,
-		1
+		1,
+		0
 	),
 	V4L2_CTRL_CFG_ISP_PARAM(
 		2,
@@ -285,7 +288,8 @@ static struct v4l2_ctrl_config_entry tier4_imx490_private_ctrl_list[] = {
 		TIER4_GW5300_PARAM_UINT8,
 		0,
 		1,
-		1
+		1,
+		0
 	),
 	V4L2_CTRL_CFG_ISP_PARAM(
 		3,
@@ -295,7 +299,19 @@ static struct v4l2_ctrl_config_entry tier4_imx490_private_ctrl_list[] = {
 		TIER4_GW5300_PARAM_UINT16,
 		0,
 		65535,
-		1
+		1,
+		0
+	),
+	V4L2_CTRL_CFG_ISP_PARAM(
+		4,
+		"T4 LocalToneMapping Str InROI",
+		V4L2_CTRL_TYPE_INTEGER,
+		108,
+		TIER4_GW5300_PARAM_UINT16,
+		0,
+		1023,
+		1,
+		512
 	)
 };
 
