@@ -117,6 +117,10 @@ MODULE_DEVICE_TABLE(of, tier4_imx490_of_match);
 #define TIERIV_C2_CAMERA_CID_READOUT_DELAY (TIERIV_C2_CAMERA_CID_BASE + 6)
 #define TIERIV_C2_CAMERA_CID_FSYNC_MFP (TIERIV_C2_CAMERA_CID_BASE + 7)
 #define TIERIV_C2_CAMERA_CID_ISP_PARAM (TIERIV_C2_CAMERA_CID_BASE + 8)
+// ISP_PARAM reserves CIDs ISP_PARAM+1 .. ISP_PARAM+ARRAY_SIZE(list) for
+// its sub-controls, so later CIDs need to stay clear of that range.
+#define TIERIV_C2_CAMERA_CID_H_REVERSE (TIERIV_C2_CAMERA_CID_BASE + 101)
+#define TIERIV_C2_CAMERA_CID_V_REVERSE (TIERIV_C2_CAMERA_CID_BASE + 102)
 
 // Indices into tier4_imx490_private_ctrl_list[] / priv->ctrls[] (must match
 // the order of the entries in tier4_imx490_private_ctrl_list below).
@@ -393,7 +397,33 @@ static struct v4l2_ctrl_config_entry tier4_imx490_private_ctrl_list[] = {
 		15,
 		1,
 		8
-	)
+	),
+	{
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_H_REVERSE,
+			.name = "T4 Horizontal Reverse",
+			.type = V4L2_CTRL_TYPE_BOOLEAN,
+			.min = 0,
+			.max = 1,
+			.step = 1,
+			.def = 0,
+			.flags = 0,
+		}
+	},
+	{
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_V_REVERSE,
+			.name = "T4 Vertical Reverse",
+			.type = V4L2_CTRL_TYPE_BOOLEAN,
+			.min = 0,
+			.max = 1,
+			.step = 1,
+			.def = 0,
+			.flags = 0,
+		}
+	},
 };
 
 // If you add new ioctl VIDIOC_S_EXT_CTRLS function, please add new CID to the following table.
@@ -422,6 +452,8 @@ struct tier4_imx490 {
 	bool last_distortion_correction;
 	bool auto_exposure;
 	bool inhibit_fpga_access;
+	u32 h_reverse;
+	u32 v_reverse;
 	struct device *fpga_dev;
 	atomic_t test_hw_fault;
 
@@ -1028,6 +1060,12 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 		dev_info(tc_dev->dev, "%s: LDC: %d\n", __func__, ctrl->val);
 		tier4_imx490_set_distortion_correction(tc_dev, ctrl->val);
 		break;
+	case TIERIV_C2_CAMERA_CID_H_REVERSE:
+		priv->h_reverse = ctrl->val;
+		break;
+	case TIERIV_C2_CAMERA_CID_V_REVERSE:
+		priv->v_reverse = ctrl->val;
+		break;
 	case TIERIV_C2_CAMERA_CID_ISP_PARAM: {
 		const struct tier4_gw5300_isp_param *p = ctrl->p_new.p;
 
@@ -1249,6 +1287,15 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 		err = tier4_max9295_start_streaming(priv->ser_dev);
 		if (err) {
 			dev_err(dev, "[%s] : tier4_max9295_start_stream() failed\n",
+				__func__);
+			return err;
+		}
+	}
+
+	if (priv->isp_dev) {
+		err = tier4_gw5300_set_reverse(priv->isp_dev, priv->v_reverse, priv->h_reverse);
+		if (err) {
+			dev_err(dev, "[%s] : tier4_gw5300_set_reverse() failed\n",
 				__func__);
 			return err;
 		}

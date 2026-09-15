@@ -874,6 +874,30 @@ int tier4_gw5300_c3_set_auto_exposure(struct device *dev, bool val)
 }
 EXPORT_SYMBOL(tier4_gw5300_c3_set_auto_exposure);
 
+int tier4_gw5300_set_reverse(struct device *dev, int v_reverse, int h_reverse)
+{
+	int ret = 0;
+	u8 buf[6];
+	u8 cmd_reverse[] = { 0x33, 0x47, 0x05, 0x00, 0x00, 0x00, 0xA1,
+			  0x00, 0x80, v_reverse ? 0x01 : 0x00, h_reverse ? 0x01 : 0x00, 0x00 };
+
+	cmd_reverse[sizeof(cmd_reverse) - 1] =
+		calcCheckSum(cmd_reverse, sizeof(cmd_reverse) - 1);
+
+	ret = tier4_gw5300_c3_send_and_recv_msg(dev, cmd_reverse, sizeof(cmd_reverse), buf, sizeof(buf));
+	if (ret < 0) {
+		dev_err(dev, "Failed to set reverse\n");
+	} else if (buf[4] != 0x01) {
+		dev_err(dev, "Reverse API Rejected! Ack/Nack: 0x%02x\n", buf[4]);
+		ret = -EINVAL;
+	} else {
+		ret = 0;
+	}
+
+	return ret;
+}
+EXPORT_SYMBOL(tier4_gw5300_set_reverse);
+
 // ------------------------------------------------------------------
 
 int tier4_gw5300_check_device(struct device *dev, u8 *rdata, int rdata_size)
