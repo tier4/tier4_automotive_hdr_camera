@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <linux/bitops.h>
 #include <linux/device.h>
 #include <linux/gpio.h>
 #include <linux/module.h>
@@ -312,6 +313,86 @@ static struct v4l2_ctrl_config_entry tier4_imx490_private_ctrl_list[] = {
 		1023,
 		1,
 		512
+	),
+	V4L2_CTRL_CFG_ISP_PARAM(
+		5,
+		"T4 LocalToneMapping Bright Pr",
+		V4L2_CTRL_TYPE_INTEGER,
+		115,
+		TIER4_GW5300_PARAM_UINT8,
+		0,
+		255,
+		1,
+		200
+	),
+	// The ISP holds the AE target as a float; the control carries whole
+	// units and is converted in tier4_imx490_{get,set}_private_ctrls().
+	V4L2_CTRL_CFG_ISP_PARAM(
+		6,
+		"T4 AE Target",
+		V4L2_CTRL_TYPE_INTEGER,
+		13,
+		TIER4_GW5300_PARAM_FLOAT,
+		1,
+		255,
+		1,
+		128
+	),
+	// 1.7 fixed-point: 128 is unity, larger values saturate more.
+	V4L2_CTRL_CFG_ISP_PARAM(
+		7,
+		"T4 Color Saturation Strength",
+		V4L2_CTRL_TYPE_INTEGER,
+		811,
+		TIER4_GW5300_PARAM_UINT8,
+		0,
+		255,
+		1,
+		100
+	),
+	V4L2_CTRL_CFG_ISP_PARAM(
+		8,
+		"T4 Enable Color Adaptive Sat",
+		V4L2_CTRL_TYPE_BOOLEAN,
+		810,
+		TIER4_GW5300_PARAM_UINT8,
+		0,
+		1,
+		1,
+		1
+	),
+	V4L2_CTRL_CFG_ISP_PARAM(
+		9,
+		"T4 AE Max Sensor Gain",
+		V4L2_CTRL_TYPE_INTEGER,
+		22,
+		TIER4_GW5300_PARAM_FLOAT,
+		0,
+		255,
+		1,
+		64
+	),
+	V4L2_CTRL_CFG_ISP_PARAM(
+		10,
+		"T4 AE Max ISP Gain",
+		V4L2_CTRL_TYPE_INTEGER,
+		38,
+		TIER4_GW5300_PARAM_FLOAT,
+		1,
+		30,
+		1,
+		3
+	),
+	V4L2_CTRL_CFG_ISP_PARAM(
+		11,
+		"T4 LocalToneMapping Svariance",
+		V4L2_CTRL_TYPE_INTEGER,
+		116,
+		TIER4_GW5300_PARAM_UINT8,
+		0,
+		15,
+		1,
+		8
 	)
 };
 
@@ -855,6 +936,49 @@ static int tier4_imx490_set_readout_delay(struct tegracam_device *tc_dev, struct
 	return tier4_gw5300_set_readout_delay(dev, readout_delay_us, h_line_ns);
 }
 
+/*
+ * ISP parameters of type TIER4_GW5300_PARAM_FLOAT are carried on the wire as
+ * IEEE-754 binary32. V4L2 has no float control type, so the matching controls
+ * carry whole units and are converted here. Kernel code must not use the FPU,
+ * so both directions are plain integer bit manipulation.
+ */
+static u32 tier4_imx490_int_to_float_bits(s32 val)
+{
+	u32 mant;
+	int exp;
+
+	if (val <= 0)
+		return 0;
+
+	exp = fls(val) - 1; /* 2^exp <= val < 2^(exp+1) */
+	if (exp <= 23)
+		mant = ((u32)val << (23 - exp)) & 0x7fffff;
+	else
+		mant = ((u32)val >> (exp - 23)) & 0x7fffff;
+
+	return ((u32)(exp + 127) << 23) | mant;
+}
+
+static s32 tier4_imx490_float_bits_to_int(u32 bits)
+{
+	u32 mant = (bits & 0x7fffff) | 0x800000; /* restore the implicit 1 */
+	int exp = (int)((bits >> 23) & 0xff) - 127;
+
+	if (bits & BIT(31)) /* negative; none of the exposed params are */
+		return 0;
+	if (exp < -1) /* < 0.5, including zero and denormals */
+		return 0;
+	if (exp < 0) /* [0.5, 1.0) rounds to 1 */
+		return 1;
+	if (exp >= 31) /* too large for s32, including inf/NaN */
+		return S32_MAX;
+	if (exp >= 23)
+		return mant << (exp - 23);
+
+	/* Round to nearest rather than truncating towards zero. */
+	return (s32)((mant + BIT(22 - exp)) >> (23 - exp));
+}
+
 static int tier4_imx490_get_private_ctrls(struct v4l2_ctrl *ctrl)
 {
 	struct tegracam_ctrl_handler *handler = container_of(
@@ -878,8 +1002,12 @@ static int tier4_imx490_get_private_ctrls(struct v4l2_ctrl *ctrl)
 				le16_to_cpu(ctrl_priv->param_id),
 				ctrl_priv->param_type,
 				&val);
-		if (!err)
-			ctrl->val = val;
+		if (!err) {
+			if (ctrl_priv->param_type == TIER4_GW5300_PARAM_FLOAT)
+				ctrl->val = tier4_imx490_float_bits_to_int(val);
+			else
+				ctrl->val = val;
+		}
 	}
 
 	return err;
@@ -932,6 +1060,11 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 		if (TIERIV_C2_CAMERA_CID_ISP_PARAM + 1 <= ctrl->id &&
 			ctrl->id < TIERIV_C2_CAMERA_CID_ISP_PARAM +
 				ARRAY_SIZE(tier4_imx490_private_ctrl_list)) {
+			u32 raw = ctrl->val;
+
+			if (ctrl_priv->param_type == TIER4_GW5300_PARAM_FLOAT)
+				raw = tier4_imx490_int_to_float_bits(ctrl->val);
+
 			dev_info(tc_dev->dev, "%s: ISP param ctrl id 0x%x\n",
 				 __func__, ctrl->id);
 
@@ -940,7 +1073,7 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 					TIER4_GW5300_ISP_CONTEXT,
 					le16_to_cpu(ctrl_priv->param_id),
 					ctrl_priv->param_type,
-					ctrl->val);
+					raw);
 			err = (ret == 2 ? 0 : -EIO);
 		} else {
 			dev_err(tc_dev->dev, "%s: unknown V4L2 control id\n", __func__);
