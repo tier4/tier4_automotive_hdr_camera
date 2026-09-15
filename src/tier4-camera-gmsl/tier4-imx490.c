@@ -1053,7 +1053,7 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 	struct tier4_imx490 *priv =
 		(struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
 	struct isp_param_ctrl_priv *ctrl_priv = ctrl->priv;
-	int err = 0, ret;
+	int err = 0;
 
 	switch (ctrl->id) {
 	case TIERIV_C2_CAMERA_CID_LDC:
@@ -1106,13 +1106,12 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 			dev_info(tc_dev->dev, "%s: ISP param ctrl id 0x%x\n",
 				 __func__, ctrl->id);
 
-			ret = tier4_gw5300_isp_set_param(priv->isp_dev,
+			err = tier4_gw5300_isp_set_param(priv->isp_dev,
 					TIER4_GW5300_ISP_SPEC_ID,
 					TIER4_GW5300_ISP_CONTEXT,
 					le16_to_cpu(ctrl_priv->param_id),
 					ctrl_priv->param_type,
 					raw);
-			err = (ret == 2 ? 0 : -EIO);
 		} else {
 			dev_err(tc_dev->dev, "%s: unknown V4L2 control id\n", __func__);
 			err = -EINVAL;
