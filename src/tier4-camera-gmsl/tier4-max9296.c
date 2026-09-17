@@ -130,6 +130,11 @@ struct tier4_max9296_source_ctx {
 
 #define MAX9296_RESET_ALL 0x80
 
+/* GMSL link-lock polling (write_link) and re-lock retries (setup_control) */
+#define MAX9296_LINK_LOCK_POLL_INTERVAL_US 5000
+#define MAX9296_LINK_LOCK_POLL_TIMEOUT_US 100000
+#define MAX9296_LINK_LOCK_RETRIES 5
+
 /* Dual GMSL MAX9296A/B */
 
 #define MAX9296_MAX_SOURCES 2
@@ -396,6 +401,10 @@ void tier4_max9296_power_off(struct device *dev)
 }
 EXPORT_SYMBOL(tier4_max9296_power_off);
 
+/* Called both pre-splitter (LOCK not expected yet, so tolerate a poll
+ * timeout here) and post-splitter (where the caller's retry loop treats
+ * a timeout as fatal).
+ */
 static int tier4_max9296_write_link(struct device *dev, u32 link)
 {
 	struct tier4_max9296 *priv = dev_get_drvdata(dev);
@@ -417,7 +426,9 @@ static int tier4_max9296_write_link(struct device *dev, u32 link)
 		return err;
 
 	err = regmap_read_poll_timeout(priv->regmap, MAX9296_LINK_ADDR, val,
-				       (val & 0x08), 5000, 100000);
+				       (val & 0x08),
+				       MAX9296_LINK_LOCK_POLL_INTERVAL_US,
+				       MAX9296_LINK_LOCK_POLL_TIMEOUT_US);
 	if (err) {
 		dev_warn(dev, "[%s] : GMSL link lock timeout (val=0x%02X). Proceeding anyway.\n", __func__, val);
 	}
@@ -557,16 +568,31 @@ int tier4_max9296_setup_control(struct device *dev, struct device *s_dev)
 	}
 
 #if _USE_CHECK_LINK_LOCKED_
-	// Check GMSL link
+	// Unlike the pre-splitter write_link() call, the link is genuinely
+	// expected to be locked here; retry with backoff and fail if not.
 	err = tier4_max9296_link_locked(dev);
 	if (err) {
-		// GMSL2 link not locked
+		int lock_retry;
+
 		dev_info(dev, "[%s]: max9296 link is not locked.\n", __func__);
-		err = tier4_max9296_write_link(dev, priv->src_link);
+
+		for (lock_retry = 0; lock_retry < MAX9296_LINK_LOCK_RETRIES;
+		     lock_retry++) {
+			tier4_max9296_write_link(dev, priv->src_link);
+			err = tier4_max9296_link_locked(dev);
+			if (!err)
+				break;
+
+			dev_warn(dev,
+				"[%s]: max9296 link still not locked, retry %d/%d\n",
+				__func__, lock_retry + 1,
+				MAX9296_LINK_LOCK_RETRIES);
+		}
+
 		if (err) {
 			dev_err(dev,
-				"[%s]: tier4_max9296_write_link() failed.\n",
-				__func__);
+				"[%s]: GMSL link never locked after %d retries.\n",
+				__func__, MAX9296_LINK_LOCK_RETRIES);
 			goto error;
 		}
 	}
