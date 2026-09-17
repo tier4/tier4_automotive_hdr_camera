@@ -2744,6 +2744,49 @@ static void tier4_isx021_set_running_flag(int nport, bool flag)
 //  wst_priv[nport].running  = false;
 //}
 
+/* Finds priv's own slot in wst_priv[] (populated in probe order, not
+ * physical GMSL port number).
+ */
+static int tier4_isx021_find_own_port(struct tier4_isx021 *priv)
+{
+	int i;
+
+	for (i = 0; i < camera_channel_count; i++) {
+		if (tier4_isx021_is_current_port(priv, i))
+			return i;
+	}
+	return -1;
+}
+
+/*
+ * Finds the wst_priv[] slot of the camera sharing self_port's
+ * deserializer on the other GMSL link (A vs B), by deserializer device
+ * and link identity -- not by assuming wst_priv[self_port +/- 1], since
+ * probe order doesn't reliably match physical port pairing. Returns -1
+ * if self_port has no sibling on the same deserializer.
+ */
+static int tier4_isx021_find_sibling_port(int self_port)
+{
+	struct tier4_isx021 *self_priv;
+	int i;
+
+	if (self_port < 0 || wst_priv[self_port].p_priv == NULL)
+		return -1;
+
+	self_priv = wst_priv[self_port].p_priv;
+
+	for (i = 0; i < camera_channel_count; i++) {
+		if (i == self_port || wst_priv[i].p_priv == NULL)
+			continue;
+
+		if (wst_priv[i].p_priv->dser_dev == self_priv->dser_dev &&
+		    wst_priv[i].p_priv->g_ctx.serdes_csi_link !=
+			    self_priv->g_ctx.serdes_csi_link)
+			return i;
+	}
+	return -1;
+}
+
 static int tier4_isx021_stop_streaming(struct tegracam_device *tc_dev)
 {
 	struct device *dev = tc_dev->dev;
@@ -2806,114 +2849,69 @@ static int tier4_isx021_stop_streaming(struct tegracam_device *tc_dev)
 
 static int tier4_isx021_start_streaming(struct tegracam_device *tc_dev)
 {
-	int i, err = 0;
-	//    struct  tier4_isx021    *next_client_priv;
+	int err = 0;
+	int self_port, sibling_port;
 	struct tier4_isx021 *priv =
 		(struct tier4_isx021 *)tegracam_get_privdata(tc_dev);
 	struct device *dev = tc_dev->dev;
 
 	mutex_lock(&tier4_isx021_lock);
 
-	for (i = 0; i < camera_channel_count; i++) {
-		if (i & 0x1) { // if  i = 1,3,5,7 ( GMSL B port of a Des )
+	self_port = tier4_isx021_find_own_port(priv);
+	if (self_port < 0) {
+		dev_err(dev,
+			"[%s] : could not find this camera's wst_priv[] slot.\n",
+			__func__);
+		err = -EINVAL;
+		goto error_exit;
+	}
 
-			if (tier4_isx021_is_camera_connected_to_port(
-				    i)) { //  a  camera is connected to GMSL B portL
+	if (tier4_isx021_is_camera_running_on_port(self_port)) {
+		err = NO_ERROR;
+		goto error_exit;
+	}
 
-				if ((tier4_isx021_is_current_port(priv, i) ==
-				     true) &&
-				    (tier4_isx021_is_camera_running_on_port(
-					     i) == false)) {
-					//                    err = tier4_isx021_start_one_streaming(wst_priv[i].p_tc_dev, wst_priv[i].p_priv);
-					err = tier4_isx021_start_one_streaming(
-						wst_priv[i].p_tc_dev);
+	sibling_port = tier4_isx021_find_sibling_port(self_port);
 
-					if (err) {
-						dev_err(dev,
-							"[%s] : Starting one streaming on Camera sensor failed.\n",
-							__func__);
-						goto error_exit;
-					}
-					wst_priv[i].running = true;
-					break;
-				}
-			}
-		} else { // if  i = 0,2,4,6 ( GMSL A side port of a Des0,Des1,Des2 or Des3 )
-
-			if ((tier4_isx021_is_camera_connected_to_port(i) ==
-			     true) &&
-			    (tier4_isx021_is_current_port(priv, i) == true)) {
-				if (tier4_isx021_is_camera_connected_to_port(
-					    i + 1) ==
-				    false) { // if another one camera( GMSL B port)
-					// is not connected to Des
-					if (tier4_isx021_is_camera_running_on_port(
-						    i) ==
-					    false) { //   and if the camera is not running.
-
-						//                      err = tier4_isx021_start_one_streaming(wst_priv[i].p_tc_dev, wst_priv[i].p_priv);
-						err = tier4_isx021_start_one_streaming(
-							wst_priv[i].p_tc_dev);
-						if (err) {
-							dev_err(dev,
-								"[%s] : Starting one streaming for next isx021 client failed.\n",
-								__func__);
-							goto error_exit;
-						}
-						tier4_isx021_set_running_flag(
-							i, true);
-					}
-					break;
-				}
-
-				//  two cameras are connected to one Des.
-
-				if (tier4_isx021_check_null_tc_dev_for_port(
-					    i + 1)) { // check if tc_dev is null
-					dev_err(dev,
-						"[%s] : wst_priv[%d].p_tc_dev is NULL.\n",
-						__func__, i + 1);
-					err = -EINVAL;
-					goto error_exit;
-				}
-
-				if (tier4_isx021_is_camera_running_on_port(
-					    i + 1) == false) {
-					//                    err = tier4_isx021_start_one_streaming(wst_priv[i+1].p_tc_dev, wst_priv[i+1].p_priv);
-					err = tier4_isx021_start_one_streaming(
-						wst_priv[i + 1].p_tc_dev);
-					if (err) {
-						dev_err(dev,
-							"[%s] : Start one streaming for the next isx021 client failed.\n",
-							__func__);
-						goto error_exit;
-					}
-					tier4_isx021_set_running_flag(i + 1,
-								      true);
-
-					mutex_unlock(
-						&tier4_isx021_lock); // stop streaming on GMSL B port
-					tier4_isx021_stop_streaming(
-						wst_priv[i + 1].p_tc_dev);
-					mutex_lock(&tier4_isx021_lock);
-				}
-
-				if (tier4_isx021_is_camera_running_on_port(i) ==
-				    false) {
-					//                    err = tier4_isx021_start_one_streaming(wst_priv[i].p_tc_dev, wst_priv[i].p_priv);
-					err = tier4_isx021_start_one_streaming(
-						wst_priv[i].p_tc_dev);
-					if (err) {
-						dev_err(dev,
-							"[%s] : Starting one streaming for current isx021 client failed.\n",
-							__func__);
-						goto error_exit;
-					}
-					tier4_isx021_set_running_flag(i, true);
-				}
-			}
+	/* Only the A-link camera primes its B-link sibling (starts, then
+	 * immediately stops it) before starting itself; B-link always
+	 * starts directly.
+	 */
+	if (sibling_port >= 0 &&
+	    priv->g_ctx.serdes_csi_link == GMSL_SERDES_CSI_LINK_A &&
+	    !tier4_isx021_is_camera_running_on_port(sibling_port)) {
+		if (tier4_isx021_check_null_tc_dev_for_port(sibling_port)) {
+			dev_err(dev,
+				"[%s] : wst_priv[%d].p_tc_dev is NULL.\n",
+				__func__, sibling_port);
+			err = -EINVAL;
+			goto error_exit;
 		}
-	} // for loop
+
+		err = tier4_isx021_start_one_streaming(
+			wst_priv[sibling_port].p_tc_dev);
+		if (err) {
+			dev_err(dev,
+				"[%s] : Starting sibling isx021 client (same deserializer) failed.\n",
+				__func__);
+			goto error_exit;
+		}
+		tier4_isx021_set_running_flag(sibling_port, true);
+
+		mutex_unlock(
+			&tier4_isx021_lock); // stop streaming on GMSL B port
+		tier4_isx021_stop_streaming(wst_priv[sibling_port].p_tc_dev);
+		mutex_lock(&tier4_isx021_lock);
+	}
+
+	err = tier4_isx021_start_one_streaming(wst_priv[self_port].p_tc_dev);
+	if (err) {
+		dev_err(dev,
+			"[%s] : Starting one streaming for current isx021 client failed.\n",
+			__func__);
+		goto error_exit;
+	}
+	tier4_isx021_set_running_flag(self_port, true);
 
 	err = NO_ERROR;
 
