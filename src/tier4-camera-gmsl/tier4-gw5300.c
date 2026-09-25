@@ -430,6 +430,74 @@ uint8_t calcCheckSum(const uint8_t *data, size_t size)
 	return result;
 }
 
+/*
+ * A command is resent when the ISP does not accept it. The ISP can only queue
+ * a limited number of commands and refuses new ones while that queue is full,
+ * which is what happens when several parameters are written back to back.
+ */
+#define GW5300_CMD_MAX_TRIES 8
+#define GW5300_CMD_RETRY_DELAY_MS 5
+
+/* Polls of the query response while waiting for a command to finish. */
+#define GW5300_QUERY_MAX_TRIES 10
+#define GW5300_QUERY_PENDING_DELAY_MS 50
+
+/*
+ * Send a command and check the response the ISP returns in the same transfer.
+ *
+ * tier4_gw5300_send_and_recv_msg() only reports whether the I2C transfer
+ * itself worked, while the ISP reports separately whether it accepted the
+ * command. Without checking that, a command the ISP refused looks like a
+ * success and is silently dropped, so resend it until it is accepted.
+ *
+ * Returns 0 once the command is accepted. When @msg_id is not NULL it is set
+ * to the id needed to query the result of the command.
+ */
+static int tier4_gw5300_send_api_cmd(struct device *dev, u8 *cmd, int cmd_size,
+				     u8 *msg_id)
+{
+	u8 ack[6];
+	int attempt, err;
+
+	for (attempt = 0; attempt < GW5300_CMD_MAX_TRIES; attempt++) {
+		if (attempt)
+			msleep(GW5300_CMD_RETRY_DELAY_MS);
+
+		err = tier4_gw5300_send_and_recv_msg(dev, cmd, cmd_size, ack,
+						     sizeof(ack));
+		if (err < 0)
+			continue;
+
+		/*
+		 * A malformed response means we cannot tell whether the
+		 * command was accepted, so treat it the same as a refusal.
+		 */
+		if (ack[0] != 0x33 || ack[1] != 0x41 ||
+		    ack[5] != calcCheckSum(ack, 5)) {
+			dev_warn(dev, "%s: bad response, resending\n",
+				 __func__);
+			continue;
+		}
+
+		if (ack[4] == 0x01) {
+			if (msg_id)
+				*msg_id = ack[3];
+			if (attempt)
+				dev_info(dev,
+					 "%s: accepted after %d retries\n",
+					 __func__, attempt);
+			return 0;
+		}
+
+		dev_dbg(dev, "%s: not accepted (0x%02x), resending\n", __func__,
+			ack[4]);
+	}
+
+	dev_err(dev, "%s: command not accepted after %d tries\n", __func__,
+		GW5300_CMD_MAX_TRIES);
+	return err < 0 ? err : -EBUSY;
+}
+
 static int tier4_gw5300_param_byte_width(u8 param_type)
 {
 	switch (param_type) {
@@ -449,8 +517,7 @@ static int tier4_gw5300_param_byte_width(u8 param_type)
 }
 
 /*
- * Write a single scalar ISP parameter. Mirrors write_parameter() in the
- * isp_parameter_bridge: a 0x72 "set parameter" command carrying the value as
+ * Write a single scalar ISP parameter. 
  * @width little-endian bytes, terminated by a modulo-256 checksum.
  */
 int tier4_gw5300_isp_set_param(struct device *dev, u8 spec_id, u8 context,
@@ -458,7 +525,6 @@ int tier4_gw5300_isp_set_param(struct device *dev, u8 spec_id, u8 context,
 {
 	/* header(9) + payload(8) + value(<=4) + checksum(1) */
 	u8 packet[22];
-	u8 buf[6];
 	int width = tier4_gw5300_param_byte_width(param_type);
 	int data_size;
 	int len = 0;
@@ -501,8 +567,7 @@ int tier4_gw5300_isp_set_param(struct device *dev, u8 spec_id, u8 context,
 		 __func__, spec_id, context, param_id, param_type, width, value);
 
 	msleep(20);
-	return tier4_gw5300_send_and_recv_msg(dev, packet, len, buf,
-					      sizeof(buf));
+	return tier4_gw5300_send_api_cmd(dev, packet, len, NULL);
 }
 EXPORT_SYMBOL(tier4_gw5300_isp_set_param);
 
@@ -516,7 +581,6 @@ int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 			       u16 param_id, u8 param_type, u32 *value)
 {
 	u8 req[19]; /* header(9) + payload(9) + checksum(1) */
-	u8 ack[6];
 	u8 query[11]; /* query(10) + checksum(1) */
 	u8 resp[24];
 	int width = tier4_gw5300_param_byte_width(param_type);
@@ -556,15 +620,12 @@ int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 	len++;
 
 	msleep(20);
-	ret = tier4_gw5300_send_and_recv_msg(dev, req, len, ack, sizeof(ack));
-	if (ret < 0)
+	ret = tier4_gw5300_send_api_cmd(dev, req, len, &msg_id);
+	if (ret < 0) {
+		dev_err(dev, "%s: read request failed for param 0x%04x\n",
+			__func__, param_id);
 		return ret;
-	if (ack[1] != 0x41 || ack[4] != 0x01) {
-		dev_err(dev, "%s: read ACK failed for param 0x%04x\n", __func__,
-			param_id);
-		return -EIO;
 	}
-	msg_id = ack[3];
 
 	/* Phase 2: 0x51 query, polled until the result status is ready. */
 	len = 0;
@@ -581,11 +642,19 @@ int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 	query[len] = calcCheckSum(query, len);
 	len++;
 
-	for (retry = 0; retry < 5; retry++) {
+	for (retry = 0; retry < GW5300_QUERY_MAX_TRIES; retry++) {
 		ret = tier4_gw5300_send_and_recv_msg(dev, query, len, resp,
 						     sizeof(resp));
 		if (ret < 0)
 			return ret;
+
+		/* Retry unless the ISP accepted the query itself. */
+		if (resp[0] != 0x33 || resp[1] != 0x52 || resp[7] != 0x01) {
+			dev_dbg(dev, "%s: query not accepted, retrying\n",
+				__func__);
+			msleep(GW5300_CMD_RETRY_DELAY_MS);
+			continue;
+		}
 
 		/* resp[8]: 0x02 = ready, 0x01 = pending, otherwise error. */
 		if (resp[8] == 0x02) {
@@ -602,7 +671,7 @@ int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 				__func__, resp[8], param_id);
 			return -EIO;
 		}
-		msleep(50);
+		msleep(GW5300_QUERY_PENDING_DELAY_MS);
 	}
 
 	dev_err(dev, "%s: read timed out for param 0x%04x\n", __func__,
@@ -873,6 +942,30 @@ int tier4_gw5300_c3_set_auto_exposure(struct device *dev, bool val)
 	return ret;
 }
 EXPORT_SYMBOL(tier4_gw5300_c3_set_auto_exposure);
+
+int tier4_gw5300_set_reverse(struct device *dev, int v_reverse, int h_reverse)
+{
+	int ret = 0;
+	u8 buf[6];
+	u8 cmd_reverse[] = { 0x33, 0x47, 0x05, 0x00, 0x00, 0x00, 0xA1,
+			  0x00, 0x80, v_reverse ? 0x01 : 0x00, h_reverse ? 0x01 : 0x00, 0x00 };
+
+	cmd_reverse[sizeof(cmd_reverse) - 1] =
+		calcCheckSum(cmd_reverse, sizeof(cmd_reverse) - 1);
+
+	ret = tier4_gw5300_c3_send_and_recv_msg(dev, cmd_reverse, sizeof(cmd_reverse), buf, sizeof(buf));
+	if (ret < 0) {
+		dev_err(dev, "Failed to set reverse\n");
+	} else if (buf[4] != 0x01) {
+		dev_err(dev, "Reverse API Rejected! Ack/Nack: 0x%02x\n", buf[4]);
+		ret = -EINVAL;
+	} else {
+		ret = 0;
+	}
+
+	return ret;
+}
+EXPORT_SYMBOL(tier4_gw5300_set_reverse);
 
 // ------------------------------------------------------------------
 
