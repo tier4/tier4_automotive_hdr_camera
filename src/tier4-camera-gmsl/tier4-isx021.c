@@ -243,9 +243,15 @@ MODULE_SOFTDEP("pre: tier4_fpga");
 #define TIER4_ISX021_REG_104_ADDR 104
 #define TIER4_ISX021_REG_105_ADDR 105
 
+// Horizontal/Vertical Reverse Application Lock registers; standard/MP-mirror pairs.
+#define TIER4_ISX021_REG_106_ADDR 106
+#define TIER4_ISX021_REG_107_ADDR 107
+#define TIER4_ISX021_REG_108_ADDR 108
+#define TIER4_ISX021_REG_109_ADDR 109
+
 // --- End of  Register definition ------------------------
 
-#define MAX_NUM_OF_REG (106)
+#define MAX_NUM_OF_REG (110)
 
 #define ISX021_AUTO_EXPOSURE_MODE 0x00
 #define ISX021_AE_TIME_UNIT_MICRO_SECOND 0x03
@@ -368,6 +374,8 @@ static const u32 ctrl_cid_list[] = {
 #define TIERIV_C1_CAMERA_CID_SHUTTER_TIME_MAX (TIERIV_C1_CAMERA_CID_BASE + 6)
 #define TIERIV_C1_CAMERA_CID_FSYNC_MFP (TIERIV_C1_CAMERA_CID_BASE + 7)
 #define TIERIV_C1_CAMERA_CID_READOUT_DELAY (TIERIV_C1_CAMERA_CID_BASE + 8)
+#define TIERIV_C1_CAMERA_CID_H_REVERSE (TIERIV_C1_CAMERA_CID_BASE + 10)
+#define TIERIV_C1_CAMERA_CID_V_REVERSE (TIERIV_C1_CAMERA_CID_BASE + 11)
 
 // Indices into tier4_isx021_private_ctrl_list[] / priv->ctrls[] (must match
 // the order of the entries in tier4_isx021_private_ctrl_list below).
@@ -486,6 +494,28 @@ static struct v4l2_ctrl_config tier4_isx021_private_ctrl_list[] = {
 		.def = ISX021_DEFAULT_READOUT_DELAY,
 		.flags = 0,
 	},
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_H_REVERSE,
+		.name = "T4 Horizontal Reverse",
+		.type = V4L2_CTRL_TYPE_BOOLEAN,
+		.min = 0,
+		.max = 1,
+		.step = 1,
+		.def = 0,
+		.flags = 0,
+	},
+	{
+		.ops = &tier4_isx021_private_ctrl_ops,
+		.id = TIERIV_C1_CAMERA_CID_V_REVERSE,
+		.name = "T4 Vertical Reverse",
+		.type = V4L2_CTRL_TYPE_BOOLEAN,
+		.min = 0,
+		.max = 1,
+		.step = 1,
+		.def = 0,
+		.flags = 0,
+	},
 };
 
 struct tier4_isx021 {
@@ -507,6 +537,8 @@ struct tier4_isx021 {
 	int trigger_mode;
 	bool inhibit_fpga_access;
 	int enable_embedded_data; // 0:disable all embedded data 1: enable front embedded data 2:enable rear embedded data 3: enable front and rear embedded data
+	u32 h_reverse;
+	u32 v_reverse;
 	atomic_t test_hw_fault;
 	const char *compatible;
 	enum tier4_camera_type cam_type;
@@ -1375,6 +1407,39 @@ static int tier4_isx021_set_fsync_trigger_mode(struct tier4_isx021 *priv)
 	if (err) {
 		goto error_exit;
 	}
+
+	usleep_range(10000, 11000);
+
+	// Horizontal/Vertical Reverse (TIER4_ISX021_REG_106_ADDR..109_ADDR: standard/MP-
+	// mirror pairs) are Application Lock registers -- write them before
+	// the streaming lock below, or they're rejected.
+	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_106_ADDR,
+				     priv->h_reverse ? 0x01 : 0x00);
+	if (!err && priv->cam_type == TIER4_CAMERA_TYPE_MP) {
+		usleep_range(10000, 11000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_107_ADDR,
+					     priv->h_reverse ? 0x01 : 0x00);
+	}
+	if (err) {
+		dev_err(dev, "[%s] : Failed to set Horizontal Reverse.\n", __func__);
+		goto error_exit;
+	}
+
+	usleep_range(10000, 11000);
+
+	err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_108_ADDR,
+				     priv->v_reverse ? 0x01 : 0x00);
+	if (!err && priv->cam_type == TIER4_CAMERA_TYPE_MP) {
+		usleep_range(10000, 11000);
+		err = tier4_isx021_write_reg(s_data, TIER4_ISX021_REG_109_ADDR,
+					     priv->v_reverse ? 0x01 : 0x00);
+	}
+	if (err) {
+		dev_err(dev, "[%s] : Failed to set Vertical Reverse.\n", __func__);
+		goto error_exit;
+	}
+
+	usleep_range(10000, 11000);
 
 	// transit to Streaming state
 	err = tier4_isx021_write_mode_set_f_lock_register(s_data, 0x53);
@@ -2331,9 +2396,13 @@ static int tier4_isx021_set_private_ctrls(struct v4l2_ctrl *ctrl)
 	case TIERIV_C1_CAMERA_CID_READOUT_DELAY:
 		// These configure the GMSL/sensor pipeline and take effect at
 		// the next streaming start; the V4L2 control framework stores
-		// the value.
-		dev_info(tc_dev->dev, "%s: ctrl id 0x%x = %d\n", __func__,
-			 ctrl->id, ctrl->val);
+		// the value which is then retrieved at s_stream time.
+		break;
+	case TIERIV_C1_CAMERA_CID_H_REVERSE:
+		priv->h_reverse = ctrl->val;
+		break;
+	case TIERIV_C1_CAMERA_CID_V_REVERSE:
+		priv->v_reverse = ctrl->val;
 		break;
 	default:
 		dev_err(tc_dev->dev, "%s: unknown V4L2 control id\n", __func__);

@@ -174,4 +174,6 @@ int tier4_gw5300_isp_set_param(struct device *dev, u8 spec_id, u8 context,
 int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 			       u16 param_id, u8 param_type, u32 *value);
 
+int tier4_gw5300_set_reverse(struct device *dev, int v_reverse, int h_reverse);
+
 #endif /* __TIER4_GW5300_H__ */
