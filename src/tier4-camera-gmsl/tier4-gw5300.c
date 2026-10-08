@@ -498,6 +498,75 @@ static int tier4_gw5300_send_api_cmd(struct device *dev, u8 *cmd, int cmd_size,
 	return err < 0 ? err : -EBUSY;
 }
 
+/*
+ * Poll the 0x51 query for the result of an accepted command.
+ *
+ * @msg_id is the id returned by tier4_gw5300_send_api_cmd(); @data_len is
+ * the number of result bytes requested from the ISP and @resp must be large
+ * enough to hold the whole response. The ISP reports the state of the
+ * command in resp[8].
+ *
+ * Returns 0 once the result is ready (0x02), -ENODATA when the ISP finished
+ * the command without producing a result (0x03), -EIO on any other error
+ * status, and -ETIMEDOUT if it is still pending after @max_tries polls
+ * spaced @pending_delay_ms apart.
+ */
+static int tier4_gw5300_query_result(struct device *dev, u8 msg_id,
+				     u16 data_len, u8 *resp, int resp_size,
+				     int max_tries,
+				     unsigned int pending_delay_ms)
+{
+	u8 query[11]; /* query(10) + checksum(1) */
+	int len = 0;
+	int retry, ret;
+
+	query[len++] = 0x33;
+	query[len++] = 0x51;
+	query[len++] = 0x07;
+	query[len++] = msg_id;
+	query[len++] = 0x00;
+	query[len++] = 0x00;
+	query[len++] = data_len & 0xFF;
+	query[len++] = (data_len >> 8) & 0xFF;
+	query[len++] = 0x00;
+	query[len++] = 0x00;
+	query[len] = calcCheckSum(query, len);
+	len++;
+
+	for (retry = 0; retry < max_tries; retry++) {
+		ret = tier4_gw5300_send_and_recv_msg(dev, query, len, resp,
+						     resp_size);
+		if (ret < 0)
+			return ret;
+
+		/* Retry unless the ISP accepted the query itself. */
+		if (resp[0] != 0x33 || resp[1] != 0x52 || resp[7] != 0x01) {
+			dev_dbg(dev, "%s: query not accepted, retrying\n",
+				__func__);
+			msleep(GW5300_CMD_RETRY_DELAY_MS);
+			continue;
+		}
+
+		switch (resp[8]) {
+		case 0x02:
+			return 0;
+		case 0x03:
+			return -ENODATA;
+		case 0x01:
+			msleep(pending_delay_ms);
+			break;
+		default:
+			dev_err(dev, "%s: result status 0x%02x for msg 0x%02x\n",
+				__func__, resp[8], msg_id);
+			return -EIO;
+		}
+	}
+
+	dev_err(dev, "%s: result for msg 0x%02x timed out\n", __func__,
+		msg_id);
+	return -ETIMEDOUT;
+}
+
 static int tier4_gw5300_param_byte_width(u8 param_type)
 {
 	switch (param_type) {
@@ -679,6 +748,310 @@ int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 	return -ETIMEDOUT;
 }
 EXPORT_SYMBOL(tier4_gw5300_isp_get_param);
+
+/* Extracts the FOV digits between '-' and '_' in an MP identity string,
+ * e.g. "xxx-120_yyy" -> "120".
+ */
+static void tier4_gw5300_extract_fov_delimited(const char *str, char *fov,
+						size_t fov_size)
+{
+	const char *dash = strchr(str, '-');
+	const char *p;
+	size_t n = 0;
+
+	fov[0] = '\0';
+	if (!dash)
+		return;
+
+	for (p = dash + 1; *p && *p != '_' && n + 1 < fov_size; p++) {
+		if (*p >= '0' && *p <= '9')
+			fov[n++] = *p;
+	}
+	fov[n] = '\0';
+}
+
+/* Extracts the FOV digits at offset 2..4 in a standard identity string,
+ * e.g. "C2085..." -> "085".
+ */
+static void tier4_gw5300_extract_fov_fixed(const char *str, int str_len,
+					   char *fov, size_t fov_size)
+{
+	int n = 0;
+	int i;
+
+	for (i = 2; i < str_len && n < 3 && (size_t)(n + 1) < fov_size; i++)
+		fov[n++] = str[i];
+	fov[n] = '\0';
+}
+
+#define TIER4_GW5300_MP_ID_MAX_LEN 20
+
+/*
+ * Checks the ISP's identity string against the MP-variant signature.
+ * Returns 0 if identified as MP, -ENODEV if not, or another errno on
+ * I2C failure. Fills in fov (if non-NULL) on success.
+ */
+int tier4_gw5300_check_mp_camera(struct device *dev, char *fov, size_t fov_size)
+{
+	char str[TIER4_GW5300_MP_ID_MAX_LEN + 1] = { 0 };
+	int str_len = 0;
+	int i, ret;
+
+	for (i = 0; i < TIER4_GW5300_MP_ID_MAX_LEN; i++) {
+		u8 req[21];
+		u8 resp[24];
+		int len = 0;
+		u8 msg_id;
+
+		req[len++] = 0x33;
+		req[len++] = 0x47;
+		req[len++] = 0x0f;
+		req[len++] = 0x00;
+		req[len++] = 0x00;
+		req[len++] = 0x00;
+		req[len++] = 0x53;
+		req[len++] = 0x00;
+		req[len++] = 0x80;
+		req[len++] = 0x05;
+		req[len++] = 0x00;
+		req[len++] = 0x00;
+		req[len++] = 0x00;
+		req[len++] = 0x00;
+		req[len++] = 0xfa;
+		req[len++] = 0x00;
+		req[len++] = 0x00;
+		req[len++] = (u8)i; /* position in the ID string */
+		req[len++] = 0x00;
+		req[len++] = 0x00;
+		req[len++] = 0x00;
+		req[len] = calcCheckSum(req, len);
+		len++;
+
+		ret = tier4_gw5300_send_api_cmd(dev, req, len, &msg_id);
+		if (ret < 0)
+			return ret;
+
+		ret = tier4_gw5300_query_result(dev, msg_id, 0x08, resp,
+						sizeof(resp),
+						GW5300_QUERY_MAX_TRIES,
+						GW5300_QUERY_PENDING_DELAY_MS);
+		if (ret == -ENODATA)
+			break; /* no more characters to read */
+		if (ret < 0)
+			return ret;
+
+		if (resp[15] != 0x00 && str_len < TIER4_GW5300_MP_ID_MAX_LEN)
+			str[str_len++] = (char)resp[15];
+
+		if (str_len >= 6 &&
+		    (!strncmp(str, "260ISP", 6) || !strncmp(str, "271ISP", 6)) &&
+		    memchr(str, '_', str_len)) {
+			break;
+		}
+	}
+
+	if (str_len >= 6 &&
+	    (!strncmp(str, "260ISP", 6) || !strncmp(str, "271ISP", 6))) {
+		dev_info(dev, "%s: identified MP camera\n", __func__);
+		if (fov)
+			tier4_gw5300_extract_fov_delimited(str, fov, fov_size);
+		return 0;
+	}
+
+	return -ENODEV;
+}
+EXPORT_SYMBOL(tier4_gw5300_check_mp_camera);
+
+/* Hardware SKU id for the standard (C2) variant; unlike the serial-number
+ * block below, it survives a GW5300 firmware reflash.
+ */
+#define TIER4_GW5300_CHIPSKU_STANDARD 3
+#define TIER4_GW5300_FOV_DEFAULT "000"
+
+/* 40 * 25ms = 1s poll budget for a request's resp[8] to go "ready". */
+#define TIER4_GW5300_ISP_READY_RETRIES 40
+#define TIER4_GW5300_ISP_READY_INTERVAL_MS 25
+
+/* The chip-info and serial-number blocks are read as one 492-byte result. */
+#define TIER4_GW5300_INFO_BLOCK_DATA_LEN 0x01ec
+#define TIER4_GW5300_INFO_BLOCK_RESP_LEN 508
+
+/*
+ * Reads chipSku (little-endian u32 at byte offset 27 of the chip-info
+ * block). Unlike the serial-number block, chipSku survives a firmware
+ * update, so it's what this driver uses to decide MP vs standard.
+ */
+static int tier4_gw5300_get_chip_sku(struct device *dev, u32 *chip_sku)
+{
+	u8 req[10] = { 0x33, 0x47, 0x03, 0x00, 0x00, 0x00,
+		       0x01, 0x00, 0x80, 0xfe };
+	u8 *resp;
+	int ret;
+	u8 msg_id;
+
+	ret = tier4_gw5300_send_api_cmd(dev, req, sizeof(req), &msg_id);
+	if (ret < 0)
+		return ret;
+
+	resp = kzalloc(TIER4_GW5300_INFO_BLOCK_RESP_LEN, GFP_KERNEL);
+	if (!resp)
+		return -ENOMEM;
+
+	ret = tier4_gw5300_query_result(dev, msg_id,
+					TIER4_GW5300_INFO_BLOCK_DATA_LEN, resp,
+					TIER4_GW5300_INFO_BLOCK_RESP_LEN,
+					TIER4_GW5300_ISP_READY_RETRIES,
+					TIER4_GW5300_ISP_READY_INTERVAL_MS);
+	if (ret == 0)
+		*chip_sku = (u32)resp[27] | ((u32)resp[28] << 8) |
+			    ((u32)resp[29] << 16) | ((u32)resp[30] << 24);
+
+	kfree(resp);
+	return ret;
+}
+
+/* A request can get stuck pending indefinitely; retry with a fresh one. */
+#define TIER4_GW5300_FOV_FETCH_ATTEMPTS 5
+
+/* Single attempt: issue one fresh request and poll it for readiness. */
+static int tier4_gw5300_get_standard_fov_once(struct device *dev, char *fov,
+					       size_t fov_size)
+{
+	u8 req[15] = { 0x33, 0x47, 0x08, 0x00, 0x00, 0x00, 0x91,
+		      0x00, 0x80, 0x70, 0x00, 0x00, 0x00, 0x00 };
+	u8 *resp;
+	char ascii[16];
+	int ascii_len = 0;
+	int len = 14; /* checksum filled in below */
+	int i, ret;
+	u8 msg_id;
+
+	req[len] = calcCheckSum(req, len);
+	len++;
+
+	ret = tier4_gw5300_send_api_cmd(dev, req, len, &msg_id);
+	if (ret < 0)
+		return ret;
+
+	resp = kzalloc(TIER4_GW5300_INFO_BLOCK_RESP_LEN, GFP_KERNEL);
+	if (!resp)
+		return -ENOMEM;
+
+	/* Poll the same outstanding request (msg_id) until resp[8] is
+	 * ready, rather than issuing a new one each time.
+	 */
+	ret = tier4_gw5300_query_result(dev, msg_id,
+					TIER4_GW5300_INFO_BLOCK_DATA_LEN, resp,
+					TIER4_GW5300_INFO_BLOCK_RESP_LEN,
+					TIER4_GW5300_ISP_READY_RETRIES,
+					TIER4_GW5300_ISP_READY_INTERVAL_MS);
+	if (ret < 0) {
+		kfree(resp);
+		return ret;
+	}
+
+	for (i = 55; i <= 68; i++) {
+		u8 c = resp[i];
+
+		if (c >= 0x20 && c < 0x7f && ascii_len < (int)sizeof(ascii) - 1)
+			ascii[ascii_len++] = (char)c;
+	}
+	ascii[ascii_len] = '\0';
+
+	kfree(resp);
+
+	if (ascii_len >= 2 && ascii[0] == 'C' && ascii[1] == '2') {
+		tier4_gw5300_extract_fov_fixed(ascii, ascii_len, fov, fov_size);
+		return 0;
+	}
+
+	return -ENODEV;
+}
+
+/*
+ * Reads the FOV digits from the serial-number/identity block (unlike
+ * chipSku, this can be wiped by a firmware update, so it's used only for
+ * the cosmetic FOV readout, never to gate identification). Retries with
+ * fresh requests since a single one can get stuck pending.
+ */
+static int tier4_gw5300_get_standard_fov(struct device *dev, char *fov,
+					 size_t fov_size)
+{
+	int attempt;
+	int err = -ENODEV;
+
+	for (attempt = 0; attempt < TIER4_GW5300_FOV_FETCH_ATTEMPTS; attempt++) {
+		err = tier4_gw5300_get_standard_fov_once(dev, fov, fov_size);
+		if (!err)
+			return 0;
+	}
+
+	return err;
+}
+
+/*
+ * Copies digits into fov, dropping leading zeros (e.g. "085" -> "85");
+ * an all-zero (or empty) input becomes "0".
+ */
+static void tier4_gw5300_fov_strip_leading_zeros(const char *digits,
+						  char *fov, size_t fov_size)
+{
+	size_t len = strlen(digits);
+	size_t i = 0;
+
+	while (i + 1 < len && digits[i] == '0')
+		i++;
+
+	if (i >= len)
+		snprintf(fov, fov_size, "0");
+	else
+		snprintf(fov, fov_size, "%.*s", (int)(len - i), digits + i);
+}
+
+/*
+ * Identifies a standard (C2) camera from chipSku, a reliable property
+ * that survives a firmware reflash (unlike the serial-number string).
+ * The serial-number block is still read best-effort to populate fov;
+ * it falls back to "000" if unreadable.
+ */
+int tier4_gw5300_check_standard_camera(struct device *dev, char *fov,
+				       size_t fov_size)
+{
+	u32 chip_sku;
+	char digits[8];
+	int err;
+
+	err = tier4_gw5300_get_chip_sku(dev, &chip_sku);
+	if (err)
+		return err;
+
+	if (chip_sku != TIER4_GW5300_CHIPSKU_STANDARD)
+		return -ENODEV;
+
+	dev_info(dev, "%s: identified standard camera (chipSku=%u)\n",
+		__func__, chip_sku);
+
+	if (fov) {
+		if (tier4_gw5300_get_standard_fov(dev, digits, sizeof(digits)) == 0)
+			tier4_gw5300_fov_strip_leading_zeros(digits, fov, fov_size);
+		else
+			snprintf(fov, fov_size, "%s", TIER4_GW5300_FOV_DEFAULT);
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(tier4_gw5300_check_standard_camera);
+
+void tier4_gw5300_set_cam_type(struct device *dev,
+			       enum tier4_camera_type cam_type)
+{
+	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
+
+	mutex_lock(&priv->lock);
+	priv->cam_type = cam_type;
+	mutex_unlock(&priv->lock);
+}
+EXPORT_SYMBOL(tier4_gw5300_set_cam_type);
 
 /*
  * Type operations for the private "ISP Parameter" compound control, whose

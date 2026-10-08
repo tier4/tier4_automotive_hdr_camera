@@ -38,6 +38,7 @@
 enum tier4_camera_type {
 	TIER4_CAMERA_TYPE_STANDARD = 0,
 	TIER4_CAMERA_TYPE_MP = 1,
+	TIER4_CAMERA_TYPE_UNKNOWN = 2,
 };
 
 #define TIER4_SYNC_MODE_INTERNAL_10FPS       0
@@ -120,6 +121,8 @@ struct tier4_gmsl_link_ctx {
 	__u32 sdev_isp_reg; /**< Sensor or ISP proxy slave address. */
 	__u32 sdev_isp_def; /**< Sensor or ISP default slave address. */
 	__u32 sdev_fpga_reg; /**< FPGA default slave address. */
+	__u32 eeprom_reg; /**< EEPROM proxy (translated) slave address, unique per port. */
+	__u32 eeprom_def; /**< EEPROM default (untranslated) slave address. */
 	struct device *s_dev; /**< Sensor device handle. */
 	__u32 hardware_model; /**< ROScube, Xavier or Orin . */
 	//  bool fpga_generate_fsync; /**< Indicates whther FPGA generate fsync or not . */

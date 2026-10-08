@@ -29,6 +29,7 @@
 #include <linux/uaccess.h>
 #include <media/tegracam_core.h>
 
+#include "tier4-eeprom.h"
 #include "tier4-fpga.h"
 #include "tier4-gmsl-link.h"
 #include "tier4-gw5300.h"
@@ -121,6 +122,13 @@ MODULE_DEVICE_TABLE(of, tier4_imx490_of_match);
 // its sub-controls, so later CIDs need to stay clear of that range.
 #define TIERIV_C2_CAMERA_CID_H_REVERSE (TIERIV_C2_CAMERA_CID_BASE + 101)
 #define TIERIV_C2_CAMERA_CID_V_REVERSE (TIERIV_C2_CAMERA_CID_BASE + 102)
+// On-board EEPROM device-info fields (MP cameras only), read once at
+// serializer setup by tier4_eeprom_read_device_info().
+#define TIERIV_C2_CAMERA_CID_EEPROM_SERIAL_NUMBER (TIERIV_C2_CAMERA_CID_BASE + 105)
+#define TIERIV_C2_CAMERA_CID_EEPROM_SHORT_MODEL (TIERIV_C2_CAMERA_CID_BASE + 106)
+#define TIERIV_C2_CAMERA_CID_EEPROM_MODEL_NAME (TIERIV_C2_CAMERA_CID_BASE + 107)
+#define TIERIV_C2_CAMERA_CID_EEPROM_PART_NUMBER (TIERIV_C2_CAMERA_CID_BASE + 108)
+#define TIERIV_C2_CAMERA_CID_EEPROM_REGION_CODE (TIERIV_C2_CAMERA_CID_BASE + 109)
 
 // Indices into tier4_imx490_private_ctrl_list[] / priv->ctrls[] (must match
 // the order of the entries in tier4_imx490_private_ctrl_list below).
@@ -424,6 +432,66 @@ static struct v4l2_ctrl_config_entry tier4_imx490_private_ctrl_list[] = {
 			.flags = 0,
 		}
 	},
+	{
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_EEPROM_SERIAL_NUMBER,
+			.name = "T4 EEPROM Serial Number",
+			.type = V4L2_CTRL_TYPE_STRING,
+			.min = 0,
+			.max = TIER4_EEPROM_FIELD_MAX_LEN - 1,
+			.step = 1,
+			.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+		}
+	},
+	{
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_EEPROM_SHORT_MODEL,
+			.name = "T4 EEPROM Short Model",
+			.type = V4L2_CTRL_TYPE_STRING,
+			.min = 0,
+			.max = TIER4_EEPROM_FIELD_MAX_LEN - 1,
+			.step = 1,
+			.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+		}
+	},
+	{
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_EEPROM_MODEL_NAME,
+			.name = "T4 EEPROM Model Name",
+			.type = V4L2_CTRL_TYPE_STRING,
+			.min = 0,
+			.max = TIER4_EEPROM_FIELD_MAX_LEN - 1,
+			.step = 1,
+			.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+		}
+	},
+	{
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_EEPROM_PART_NUMBER,
+			.name = "T4 EEPROM Part Number",
+			.type = V4L2_CTRL_TYPE_STRING,
+			.min = 0,
+			.max = TIER4_EEPROM_FIELD_MAX_LEN - 1,
+			.step = 1,
+			.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+		}
+	},
+	{
+		.config = {
+			.ops = &tier4_imx490_private_ctrl_ops,
+			.id = TIERIV_C2_CAMERA_CID_EEPROM_REGION_CODE,
+			.name = "T4 EEPROM Region Code",
+			.type = V4L2_CTRL_TYPE_STRING,
+			.min = 0,
+			.max = TIER4_EEPROM_FIELD_MAX_LEN - 1,
+			.step = 1,
+			.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+		}
+	}
 };
 
 // If you add new ioctl VIDIOC_S_EXT_CTRLS function, please add new CID to the following table.
@@ -459,6 +527,7 @@ struct tier4_imx490 {
 
 	const char *compatible;
 	enum tier4_camera_type cam_type;
+	struct tier4_eeprom_info eeprom_info;
 
 	struct v4l2_ctrl_handler ctrl_handler;
 	struct v4l2_ctrl *ctrls[ARRAY_SIZE(tier4_imx490_private_ctrl_list)];
@@ -671,7 +740,8 @@ static int tier4_imx490_set_fsync_trigger_mode(struct tier4_imx490 *priv,
 	}
 
 	err = tier4_max9296_setup_gpi(priv->dser_dev,
-				      priv->ctrls[IMX490_CTRL_FSYNC_MFP]->val);
+				      priv->ctrls[IMX490_CTRL_FSYNC_MFP]->val,
+				      priv->cam_type);
 
 	if (err) {
 		dev_err(dev, "[%s] :tier4_max9296_setup_gpi() failed\n",
@@ -737,6 +807,15 @@ static int tier4_imx490_gmsl_serdes_setup(struct tier4_imx490 *priv)
 		dev_err(dev, "[%s] : GMSL serializer setup failed\n", __func__);
 		goto error;
 	}
+
+	/* The on-board EEPROM sits behind the serializer, so it is readable
+	 * only once the link is configured. Only MP cameras carry one.
+	 */
+	if (priv->cam_type == TIER4_CAMERA_TYPE_MP)
+		tier4_eeprom_read_device_info(priv->i2c_client->adapter,
+					      priv->g_ctx.eeprom_reg,
+					      &priv->eeprom_info,
+					      &priv->i2c_client->dev);
 
 	des_err = tier4_max9296_setup_control(priv->dser_dev,
 					      &priv->i2c_client->dev);
@@ -1022,6 +1101,29 @@ static int tier4_imx490_get_private_ctrls(struct v4l2_ctrl *ctrl)
 	u32 val = 0;
 	int err = -ENOENT;
 
+	switch (ctrl->id) {
+	case TIERIV_C2_CAMERA_CID_EEPROM_SERIAL_NUMBER:
+		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
+			priv->eeprom_info.serial_number);
+		return 0;
+	case TIERIV_C2_CAMERA_CID_EEPROM_SHORT_MODEL:
+		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
+			priv->eeprom_info.short_model);
+		return 0;
+	case TIERIV_C2_CAMERA_CID_EEPROM_MODEL_NAME:
+		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
+			priv->eeprom_info.model_name);
+		return 0;
+	case TIERIV_C2_CAMERA_CID_EEPROM_PART_NUMBER:
+		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
+			priv->eeprom_info.part_number);
+		return 0;
+	case TIERIV_C2_CAMERA_CID_EEPROM_REGION_CODE:
+		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
+			priv->eeprom_info.region_code);
+		return 0;
+	}
+
 	if (TIERIV_C2_CAMERA_CID_ISP_PARAM + 1 <= ctrl->id &&
 		ctrl->id < TIERIV_C2_CAMERA_CID_ISP_PARAM +
 			ARRAY_SIZE(tier4_imx490_private_ctrl_list)) {
@@ -1093,6 +1195,13 @@ static int tier4_imx490_set_private_ctrls(struct v4l2_ctrl *ctrl)
 		// control framework) here.
 		dev_info(tc_dev->dev, "%s: ctrl id 0x%x = %d\n", __func__,
 			 ctrl->id, ctrl->val);
+		break;
+	case TIERIV_C2_CAMERA_CID_EEPROM_SERIAL_NUMBER:
+	case TIERIV_C2_CAMERA_CID_EEPROM_SHORT_MODEL:
+	case TIERIV_C2_CAMERA_CID_EEPROM_MODEL_NAME:
+	case TIERIV_C2_CAMERA_CID_EEPROM_PART_NUMBER:
+	case TIERIV_C2_CAMERA_CID_EEPROM_REGION_CODE:
+		// Read-only; nothing to store.
 		break;
 	default:
 		if (TIERIV_C2_CAMERA_CID_ISP_PARAM + 1 <= ctrl->id &&
@@ -1660,6 +1769,7 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 	struct i2c_client *dser_i2c = NULL;
 	struct device_node *isp_node;
 	struct i2c_client *isp_i2c = NULL;
+	struct device_node *eeprom_node;
 	struct device_node *fpga_node = NULL;
 	struct i2c_client *fpga_i2c = NULL;
 	struct device_node *gmsl;
@@ -1904,6 +2014,20 @@ static int tier4_imx490_board_setup(struct tier4_imx490 *priv)
 
 	priv->g_ctx.sdev_reg = priv->g_ctx.sdev_isp_reg;
 	priv->g_ctx.sdev_def = priv->g_ctx.sdev_isp_def;
+
+	// On-board EEPROM (MP cameras only). Not present on standard-camera
+	// devicetrees, and even where present the physical camera may turn
+	// out to be standard (imx490 auto-detects MP vs standard at runtime,
+	// see tier4_imx490_detect_and_setup_serializer()) -- so a missing
+	// node or a failed read here is not an error, it just leaves
+	// eeprom_reg/eeprom_def at 0 and tier4_eeprom_read_device_info()
+	// skips the read.
+	eeprom_node = of_get_child_by_name(node, "eeprom");
+	if (eeprom_node) {
+		of_property_read_u32(eeprom_node, "reg", &priv->g_ctx.eeprom_reg);
+		of_property_read_u32(eeprom_node, "def-addr", &priv->g_ctx.eeprom_def);
+		of_node_put(eeprom_node);
+	}
 
 	// For Dser node
 

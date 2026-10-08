@@ -28,6 +28,7 @@
 #include <linux/uaccess.h>
 #include <media/tegracam_core.h>
 
+#include "tier4-eeprom.h"
 #include "tier4-fpga.h"
 #include "tier4-gmsl-link.h"
 #include "tier4-gw5300.h"
@@ -130,6 +131,13 @@ static const u32 ctrl_cid_list[] = {
 #define TIERIV_C3_CAMERA_CID_SHUTTER_TIME_MAX (TIERIV_C3_CAMERA_CID_BASE + 5)
 #define TIERIV_C3_CAMERA_CID_FSYNC_MFP (TIERIV_C3_CAMERA_CID_BASE + 6)
 #define TIERIV_C3_CAMERA_CID_ISP_PARAM (TIERIV_C3_CAMERA_CID_BASE + 7)
+// On-board EEPROM device-info fields (MP cameras only), read once at
+// serializer setup by tier4_eeprom_read_device_info().
+#define TIERIV_C3_CAMERA_CID_EEPROM_SERIAL_NUMBER (TIERIV_C3_CAMERA_CID_BASE + 8)
+#define TIERIV_C3_CAMERA_CID_EEPROM_SHORT_MODEL (TIERIV_C3_CAMERA_CID_BASE + 9)
+#define TIERIV_C3_CAMERA_CID_EEPROM_MODEL_NAME (TIERIV_C3_CAMERA_CID_BASE + 10)
+#define TIERIV_C3_CAMERA_CID_EEPROM_PART_NUMBER (TIERIV_C3_CAMERA_CID_BASE + 11)
+#define TIERIV_C3_CAMERA_CID_EEPROM_REGION_CODE (TIERIV_C3_CAMERA_CID_BASE + 12)
 
 // Indices into tier4_imx728_private_ctrl_list[] / priv->ctrls[] (must match
 // the order of the entries in tier4_imx728_private_ctrl_list below).
@@ -144,8 +152,10 @@ enum {
 };
 
 static int tier4_imx728_set_private_ctrls(struct v4l2_ctrl *ctrl);
+static int tier4_imx728_get_private_ctrls(struct v4l2_ctrl *ctrl);
 static const struct v4l2_ctrl_ops tier4_imx728_private_ctrl_ops = {
 	.s_ctrl = tier4_imx728_set_private_ctrls,
+	.g_volatile_ctrl = tier4_imx728_get_private_ctrls,
 };
 
 static struct v4l2_ctrl_config tier4_imx728_private_ctrl_list[] = {
@@ -224,6 +234,56 @@ static struct v4l2_ctrl_config tier4_imx728_private_ctrl_list[] = {
 		.elem_size = sizeof(struct tier4_gw5300_isp_param),
 		.flags = V4L2_CTRL_FLAG_EXECUTE_ON_WRITE,
 	},
+	{
+		.ops = &tier4_imx728_private_ctrl_ops,
+		.id = TIERIV_C3_CAMERA_CID_EEPROM_SERIAL_NUMBER,
+		.name = "T4 EEPROM Serial Number",
+		.type = V4L2_CTRL_TYPE_STRING,
+		.min = 0,
+		.max = TIER4_EEPROM_FIELD_MAX_LEN - 1,
+		.step = 1,
+		.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+	},
+	{
+		.ops = &tier4_imx728_private_ctrl_ops,
+		.id = TIERIV_C3_CAMERA_CID_EEPROM_SHORT_MODEL,
+		.name = "T4 EEPROM Short Model",
+		.type = V4L2_CTRL_TYPE_STRING,
+		.min = 0,
+		.max = TIER4_EEPROM_FIELD_MAX_LEN - 1,
+		.step = 1,
+		.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+	},
+	{
+		.ops = &tier4_imx728_private_ctrl_ops,
+		.id = TIERIV_C3_CAMERA_CID_EEPROM_MODEL_NAME,
+		.name = "T4 EEPROM Model Name",
+		.type = V4L2_CTRL_TYPE_STRING,
+		.min = 0,
+		.max = TIER4_EEPROM_FIELD_MAX_LEN - 1,
+		.step = 1,
+		.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+	},
+	{
+		.ops = &tier4_imx728_private_ctrl_ops,
+		.id = TIERIV_C3_CAMERA_CID_EEPROM_PART_NUMBER,
+		.name = "T4 EEPROM Part Number",
+		.type = V4L2_CTRL_TYPE_STRING,
+		.min = 0,
+		.max = TIER4_EEPROM_FIELD_MAX_LEN - 1,
+		.step = 1,
+		.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+	},
+	{
+		.ops = &tier4_imx728_private_ctrl_ops,
+		.id = TIERIV_C3_CAMERA_CID_EEPROM_REGION_CODE,
+		.name = "T4 EEPROM Region Code",
+		.type = V4L2_CTRL_TYPE_STRING,
+		.min = 0,
+		.max = TIER4_EEPROM_FIELD_MAX_LEN - 1,
+		.step = 1,
+		.flags = V4L2_CTRL_FLAG_READ_ONLY | V4L2_CTRL_FLAG_VOLATILE,
+	},
 };
 
 struct tier4_imx728 {
@@ -245,6 +305,7 @@ struct tier4_imx728 {
 	struct device *fpga_dev;
 	const char *compatible;
 	enum tier4_camera_type cam_type;
+	struct tier4_eeprom_info eeprom_info;
 
 	struct v4l2_ctrl_handler ctrl_handler;
 	struct v4l2_ctrl *ctrls[ARRAY_SIZE(tier4_imx728_private_ctrl_list)];
@@ -419,7 +480,8 @@ static int tier4_imx728_set_fsync_trigger_mode(struct tier4_imx728 *priv,
 	}
 
 	err = tier4_max9296_setup_gpi(priv->dser_dev,
-				      priv->ctrls[IMX728_CTRL_FSYNC_MFP]->val);
+				      priv->ctrls[IMX728_CTRL_FSYNC_MFP]->val,
+				      priv->cam_type);
 
 	if (err) {
 		dev_err(dev, "[%s] :tier4_max9296_setup_gpi() failed\n",
@@ -494,6 +556,10 @@ static int tier4_imx728_gmsl_serdes_setup(struct tier4_imx728 *priv)
 		dev_err(dev, "[%s] : GMSL serializer setup failed\n", __func__);
 		goto error;
 	}
+
+	tier4_eeprom_read_device_info(priv->i2c_client->adapter,
+				      priv->g_ctx.eeprom_reg, &priv->eeprom_info,
+				      &priv->i2c_client->dev);
 
 	des_err = tier4_max9296_setup_control(priv->dser_dev,
 					      &priv->i2c_client->dev);
@@ -748,12 +814,55 @@ static int tier4_imx728_set_private_ctrls(struct v4l2_ctrl *ctrl)
 		dev_info(tc_dev->dev, "%s: ctrl id 0x%x = %d\n", __func__,
 			 ctrl->id, ctrl->val);
 		break;
+	case TIERIV_C3_CAMERA_CID_EEPROM_SERIAL_NUMBER:
+	case TIERIV_C3_CAMERA_CID_EEPROM_SHORT_MODEL:
+	case TIERIV_C3_CAMERA_CID_EEPROM_MODEL_NAME:
+	case TIERIV_C3_CAMERA_CID_EEPROM_PART_NUMBER:
+	case TIERIV_C3_CAMERA_CID_EEPROM_REGION_CODE:
+		// Read-only; nothing to store.
+		break;
 	default:
 		dev_err(tc_dev->dev, "%s: unknown V4L2 control id\n", __func__);
 		err = -EINVAL;
 	}
 
 	return err;
+}
+
+static int tier4_imx728_get_private_ctrls(struct v4l2_ctrl *ctrl)
+{
+	struct tegracam_ctrl_handler *handler = container_of(
+		ctrl->handler, struct tegracam_ctrl_handler, ctrl_handler);
+	struct tegracam_device *tc_dev = handler->tc_dev;
+	struct tier4_imx728 *priv =
+		(struct tier4_imx728 *)tegracam_get_privdata(tc_dev);
+
+	switch (ctrl->id) {
+	case TIERIV_C3_CAMERA_CID_EEPROM_SERIAL_NUMBER:
+		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
+			priv->eeprom_info.serial_number);
+		break;
+	case TIERIV_C3_CAMERA_CID_EEPROM_SHORT_MODEL:
+		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
+			priv->eeprom_info.short_model);
+		break;
+	case TIERIV_C3_CAMERA_CID_EEPROM_MODEL_NAME:
+		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
+			priv->eeprom_info.model_name);
+		break;
+	case TIERIV_C3_CAMERA_CID_EEPROM_PART_NUMBER:
+		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
+			priv->eeprom_info.part_number);
+		break;
+	case TIERIV_C3_CAMERA_CID_EEPROM_REGION_CODE:
+		snprintf(ctrl->p_new.p_char, ctrl->maximum + 1, "%s",
+			priv->eeprom_info.region_code);
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
 }
 
 static struct tegracam_ctrl_ops tier4_imx728_ctrl_ops = {
@@ -1314,6 +1423,7 @@ static int tier4_imx728_board_setup(struct tier4_imx728 *priv)
 	struct i2c_client *dser_i2c = NULL;
 	struct device_node *isp_node;
 	struct i2c_client *isp_i2c = NULL;
+	struct device_node *eeprom_node;
 	struct device_node *fpga_node = NULL;
 	struct i2c_client *fpga_i2c = NULL;
 	struct device_node *gmsl;
@@ -1559,6 +1669,18 @@ static int tier4_imx728_board_setup(struct tier4_imx728 *priv)
 
 	priv->g_ctx.sdev_reg = priv->g_ctx.sdev_isp_reg;
 	priv->g_ctx.sdev_def = priv->g_ctx.sdev_isp_def;
+
+	// On-board EEPROM (present on C3MP builds only -- cam_type is decided
+	// statically above from the devicetree compatible string, so unlike
+	// isx021 there's no runtime ambiguity here). A missing node or failed
+	// read is not fatal; it just leaves eeprom_reg/eeprom_def at 0 and
+	// tier4_eeprom_read_device_info() skips the read.
+	eeprom_node = of_get_child_by_name(node, "eeprom");
+	if (eeprom_node) {
+		of_property_read_u32(eeprom_node, "reg", &priv->g_ctx.eeprom_reg);
+		of_property_read_u32(eeprom_node, "def-addr", &priv->g_ctx.eeprom_def);
+		of_node_put(eeprom_node);
+	}
 
 	// For Dser node
 
