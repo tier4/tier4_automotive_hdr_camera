@@ -1,3 +1,11 @@
+tier4-camera-gmsl (3.1.0) focal; urgency=medium
+
+  * Added ISP tuning controls for C2 (local tone mapping, auto exposure, color saturation)
+  * Added image reverse (horizontal/vertical) controls for C1/C1MP and C2
+  * Improved reliability of the ISP command interface
+
+ -- tier4 <camera@tier4.jp>  Fri, 25 Sep 2026 09:51:00 +0900
+
 tier4-camera-gmsl (3.0.0) focal; urgency=medium
 
   * Support v4l2 control
