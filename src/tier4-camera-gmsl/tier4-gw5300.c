@@ -394,32 +394,6 @@ static int tier4_gw5300_c3_send_and_recv_msg(struct device *dev, u8 *wdata,
 					      rdata_size);
 }
 
-static int
-tier4_gw5300_mode_seq_send_and_recv_msg(struct device *dev,
-					struct mode_sequence *mode_seq,
-					u8 *rdata, int rdata_size)
-{
-	int i;
-	int err = 0;
-
-	for (i = 0; i < mode_seq->len; ++i) {
-		struct mode_command *cmd = &mode_seq->commands[i];
-
-		err = tier4_gw5300_send_and_recv_msg(
-			dev, cmd->command, cmd->len, rdata, rdata_size);
-		msleep(cmd->delay_ms);
-		if (err < 0) {
-			dev_err(dev, "%s: Failed to send a command[%d]: %d\n",
-				__func__, i, err);
-			break;
-		}
-	}
-
-	return err;
-}
-
-// -------------------------------------------------------------------
-
 uint8_t calcCheckSum(const uint8_t *data, size_t size)
 {
 	uint8_t result = 0;
@@ -435,8 +409,8 @@ uint8_t calcCheckSum(const uint8_t *data, size_t size)
  * a limited number of commands and refuses new ones while that queue is full,
  * which is what happens when several parameters are written back to back.
  */
-#define GW5300_CMD_MAX_TRIES 8
-#define GW5300_CMD_RETRY_DELAY_MS 5
+#define GW5300_CMD_MAX_TRIES 51
+#define GW5300_CMD_RETRY_DELAY_MS 10
 
 /* Polls of the query response while waiting for a command to finish. */
 #define GW5300_QUERY_MAX_TRIES 10
@@ -457,6 +431,7 @@ static int tier4_gw5300_send_api_cmd(struct device *dev, u8 *cmd, int cmd_size,
 				     u8 *msg_id)
 {
 	u8 ack[6];
+	u8 last_nack = 0;
 	int attempt, err;
 
 	for (attempt = 0; attempt < GW5300_CMD_MAX_TRIES; attempt++) {
@@ -489,14 +464,43 @@ static int tier4_gw5300_send_api_cmd(struct device *dev, u8 *cmd, int cmd_size,
 			return 0;
 		}
 
-		dev_dbg(dev, "%s: not accepted (0x%02x), resending\n", __func__,
-			ack[4]);
+		last_nack = ack[4];
+		dev_info(dev, "%s: not accepted (0x%02x), resending\n", __func__,
+			 ack[4]);
 	}
 
-	dev_err(dev, "%s: command not accepted after %d tries\n", __func__,
-		GW5300_CMD_MAX_TRIES);
+	dev_err(dev,
+		"%s: command not accepted after %d tries (last NACK 0x%02x)\n",
+		__func__, GW5300_CMD_MAX_TRIES, last_nack);
 	return err < 0 ? err : -EBUSY;
 }
+
+static int
+tier4_gw5300_mode_seq_send_and_recv_msg(struct device *dev,
+					struct mode_sequence *mode_seq,
+					u8 *rdata, int rdata_size)
+{
+	int i;
+	int err = 0;
+
+	for (i = 0; i < mode_seq->len; ++i) {
+		struct mode_command *cmd = &mode_seq->commands[i];
+
+		err = tier4_gw5300_send_api_cmd(dev, cmd->command, cmd->len,
+						NULL);
+		msleep(cmd->delay_ms);
+		if (err < 0) {
+			dev_err(dev, "%s: Failed to send a command[%d]: %d\n",
+				__func__, i, err);
+			break;
+		}
+	}
+
+	/* Callers treat a positive value as the number of commands sent. */
+	return err < 0 ? err : mode_seq->len;
+}
+
+// -------------------------------------------------------------------
 
 static int tier4_gw5300_param_byte_width(u8 param_type)
 {
@@ -525,15 +529,20 @@ int tier4_gw5300_isp_set_param(struct device *dev, u8 spec_id, u8 context,
 {
 	/* header(9) + payload(8) + value(<=4) + checksum(1) */
 	u8 packet[22];
+	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 	int width = tier4_gw5300_param_byte_width(param_type);
 	int data_size;
 	int len = 0;
 	int i;
+	int ret;
+
+	mutex_lock(&priv->lock);
 
 	if (width < 0) {
 		dev_err(dev, "%s: unsupported param_type %u\n", __func__,
 			param_type);
-		return -EINVAL;
+		ret = -EINVAL;
+		goto out;
 	}
 
 	data_size = 11 + width;
@@ -567,7 +576,11 @@ int tier4_gw5300_isp_set_param(struct device *dev, u8 spec_id, u8 context,
 		 __func__, spec_id, context, param_id, param_type, width, value);
 
 	msleep(20);
-	return tier4_gw5300_send_api_cmd(dev, packet, len, NULL);
+	ret = tier4_gw5300_send_api_cmd(dev, packet, len, NULL);
+
+out:
+	mutex_unlock(&priv->lock);
+	return ret;
 }
 EXPORT_SYMBOL(tier4_gw5300_isp_set_param);
 
@@ -583,19 +596,25 @@ int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 	u8 req[19]; /* header(9) + payload(9) + checksum(1) */
 	u8 query[11]; /* query(10) + checksum(1) */
 	u8 resp[24];
+	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 	int width = tier4_gw5300_param_byte_width(param_type);
 	int len = 0;
 	int i, ret, retry;
 	u8 msg_id;
 	u32 v = 0;
 
+	mutex_lock(&priv->lock);
+
 	if (width < 0) {
 		dev_err(dev, "%s: unsupported param_type %u\n", __func__,
 			param_type);
-		return -EINVAL;
+		ret = -EINVAL;
+		goto out;
 	}
-	if (!value)
-		return -EINVAL;
+	if (!value) {
+		ret = -EINVAL;
+		goto out;
+	}
 
 	/* Phase 1: 0x70 read request -> 6-byte ACK carrying the message id. */
 	req[len++] = 0x33;
@@ -624,7 +643,7 @@ int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 	if (ret < 0) {
 		dev_err(dev, "%s: read request failed for param 0x%04x\n",
 			__func__, param_id);
-		return ret;
+		goto out;
 	}
 
 	/* Phase 2: 0x51 query, polled until the result status is ready. */
@@ -646,7 +665,7 @@ int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 		ret = tier4_gw5300_send_and_recv_msg(dev, query, len, resp,
 						     sizeof(resp));
 		if (ret < 0)
-			return ret;
+			goto out;
 
 		/* Retry unless the ISP accepted the query itself. */
 		if (resp[0] != 0x33 || resp[1] != 0x52 || resp[7] != 0x01) {
@@ -664,19 +683,25 @@ int tier4_gw5300_isp_get_param(struct device *dev, u8 spec_id, u8 context,
 			dev_info(dev,
 				 "%s: param_id=0x%04x type=%u value=0x%08x\n",
 				 __func__, param_id, param_type, v);
-			return 0;
+			ret = 0;
+			goto out;
 		}
 		if (resp[8] != 0x01) {
 			dev_err(dev, "%s: read status 0x%02x for param 0x%04x\n",
 				__func__, resp[8], param_id);
-			return -EIO;
+			ret = -EIO;
+			goto out;
 		}
 		msleep(GW5300_QUERY_PENDING_DELAY_MS);
 	}
 
 	dev_err(dev, "%s: read timed out for param 0x%04x\n", __func__,
 		param_id);
-	return -ETIMEDOUT;
+	ret = -ETIMEDOUT;
+
+out:
+	mutex_unlock(&priv->lock);
+	return ret;
 }
 EXPORT_SYMBOL(tier4_gw5300_isp_get_param);
 
@@ -734,6 +759,7 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev,
 						u32 min_integration_time)
 {
 	u8 buf[6];
+	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 	int ret = 0;
 
 	u8 cmd_integration_max[22] = {
@@ -756,6 +782,8 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev,
 	uint8_t b2 = (max_line >> 8) & 0xFF;
 	uint8_t b3 = 0;
 	uint8_t b4 = 0;
+
+	mutex_lock(&priv->lock);
 
 	dev_info(
 		dev,
@@ -788,6 +816,7 @@ int tier4_gw5300_set_integration_time_on_aemode(struct device *dev,
 					      sizeof(cmd_integration_min), buf,
 					      sizeof(buf));
 
+	mutex_unlock(&priv->lock);
 	return ret;
 }
 
@@ -830,6 +859,7 @@ int tier4_gw5300_set_readout_delay(struct device *dev, int readout_delay_us, u32
 	int ret = 0;
 	int i;
 	u8 buf[6];
+	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 	int delay_in_line;
 	u8 cmd[28] = {
 		0x33, 0x47, 0x15, 0x00, 0x00, 0x00, 0xe0, 0x00,
@@ -840,11 +870,17 @@ int tier4_gw5300_set_readout_delay(struct device *dev, int readout_delay_us, u32
 	u8 regs[3] = {0xfd, 0xfe, 0xff};
 	u8 vals[3];
 
-	if (readout_delay_us < 0 || readout_delay_us > 100000)
-		return -EINVAL;
+	mutex_lock(&priv->lock);
 
-	if (h_line_ns == 0)
-		return -EINVAL;
+	if (readout_delay_us < 0 || readout_delay_us > 100000) {
+		ret = -EINVAL;
+		goto out;
+	}
+
+	if (h_line_ns == 0) {
+		ret = -EINVAL;
+		goto out;
+	}
 
 	delay_in_line = DIV_ROUND_CLOSEST(readout_delay_us * 1000, h_line_ns);
 
@@ -859,12 +895,18 @@ int tier4_gw5300_set_readout_delay(struct device *dev, int readout_delay_us, u32
 		cmd[27] = calcCheckSum(cmd, 28);
 
 		ret = tier4_gw5300_send_and_recv_msg(dev, cmd, sizeof(cmd), buf, sizeof(buf));
-		if (ret < 0)
-			return -EINVAL;
+		if (ret < 0) {
+			ret = -EINVAL;
+			goto out;
+		}
 		usleep_range(100000, 110000);
 	}
 
-	return 0;
+	ret = 0;
+
+out:
+	mutex_unlock(&priv->lock);
+	return ret;
 }
 EXPORT_SYMBOL(tier4_gw5300_set_readout_delay);
 
@@ -874,10 +916,13 @@ int tier4_gw5300_set_distortion_correction(struct device *dev, bool val)
 {
 	int ret = 0;
 	u8 buf[6];
+	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 	u8 cmd_dwp_on[] = { 0x33, 0x47, 0x06, 0x00, 0x00, 0x00, 0x4d,
 			    0x00, 0x80, 0x04, 0x00, 0x01, 0x52 };
 	u8 cmd_dwp_off[] = { 0x33, 0x47, 0x03, 0x00, 0x00,
 			     0x00, 0x45, 0x00, 0x80, 0x42 };
+
+	mutex_lock(&priv->lock);
 
 	if (val) {
 		ret += tier4_gw5300_send_and_recv_msg(
@@ -887,6 +932,7 @@ int tier4_gw5300_set_distortion_correction(struct device *dev, bool val)
 						      sizeof(cmd_dwp_off), buf,
 						      sizeof(buf));
 	}
+	mutex_unlock(&priv->lock);
 	return ret;
 }
 EXPORT_SYMBOL(tier4_gw5300_set_distortion_correction);
@@ -946,23 +992,20 @@ EXPORT_SYMBOL(tier4_gw5300_c3_set_auto_exposure);
 int tier4_gw5300_set_reverse(struct device *dev, int v_reverse, int h_reverse)
 {
 	int ret = 0;
-	u8 buf[6];
+	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 	u8 cmd_reverse[] = { 0x33, 0x47, 0x05, 0x00, 0x00, 0x00, 0xA1,
 			  0x00, 0x80, v_reverse ? 0x01 : 0x00, h_reverse ? 0x01 : 0x00, 0x00 };
+
+	mutex_lock(&priv->lock);
 
 	cmd_reverse[sizeof(cmd_reverse) - 1] =
 		calcCheckSum(cmd_reverse, sizeof(cmd_reverse) - 1);
 
-	ret = tier4_gw5300_c3_send_and_recv_msg(dev, cmd_reverse, sizeof(cmd_reverse), buf, sizeof(buf));
-	if (ret < 0) {
+	ret = tier4_gw5300_send_api_cmd(dev, cmd_reverse, sizeof(cmd_reverse), NULL);
+	if (ret < 0)
 		dev_err(dev, "Failed to set reverse\n");
-	} else if (buf[4] != 0x01) {
-		dev_err(dev, "Reverse API Rejected! Ack/Nack: 0x%02x\n", buf[4]);
-		ret = -EINVAL;
-	} else {
-		ret = 0;
-	}
 
+	mutex_unlock(&priv->lock);
 	return ret;
 }
 EXPORT_SYMBOL(tier4_gw5300_set_reverse);
@@ -1015,6 +1058,7 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
 	struct tier4_gw5300 *priv = dev_get_drvdata(dev);
 
 	memset(buf, 0x00, 6);
+	mutex_lock(&priv->lock);
 
 	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
 		// for C2/C3 camera
@@ -1320,6 +1364,7 @@ int tier4_gw5300_setup_sensor_mode(struct device *dev, int sensor_mode)
 	}
 error:
 
+	mutex_unlock(&priv->lock);
 	return err;
 }
 EXPORT_SYMBOL(tier4_gw5300_setup_sensor_mode);

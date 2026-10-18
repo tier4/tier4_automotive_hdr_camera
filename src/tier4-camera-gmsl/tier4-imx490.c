@@ -1381,6 +1381,13 @@ static bool tier4_imx490_is_current_port(struct tier4_imx490 *priv, int nport)
 	return false;
 }
 
+static bool tier4_imx490_is_same_dser(struct tier4_imx490 *priv, int nport)
+{
+	struct tier4_imx490 *sibling = wst_priv[nport].p_priv;
+
+	return sibling && priv->dser_dev == sibling->dser_dev;
+}
+
 static void tier4_imx490_set_running_flag(int nport, bool flag)
 {
 	wst_priv[nport].running = flag;
@@ -1487,7 +1494,9 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
 			    (tier4_imx490_is_current_port(priv, i) == true)) {
 				if (tier4_imx490_is_camera_connected_to_port(
 					    i + 1) ==
-				    false) { // if another one camera( GMSL B port) is not
+				    false ||
+				    !tier4_imx490_is_same_dser(priv, i + 1)) {
+					// if another one camera( GMSL B port) is not
 					// connected to Des.
 					if (tier4_imx490_is_camera_running_on_port(
 						    i) ==
