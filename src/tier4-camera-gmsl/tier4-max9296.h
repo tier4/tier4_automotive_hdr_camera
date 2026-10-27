@@ -59,6 +59,21 @@ int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp,
 int tier4_max9296_setup_link(struct device *dev, struct device *s_dev);
 
 /**
+ * Checks whether another camera on this deserializer has already read an
+ * on-board EEPROM device-info block identical to @a devinfo.
+ *
+ * @param [in]  dev             The deserializer device handle.
+ * @param [in]  s_dev           The sensor device handle doing the check.
+ * @param [in]  devinfo         The device-info block @a s_dev just read.
+ * @param [in]  len             Size of @a devinfo in bytes.
+ *
+ * @return  true if it matches another camera's EEPROM, false otherwise.
+ */
+bool tier4_max9296_eeprom_seen_on_other_link(struct device *dev,
+					     struct device *s_dev,
+					     const u8 *devinfo, size_t len);
+
+/**
  * @brief  Sets up a deserializer link's control pipeline.
  *
  * Puts the deserializer in dual splitter mode. You must call this function

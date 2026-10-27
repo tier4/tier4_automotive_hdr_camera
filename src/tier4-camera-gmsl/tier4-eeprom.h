@@ -55,6 +55,8 @@
 /* Parsed device-info fields read from the camera's on-board EEPROM. */
 struct tier4_eeprom_info {
 	bool valid;
+	/* The device-info block as read, before parsing (set when valid). */
+	u8 raw[TIER4_EEPROM_DEVICE_INFO_SIZE];
 	char serial_number[TIER4_EEPROM_FIELD_MAX_LEN];
 	char short_model[TIER4_EEPROM_FIELD_MAX_LEN];
 	char model_name[TIER4_EEPROM_FIELD_MAX_LEN];
@@ -134,6 +136,8 @@ tier4_eeprom_read_device_info(struct i2c_adapter *adap, u16 addr,
 		return -EINVAL;
 	}
 
+	memcpy(info->raw, r_buf, sizeof(info->raw));
+
 	// Guarantee NUL-termination before splitting into fields.
 	r_buf[sizeof(r_buf) - 1] = '\0';
 	raw = (char *)r_buf;
@@ -159,10 +163,12 @@ tier4_eeprom_read_device_info(struct i2c_adapter *adap, u16 addr,
  * deserializer link is up, before any serializer register write).  Returns
  * TIER4_CAMERA_TYPE_UNKNOWN when the EEPROM is absent or unreadable -- the
  * normal case for a standard camera -- so the caller falls back to
- * sensor-identity probing.
+ * sensor-identity probing.  When the block read is valid device-info,
+ * it is also copied to @devinfo (TIER4_EEPROM_DEVICE_INFO_SIZE bytes, may
+ * be NULL) so the caller can tell whose EEPROM answered.
  */
 static enum tier4_camera_type __maybe_unused
-tier4_eeprom_type_hint(struct i2c_adapter *adap, u16 addr,
+tier4_eeprom_type_hint(struct i2c_adapter *adap, u16 addr, u8 *devinfo,
 		       struct device *dev_for_log)
 {
 	u8 w_buf[2] = {
@@ -176,17 +182,19 @@ tier4_eeprom_type_hint(struct i2c_adapter *adap, u16 addr,
 		{ .addr = addr, .flags = I2C_M_RD,
 		  .len = sizeof(r_buf), .buf = r_buf },
 	};
-	char *raw, *short_model;
+	char *raw, *serial, *short_model;
 	size_t n;
 
 	if (i2c_transfer(adap, msg, 2) != 2)
 		return TIER4_CAMERA_TYPE_UNKNOWN;
 	if (!tier4_eeprom_devinfo_valid(r_buf, sizeof(r_buf)))
 		return TIER4_CAMERA_TYPE_UNKNOWN;
+	if (devinfo)
+		memcpy(devinfo, r_buf, sizeof(r_buf));
 
 	r_buf[sizeof(r_buf) - 1] = '\0';
 	raw = (char *)r_buf;
-	strsep(&raw, "*");			/* [0] serial number */
+	serial = strsep(&raw, "*");		/* [0] serial number */
 	short_model = strsep(&raw, "*");		/* [1] ShortModel */
 	if (!short_model || short_model[0] != 'C' ||
 	    (short_model[1] != '1' && short_model[1] != '2'))
@@ -195,13 +203,13 @@ tier4_eeprom_type_hint(struct i2c_adapter *adap, u16 addr,
 	n = strlen(short_model);
 	if (n >= 2 && short_model[n - 2] == 'M' && short_model[n - 1] == 'P') {
 		dev_info(dev_for_log,
-			 "[%s] : EEPROM ShortModel=%s -> MP\n", __func__,
-			 short_model);
+			 "[%s] : EEPROM Serial Number=%s -> MP\n", __func__,
+			 serial);
 		return TIER4_CAMERA_TYPE_MP;
 	}
 	dev_info(dev_for_log,
-		 "[%s] : EEPROM ShortModel=%s -> standard\n", __func__,
-		 short_model);
+		 "[%s] : EEPROM Serial Number=%s -> standard\n", __func__,
+		 serial);
 	return TIER4_CAMERA_TYPE_STANDARD;
 }
 
