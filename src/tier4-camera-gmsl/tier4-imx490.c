@@ -1166,7 +1166,7 @@ static int tier4_imx490_set_exposure(struct tegracam_device *tc_dev, s64 val)
 		(struct tier4_imx490 *)tegracam_get_privdata(tc_dev);
 
 	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
-		tier4_gw5300_c2_set_integration_time_on_aemode(
+		err = tier4_gw5300_c2_set_integration_time_on_aemode(
 			priv->isp_dev, priv->trigger_mode, val, val);
 	}
 
@@ -1191,13 +1191,12 @@ tier4_imx490_set_distortion_correction(struct tegracam_device *tc_dev, bool val)
 
 		err = tier4_gw5300_set_distortion_correction(priv->isp_dev,
 							     val);
-		if (err <= 0) {
+		if (err) {
 			dev_info(
 				&priv->i2c_client->dev,
 				"[%s] : Setting distortion correction mode failed.\n",
 				__func__);
 		} else {
-			err = 0;
 			priv->last_distortion_correction = val;
 		}
 	}
@@ -1675,10 +1674,13 @@ static int tier4_imx490_start_one_streaming(struct tegracam_device *tc_dev)
 
 	//#if 0
 	msleep(1000);
-	tier4_gw5300_c2_set_integration_time_on_aemode(priv->isp_dev,
-						       priv->trigger_mode,
-						       priv->ctrls[IMX490_CTRL_SHUTTER_TIME_MAX]->val,
-						       priv->ctrls[IMX490_CTRL_SHUTTER_TIME_MIN]->val);
+	err = tier4_gw5300_c2_set_integration_time_on_aemode(
+		priv->isp_dev, priv->trigger_mode,
+		priv->ctrls[IMX490_CTRL_SHUTTER_TIME_MAX]->val,
+		priv->ctrls[IMX490_CTRL_SHUTTER_TIME_MIN]->val);
+	if (err)
+		dev_err(dev, "[%s] : setting integration time failed: %d\n",
+			__func__, err);
 	//#endif
 
 	dev_info(dev, "[%s] :  Camera has started streaming\n", __func__);
@@ -1722,6 +1724,13 @@ static bool tier4_imx490_is_current_port(struct tier4_imx490 *priv, int nport)
 		return true;
 	}
 	return false;
+}
+
+static bool tier4_imx490_is_same_dser(struct tier4_imx490 *priv, int nport)
+{
+	struct tier4_imx490 *sibling = wst_priv[nport].p_priv;
+
+	return sibling && priv->dser_dev == sibling->dser_dev;
 }
 
 static void tier4_imx490_set_running_flag(int nport, bool flag)
@@ -1830,7 +1839,9 @@ static int tier4_imx490_start_streaming(struct tegracam_device *tc_dev)
 			    (tier4_imx490_is_current_port(priv, i) == true)) {
 				if (tier4_imx490_is_camera_connected_to_port(
 					    i + 1) ==
-				    false) { // if another one camera( GMSL B port) is not
+				    false ||
+				    !tier4_imx490_is_same_dser(priv, i + 1)) {
+					// if another one camera( GMSL B port) is not
 					// connected to Des.
 					if (tier4_imx490_is_camera_running_on_port(
 						    i) ==
