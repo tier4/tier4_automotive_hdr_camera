@@ -25,6 +25,7 @@
 #include <media/camera_common.h>
 
 #include "tier4-max9296.h"
+#include "tier4-eeprom.h"
 #include "tier4-gmsl-link.h"
 #include "tier4-hw-model.h"
 
@@ -130,6 +131,11 @@ struct tier4_max9296_source_ctx {
 
 #define MAX9296_RESET_ALL 0x80
 
+/* GMSL link-lock polling (write_link) and re-lock retries (setup_control) */
+#define MAX9296_LINK_LOCK_POLL_INTERVAL_US 5000
+#define MAX9296_LINK_LOCK_POLL_TIMEOUT_US 100000
+#define MAX9296_LINK_LOCK_RETRIES 5
+
 /* Dual GMSL MAX9296A/B */
 
 #define MAX9296_MAX_SOURCES 2
@@ -184,7 +190,6 @@ struct tier4_max9296 {
 	int pw_ref;
 	const char *compatible;
 	struct regulator *vdd_cam_1v2;
-	enum tier4_camera_type cam_type;
 	int fsync_gpi;
 };
 
@@ -397,6 +402,10 @@ void tier4_max9296_power_off(struct device *dev)
 }
 EXPORT_SYMBOL(tier4_max9296_power_off);
 
+/* Called both pre-splitter (LOCK not expected yet, so tolerate a poll
+ * timeout here) and post-splitter (where the caller's retry loop treats
+ * a timeout as fatal).
+ */
 static int tier4_max9296_write_link(struct device *dev, u32 link)
 {
 	struct tier4_max9296 *priv = dev_get_drvdata(dev);
@@ -418,13 +427,53 @@ static int tier4_max9296_write_link(struct device *dev, u32 link)
 		return err;
 
 	err = regmap_read_poll_timeout(priv->regmap, MAX9296_LINK_ADDR, val,
-				       (val & 0x08), 5000, 100000);
+				       (val & 0x08),
+				       MAX9296_LINK_LOCK_POLL_INTERVAL_US,
+				       MAX9296_LINK_LOCK_POLL_TIMEOUT_US);
 	if (err) {
 		dev_warn(dev, "[%s] : GMSL link lock timeout (val=0x%02X). Proceeding anyway.\n", __func__, val);
 	}
 
 	return 0;
 }
+
+/*
+ * Returns true if another camera on this deserializer has already read an
+ * on-board EEPROM device-info block identical to @devinfo. Once both links
+ * are up, that camera's EEPROM also answers at the untranslated address,
+ * so a match means @s_dev read the other camera's EEPROM, not its own.
+ */
+bool tier4_max9296_eeprom_seen_on_other_link(struct device *dev,
+					     struct device *s_dev,
+					     const u8 *devinfo, size_t len)
+{
+	struct tier4_max9296 *priv = dev_get_drvdata(dev);
+	const struct tier4_eeprom_info *info;
+	bool seen = false;
+	int i;
+
+	if (len > TIER4_EEPROM_DEVICE_INFO_SIZE)
+		return false;
+
+	mutex_lock(&priv->lock);
+
+	for (i = 0; i < priv->num_src; i++) {
+		if (!priv->sources[i].g_ctx ||
+		    priv->sources[i].g_ctx->s_dev == s_dev)
+			continue;
+
+		info = priv->sources[i].g_ctx->eeprom_info;
+		if (info && info->valid && !memcmp(info->raw, devinfo, len)) {
+			seen = true;
+			break;
+		}
+	}
+
+	mutex_unlock(&priv->lock);
+
+	return seen;
+}
+EXPORT_SYMBOL(tier4_max9296_eeprom_seen_on_other_link);
 
 int tier4_max9296_setup_link(struct device *dev, struct device *s_dev)
 {
@@ -474,7 +523,8 @@ static int tier4_max9296_link_locked(struct device *dev)
 	return 0;
 }
 
-int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp)
+int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp,
+			    enum tier4_camera_type cam_type)
 {
 	int err = 0;
 	u16 gpio_mfp_base;
@@ -501,11 +551,11 @@ int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp)
 		err += tier4_max9296_write_reg(dev, 0x0003, 0x40);
 	}
 
-	if (priv->cam_type == TIER4_CAMERA_TYPE_STANDARD) {
+	if (cam_type == TIER4_CAMERA_TYPE_STANDARD) {
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base, 0x03);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 1, 0x06);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 2, 0x00);
-	} else if (priv->cam_type == TIER4_CAMERA_TYPE_MP) {
+	} else if (cam_type == TIER4_CAMERA_TYPE_MP) {
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base, 0x83);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 1, 0x10);
 		err += tier4_max9296_write_reg(dev, gpio_mfp_base + 2, 0x40);
@@ -557,16 +607,31 @@ int tier4_max9296_setup_control(struct device *dev, struct device *s_dev)
 	}
 
 #if _USE_CHECK_LINK_LOCKED_
-	// Check GMSL link
+	// Unlike the pre-splitter write_link() call, the link is genuinely
+	// expected to be locked here; retry with backoff and fail if not.
 	err = tier4_max9296_link_locked(dev);
 	if (err) {
-		// GMSL2 link not locked
+		int lock_retry;
+
 		dev_info(dev, "[%s]: max9296 link is not locked.\n", __func__);
-		err = tier4_max9296_write_link(dev, priv->src_link);
+
+		for (lock_retry = 0; lock_retry < MAX9296_LINK_LOCK_RETRIES;
+		     lock_retry++) {
+			tier4_max9296_write_link(dev, priv->src_link);
+			err = tier4_max9296_link_locked(dev);
+			if (!err)
+				break;
+
+			dev_warn(dev,
+				"[%s]: max9296 link still not locked, retry %d/%d\n",
+				__func__, lock_retry + 1,
+				MAX9296_LINK_LOCK_RETRIES);
+		}
+
 		if (err) {
 			dev_err(dev,
-				"[%s]: tier4_max9296_write_link() failed.\n",
-				__func__);
+				"[%s]: GMSL link never locked after %d retries.\n",
+				__func__, MAX9296_LINK_LOCK_RETRIES);
 			goto error;
 		}
 	}
@@ -1084,13 +1149,8 @@ static int tier4_max9296_parse_dt(struct tier4_max9296 *priv,
 	}
 	priv->compatible = match->compatible;
 
-	if (strstr(priv->compatible, "tier4mp_")) {
-		priv->cam_type = TIER4_CAMERA_TYPE_MP;
-		dev_info(&client->dev, "[%s] : Matched TIER IV MP compatible: %s\n", __func__, priv->compatible);
-	} else {
-		priv->cam_type = TIER4_CAMERA_TYPE_STANDARD;
-		dev_info(&client->dev, "[%s] : Matched TIER IV compatible: %s\n", __func__, priv->compatible);
-	}
+	dev_info(&client->dev, "[%s] : Matched TIER IV compatible: %s\n",
+		__func__, priv->compatible);
 
 	err = of_property_read_string(node, "csi-mode", &str_value);
 	if (err < 0) {

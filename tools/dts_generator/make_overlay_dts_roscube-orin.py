@@ -43,14 +43,14 @@ def build_cameras(camera_list: Iterable[camera.Type], gmsl_dsers: Iterable[Devic
 
     # Create cameras using library classes
     c1_cameras = [
-        camera.C1(index=0, suffix='a', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1(index=1, suffix='b', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C1(index=2, suffix='c', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1(index=3, suffix='d', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C1(index=4, suffix='e', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1(index=5, suffix='f', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C1(index=6, suffix='g', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1(index=7, suffix='h', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C1(index=0, suffix='a', address='1d', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C1(index=1, suffix='b', address='1e', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C1(index=2, suffix='c', address='1d', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C1(index=3, suffix='d', address='1e', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C1(index=4, suffix='e', address='1d', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C1(index=5, suffix='f', address='1e', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C1(index=6, suffix='g', address='1d', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C1(index=7, suffix='h', address='1e', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
     ]
     # Apply patches to C1
     for i, cam in enumerate(c1_cameras):
@@ -58,70 +58,70 @@ def build_cameras(camera_list: Iterable[camera.Type], gmsl_dsers: Iterable[Devic
         patch_camera_node(cam, i, get_power_ref(i), vc_id)
 
     c2_cameras = [
-        camera.C2(index=0, suffix='a', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2(index=1, suffix='b', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C2(index=2, suffix='c', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2(index=3, suffix='d', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C2(index=4, suffix='e', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2(index=5, suffix='f', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C2(index=6, suffix='g', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2(index=7, suffix='h', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C2(index=0, suffix='a', address='2d', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C2(index=1, suffix='b', address='2e', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C2(index=2, suffix='c', address='2d', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C2(index=3, suffix='d', address='2e', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C2(index=4, suffix='e', address='2d', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C2(index=5, suffix='f', address='2e', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C2(index=6, suffix='g', address='2d', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C2(index=7, suffix='h', address='2e', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
     ]
     for i, cam in enumerate(c2_cameras):
         vc_id = '0' if i % 2 == 0 else '1'
         patch_camera_node(cam, i, get_power_ref(i), vc_id)
 
     c3_cameras = [
-        camera.C3(index=0, suffix='a', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3(index=1, suffix='b', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C3(index=2, suffix='c', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3(index=3, suffix='d', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C3(index=4, suffix='e', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3(index=5, suffix='f', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C3(index=6, suffix='g', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3(index=7, suffix='h', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C3(index=0, suffix='a', address='3d', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C3(index=1, suffix='b', address='3e', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C3(index=2, suffix='c', address='3d', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C3(index=3, suffix='d', address='3e', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C3(index=4, suffix='e', address='3d', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C3(index=5, suffix='f', address='3e', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C3(index=6, suffix='g', address='3d', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C3(index=7, suffix='h', address='3e', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
     ]
     for i, cam in enumerate(c3_cameras):
         vc_id = '0' if i % 2 == 0 else '1'
         patch_camera_node(cam, i, get_power_ref(i), vc_id)
 
     c1mp_cameras = [
-        camera.C1MP(index=0, suffix='a', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1MP(index=1, suffix='b', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C1MP(index=2, suffix='c', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1MP(index=3, suffix='d', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C1MP(index=4, suffix='e', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1MP(index=5, suffix='f', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C1MP(index=6, suffix='g', address='1b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C1MP(index=7, suffix='h', address='1c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C1MP(index=0, suffix='a', address='1d', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C1MP(index=1, suffix='b', address='1e', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C1MP(index=2, suffix='c', address='1d', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C1MP(index=3, suffix='d', address='1e', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C1MP(index=4, suffix='e', address='1d', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C1MP(index=5, suffix='f', address='1e', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C1MP(index=6, suffix='g', address='1d', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C1MP(index=7, suffix='h', address='1e', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
     ]
     for i, cam in enumerate(c1mp_cameras):
         vc_id = '0' if i % 2 == 0 else '1'
         patch_camera_node(cam, i, get_power_ref(i), vc_id)
 
     c2mp_cameras = [
-        camera.C2MP(index=0, suffix='a', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2MP(index=1, suffix='b', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C2MP(index=2, suffix='c', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2MP(index=3, suffix='d', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C2MP(index=4, suffix='e', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2MP(index=5, suffix='f', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C2MP(index=6, suffix='g', address='2b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C2MP(index=7, suffix='h', address='2c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C2MP(index=0, suffix='a', address='2d', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C2MP(index=1, suffix='b', address='2e', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C2MP(index=2, suffix='c', address='2d', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C2MP(index=3, suffix='d', address='2e', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C2MP(index=4, suffix='e', address='2d', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C2MP(index=5, suffix='f', address='2e', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C2MP(index=6, suffix='g', address='2d', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C2MP(index=7, suffix='h', address='2e', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
     ]
     for i, cam in enumerate(c2mp_cameras):
         vc_id = '0' if i % 2 == 0 else '1'
         patch_camera_node(cam, i, get_power_ref(i), vc_id)
 
     c3mp_cameras = [
-        camera.C3MP(index=0, suffix='a', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3MP(index=1, suffix='b', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C3MP(index=2, suffix='c', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3MP(index=3, suffix='d', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C3MP(index=4, suffix='e', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3MP(index=5, suffix='f', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
-        camera.C3MP(index=6, suffix='g', address='3b', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
-        camera.C3MP(index=7, suffix='h', address='3c', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C3MP(index=0, suffix='a', address='3d', vc_id='0', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='a', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C3MP(index=1, suffix='b', address='3e', vc_id='1', csi_lanes=CSI_LANES, port_index=0, serdes_csi_link='b', dser_label=dser_label[0], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C3MP(index=2, suffix='c', address='3d', vc_id='0', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='a', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C3MP(index=3, suffix='d', address='3e', vc_id='1', csi_lanes=CSI_LANES, port_index=2, serdes_csi_link='b', dser_label=dser_label[1], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C3MP(index=4, suffix='e', address='3d', vc_id='0', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='a', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C3MP(index=5, suffix='f', address='3e', vc_id='1', csi_lanes=CSI_LANES, port_index=4, serdes_csi_link='b', dser_label=dser_label[2], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
+        camera.C3MP(index=6, suffix='g', address='3d', vc_id='0', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='a', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=True),
+        camera.C3MP(index=7, suffix='h', address='3e', vc_id='1', csi_lanes=CSI_LANES, port_index=6, serdes_csi_link='b', dser_label=dser_label[3], serdes_pix_clk_hz=PIXEL_CLOCK, primary=False),
     ]
     for i, cam in enumerate(c3mp_cameras):
         vc_id = '0' if i % 2 == 0 else '1'
@@ -146,10 +146,15 @@ def at(lst: Sequence[T], index: int) -> Optional[T]:
     return lst[index] if index < len(lst) else None
 
 
-def create_gmsl_dser_nodes(use_tier4mp_per_dser: Optional[List[bool]] = None) -> List[DeviceTreeNode]:
-    if use_tier4mp_per_dser is None:
-        use_tier4mp_per_dser = [False, False, False, False]
-
+def create_gmsl_dser_nodes() -> List[DeviceTreeNode]:
+    # The deserializer's own compatible string is unified to tier4_max9296
+    # regardless of the attached cameras' type: the runtime driver
+    # auto-detects MP vs standard imx490 cameras and reconfigures itself
+    # accordingly. Note this assumes cameras sharing a deserializer are
+    # all auto-detect-capable (currently only imx490/C2/C2MP) -- isx021
+    # (C1/C1MP) and imx728 (C3/C3MP) don't have equivalent runtime
+    # detection, so mixing them with this generator on the same
+    # deserializer would leave their GPI configuration wrong.
     dser_configs = [
         ('max9296', 'dser_0'),
         ('max9296', 'dser_1'),
@@ -158,18 +163,15 @@ def create_gmsl_dser_nodes(use_tier4mp_per_dser: Optional[List[bool]] = None) ->
     ]
 
     nodes = []
-    for i, (name, label) in enumerate(dser_configs):
-        Dser = gmsl.Tier4MPDeserializer if use_tier4mp_per_dser[i] else gmsl.Deserializer
-        
-        # Create the node using library
-        node = Dser.node(name=name, csi_lanes=CSI_LANES, label=label)
-        
+    for name, label in dser_configs:
+        node = gmsl.Deserializer.node(name=name, csi_lanes=CSI_LANES, label=label)
+
         node.properties([
             'clk-mhz = <2000>',
             'max-src = <2>',
             'fsync-gpi = <0>'
         ])
-        
+
         nodes.append(node)
     return nodes
 
@@ -207,18 +209,7 @@ def generate_jetson_camera_overlay(opts: GeneratorOptions) -> DeviceTreeNode:
     i2c_bus_number: int = 9
     i2c_mux_path = '/bus@0/i2c@c250000/tca9546@70'
 
-    use_tier4mp_per_dser = []
-    for dser_idx in range(NUM_GMSL_DESERIALIZERS):
-        cam_idx_0 = dser_idx * 2
-        cam_idx_1 = dser_idx * 2 + 1
-        is_tier4mp = False
-        if cam_idx_0 < len(opts.camera_list):
-            is_tier4mp = is_tier4mp or opts.camera_list[cam_idx_0].is_tier4mp
-        if cam_idx_1 < len(opts.camera_list):
-            is_tier4mp = is_tier4mp or opts.camera_list[cam_idx_1].is_tier4mp
-        use_tier4mp_per_dser.append(is_tier4mp)
-
-    gmsl_dsers: Sequence[DeviceTreeNode] = create_gmsl_dser_nodes(use_tier4mp_per_dser=use_tier4mp_per_dser)
+    gmsl_dsers: Sequence[DeviceTreeNode] = create_gmsl_dser_nodes()
 
     # Build cameras using local function that applies patches
     cameras = build_cameras(opts.camera_list, gmsl_dsers)
@@ -325,7 +316,6 @@ def generate_jetson_camera_overlay(opts: GeneratorOptions) -> DeviceTreeNode:
     
     # Platform modules
     tegra_camera_platform_modules = []
->>>>>>> c2d5091 (dts_generator: add support for new L4T BSP versions and ECU platforms)
     for i in range(8):
         cam = at(cameras, i)
         frags = create_platform_module_fragment(

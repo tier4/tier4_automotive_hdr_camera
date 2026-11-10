@@ -35,11 +35,17 @@
  *
  * @param [in]  dev             The deserializer device handle.
  * @param [in]  fsync_mfp       MFP pin number for fsync siganl input.
+ * @param [in]  cam_type        The calling camera's own type (standard vs
+ *                               MP). The deserializer may be shared by two
+ *                               cameras of different types, so this is
+ *                               taken per call rather than tracked on the
+ *                               deserializer itself.
  *
  * @ingroup serdes_group
  * @{
  */
-int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp);
+int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp,
+			    enum tier4_camera_type cam_type);
 
 /**
  * Puts a deserializer device in single exclusive link mode, so link-specific
@@ -51,6 +57,21 @@ int tier4_max9296_setup_gpi(struct device *dev, int fsync_mfp);
  * @return  0 for success, or -1 otherwise.
  */
 int tier4_max9296_setup_link(struct device *dev, struct device *s_dev);
+
+/**
+ * Checks whether another camera on this deserializer has already read an
+ * on-board EEPROM device-info block identical to @a devinfo.
+ *
+ * @param [in]  dev             The deserializer device handle.
+ * @param [in]  s_dev           The sensor device handle doing the check.
+ * @param [in]  devinfo         The device-info block @a s_dev just read.
+ * @param [in]  len             Size of @a devinfo in bytes.
+ *
+ * @return  true if it matches another camera's EEPROM, false otherwise.
+ */
+bool tier4_max9296_eeprom_seen_on_other_link(struct device *dev,
+					     struct device *s_dev,
+					     const u8 *devinfo, size_t len);
 
 /**
  * @brief  Sets up a deserializer link's control pipeline.

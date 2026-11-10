@@ -39,6 +39,19 @@
 int tier4_max9295_setup_gpo(struct device *dev);
 
 /**
+ * @brief  Overrides the serializer's own idea of the connected camera's
+ * type (standard vs MP), used when probing which type is actually
+ * connected instead of trusting the devicetree hint. Also updates the
+ * XERROR MFP pin number, which is derived from the camera type rather
+ * than a devicetree property.
+ *
+ * @param  [in]  dev            The serializer device handle.
+ * @param  [in]  cam_type       The camera type to record.
+ */
+void tier4_max9295_set_cam_type(struct device *dev,
+				enum tier4_camera_type cam_type);
+
+/**
  * @brief  Powers on a serializer device and performs the I2C overrides
  * for sensor and serializer devices.
  *
@@ -53,6 +66,59 @@ int tier4_max9295_setup_gpo(struct device *dev);
  * @return  0 for success, or -1 otherwise.
  */
 int tier4_max9295_setup_control(struct device *dev);
+
+/**
+ * @brief  Reassigns the serializer's I2C device address and establishes
+ * the GMSL link (A or B) for the sensor source paired with this
+ * serializer. This is the first step of tier4_max9295_setup_control()
+ * and has no camera-type-dependent behavior.
+ *
+ * @param  [in]  dev            The serializer device handle.
+ *
+ * @return  0 for success, negative error code otherwise.
+ */
+int tier4_max9295_setup_control_link(struct device *dev);
+
+/**
+ * @brief  Sets up I2C passthrough routing and proxy address overrides
+ * for the sensor and serializer devices. Must be called after
+ * tier4_max9295_setup_control_link(). Has no camera-type-dependent
+ * behavior.
+ *
+ * @param  [in]  dev            The serializer device handle.
+ *
+ * @return  0 for success, negative error code otherwise.
+ */
+int tier4_max9295_setup_control_routing(struct device *dev);
+
+/**
+ * @brief  Identifies which point in the tier4_max9295_setup_control()
+ * sequence a camera-type-dependent register write group belongs to.
+ * Both stages exist because the standard camera's PLL must be put in
+ * reset early (right after the link is up, before routing) and only
+ * re-enabled after routing/sensor address setup -- the two groups of
+ * writes cannot be merged into one without changing that ordering on
+ * real hardware.
+ */
+enum tier4_max9295_hw_stage {
+	/** Right after tier4_max9295_setup_control_link(). */
+	TIER4_MAX9295_HW_STAGE_PLL,
+	/** Right after tier4_max9295_setup_control_routing(). */
+	TIER4_MAX9295_HW_STAGE_SENSOR,
+};
+
+/**
+ * @brief  Performs the camera-type-dependent (standard vs MP) register
+ * writes for the given stage of tier4_max9295_setup_control(). This is
+ * the single place all cam_type branching for serializer control lives.
+ *
+ * @param  [in]  dev            The serializer device handle.
+ * @param  [in]  stage          Which point in the setup sequence this call is for.
+ *
+ * @return  0 for success, negative error code otherwise.
+ */
+int tier4_max9295_setup_control_hw_dependent(struct device *dev,
+					     enum tier4_max9295_hw_stage stage);
 
 /**
  * Reverts I2C overrides and resets a serializer device.

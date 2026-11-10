@@ -38,6 +38,7 @@
 enum tier4_camera_type {
 	TIER4_CAMERA_TYPE_STANDARD = 0,
 	TIER4_CAMERA_TYPE_MP = 1,
+	TIER4_CAMERA_TYPE_UNKNOWN = 2,
 };
 
 #define TIER4_SYNC_MODE_INTERNAL_10FPS       0
@@ -94,6 +95,8 @@ struct tier4_gmsl_stream {
  * Holds the configuration of the GMSL links from a sensor to its serializer to
  * its deserializer.
  */
+struct tier4_eeprom_info;
+
 struct tier4_gmsl_link_ctx {
 	__u32 st_vc; /**< Default sensor virtual channel. */
 	__u32 dst_vc; /**< Destination virtual channel (user-defined). */
@@ -120,6 +123,14 @@ struct tier4_gmsl_link_ctx {
 	__u32 sdev_isp_reg; /**< Sensor or ISP proxy slave address. */
 	__u32 sdev_isp_def; /**< Sensor or ISP default slave address. */
 	__u32 sdev_fpga_reg; /**< FPGA default slave address. */
+	__u32 eeprom_reg; /**< EEPROM proxy (translated) slave address, unique per port. */
+	__u32 eeprom_def; /**< EEPROM default (untranslated) slave address. */
+	/*
+	 * This camera's on-board EEPROM device info, once read (NULL or
+	 * !valid otherwise). Lets the deserializer driver tell whether an
+	 * EEPROM read at the untranslated address came from this camera.
+	 */
+	const struct tier4_eeprom_info *eeprom_info;
 	struct device *s_dev; /**< Sensor device handle. */
 	__u32 hardware_model; /**< ROScube, Xavier or Orin . */
 	//  bool fpga_generate_fsync; /**< Indicates whther FPGA generate fsync or not . */
