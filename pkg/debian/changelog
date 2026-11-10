@@ -1,3 +1,12 @@
+tier4-camera-gmsl (3.2.0) focal; urgency=medium
+
+  * Added automatic detection of MP and standard cameras at probe for C1/C1MP and C2/C2MP
+  * Added V4L2 controls to read device information from the on-board EEPROM of MP cameras
+  * Improved reliability of the GMSL link setup and the ISP command interface
+  * Unified the C1/C1MP and C2/C2MP camera classes in the DTS generator
+
+ -- tier4 <camera@tier4.jp>  Tue, 10 Nov 2026 12:00:00 +0900
+
 tier4-camera-gmsl (3.1.0) focal; urgency=medium
 
   * Added ISP tuning controls for C2 (local tone mapping, auto exposure, color saturation)
